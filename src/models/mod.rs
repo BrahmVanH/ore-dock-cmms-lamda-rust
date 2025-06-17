@@ -4,6 +4,7 @@ pub mod prelude;
 
 pub mod asset_type;
 pub mod asset;
+pub mod location_type;
 pub mod location;
 pub mod maintenance_schedule;
 pub mod notification;
@@ -26,6 +27,7 @@ pub mod work_order;
 seaography::register_entity_modules!([
     asset_type,
     asset,
+    location_type,
     location,
     maintenance_schedule,
     notification,
