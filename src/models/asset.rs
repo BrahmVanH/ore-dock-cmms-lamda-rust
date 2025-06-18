@@ -184,6 +184,7 @@ pub struct Asset {
     pub location_id: String,
     pub manufacturer_id: String,
     pub maintenance_frequency: MaintenanceFrequencyOptions,
+    pub maintenance_schedule_id: Option<String>,
     pub interval_days: i32,
     pub documentation_keys: Vec<String>,
     pub workorder_ids: Vec<String>,
@@ -247,6 +248,7 @@ impl Asset {
             location_id,
             manufacturer_id,
             maintenance_frequency: maint_freq,
+            maintenance_schedule_id: None,
             interval_days: maint_freq_days,
             documentation_keys: None,
             workorder_ids: Vec::new(),
@@ -301,6 +303,17 @@ impl Asset {
         )
             .map_err(|e| e)
             .ok()?;
+
+        let maintenance_schedule_id = match item.get("maintenance_schedule_id") {
+            Some(AttributeValue::S(schedule_id)) => Some(schedule_id.clone()),
+            Some(AttributeValue::Null(_)) => None,
+            None => {
+                return Err("maintenance_schedule_id missing from item".into());
+            }
+            Some(other) => {
+                return Err(format!("Unexpected type for 'name-of-field': {:?}", other).into());
+            }
+        };
 
         let interval_days = item
             .get("interval_days")
@@ -365,6 +378,7 @@ impl Asset {
             location_id,
             manufacturer_id,
             maintenance_frequency,
+            maintenance_schedule_id,
             interval_days,
             documentation_keys,
             workorder_ids,
@@ -412,6 +426,19 @@ impl Asset {
             "maintenance_frequency".to_string(),
             AttributeValue::S(self.maintenance_frequency.to_str().to_string())
         );
+        let maintenance_schedule_id_attr_value = match self.maintenance_schedule_id {
+            Some(id) => AttributeValue::S(id),
+            None => AttributeValue::Null(true),
+            None => {
+                return Err("maintenance_schedule_id missing in to_item".into());
+            }
+            Some(other) => {
+                return Err(
+                    format!("Unexpected type for 'maintenance_schedule_id': {:?}", other).into()
+                );
+            }
+        };
+        item.insert("maintenance_interval_id".to_string(), maintenance_schedule_id_attr_value);
         item.insert("interval_days".to_string(), AttributeValue::N(self.interval_days.to_string()));
 
         if !self.documentation_keys.is_empty() {
