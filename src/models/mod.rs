@@ -6,7 +6,9 @@ pub mod asset_type;
 pub mod asset;
 pub mod location_type;
 pub mod location;
+pub mod address;
 pub mod maintenance_schedule;
+pub mod manufacturer;
 pub mod notification;
 pub mod notification_delivery_log;
 pub mod notification_template;
@@ -29,7 +31,9 @@ seaography::register_entity_modules!([
     asset,
     location_type,
     location,
+    address,
     maintenance_schedule,
+    manufacturer,
     notification,
     notification_delivery_log,
     notification_template,
