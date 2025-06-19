@@ -1,13 +1,12 @@
 use std::collections::HashMap;
 
-use async_graphql::{ Object };
+use async_graphql::Object;
 use aws_sdk_dynamodb::types::AttributeValue;
 use chrono::{ DateTime, Utc };
-use regex::Regex;
 use serde::{ Deserialize, Serialize };
 use tracing::info;
 
-use crate::{error::AppError, models::address::Address};
+use crate::{ error::AppError, models::address::Address };
 
 /// Represents a Location in the system
 ///
