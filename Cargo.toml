@@ -15,6 +15,7 @@ chrono = { version = "0.4.41", features = ["serde"] }
 dotenvy = "0.15.7"
 jsonwebtoken = "9.3.1"
 rand_core = { version = "0.9.3", features = ["std"] }
+regex = "1.11.1"
 rust_decimal = "1.37.2"
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
