@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use async_graphql::{ ComplexObject, Object };
+use async_graphql::{ Object };
 use aws_sdk_dynamodb::types::AttributeValue;
 use chrono::{ DateTime, Utc };
 use regex::Regex;
@@ -275,7 +275,7 @@ impl Location {
     }
 }
 
-#[ComplexObject]
+#[Object]
 impl Location {
     async fn id(&self) -> &str {
         &self.id
