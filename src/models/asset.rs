@@ -7,7 +7,7 @@ use rust_decimal::Decimal;
 use serde::{ Deserialize, Serialize };
 use tracing::info;
 
-use crate::error::AppError;
+use crate::{ error::AppError, models::maintenance_schedule };
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "snake_case")]
@@ -153,7 +153,7 @@ impl AssetCurrentStatusOptions {
 ///
 /// * `id` - Unique identifier for the asset
 /// * `name` - Name of the asset
-/// * `type_id` - ID of the asset type
+/// * `r#type_id` - ID of the asset type
 /// * `serial_number` - Serial number of the asset
 /// * `model_number` - Model number of the asset
 /// * `purchase_date` - Date when asset was purchased
@@ -164,7 +164,7 @@ impl AssetCurrentStatusOptions {
 /// * `maintenance_frequency` - How often maintenance is required
 /// * `interval_days` - Number of days between maintenance
 /// * `documentation_keys` - Keys for related documentation
-/// * `workorder_ids` - IDs of related work orders
+/// * `work_order_ids` - IDs of related work orders
 /// * `warranty_start_date` - Start date of warranty
 /// * `warranty_end_date` - End date of warranty
 /// * `total_downtime_hours` - Total hours the asset has been down
@@ -187,7 +187,7 @@ pub struct Asset {
     pub maintenance_schedule_id: Option<String>,
     pub interval_days: i32,
     pub documentation_keys: Vec<String>,
-    pub workorder_ids: Vec<String>,
+    pub work_order_ids: Vec<String>,
     pub warranty_start_date: Option<DateTime<Utc>>,
     pub warranty_end_date: Option<DateTime<Utc>>,
     pub total_downtime_hours: Decimal,
@@ -203,7 +203,7 @@ impl Asset {
     ///
     /// * `id` - Unique identifier
     /// * `name` - Name of the asset
-    /// * `type_id` - Asset type ID
+    /// * `r#type_id` - Asset type ID
     /// * `serial_number` - Serial number
     /// * `model_number` - Model number
     /// * `purchase_date` - Purchase date
@@ -251,7 +251,7 @@ impl Asset {
             maintenance_schedule_id: None,
             interval_days: maint_freq_days,
             documentation_keys: None,
-            workorder_ids: Vec::new(),
+            work_order_ids: Vec::new(),
             warranty_start_date,
             warranty_end_date,
             total_downtime_hours: 0.0,
@@ -274,7 +274,7 @@ impl Asset {
 
         let id = item.get("id")?.as_s().ok()?.to_string();
         let name = item.get("name")?.as_s().ok()?.to_string();
-        let type_id = item.get("type_id")?.as_s().ok()?.to_string();
+        let r#type_id = item.get("r#type_id")?.as_s().ok()?.to_string();
         let serial_number = item.get("serial_number")?.as_s().ok()?.to_string();
         let model_number = item.get("model_number")?.as_s().ok()?.to_string();
         let location_id = item.get("location_id")?.as_s().ok()?.to_string();
@@ -298,22 +298,20 @@ impl Asset {
             .ok()?;
 
         let maintenance_frequency_str = item.get("maintenance_frequency")?.as_s().ok()?;
+
         let maintenance_frequency = MaintenanceFrequencyOptions::from_string(
             &maintenance_frequency_str
         )
             .map_err(|e| e)
             .ok()?;
 
-        let maintenance_schedule_id = match item.get("maintenance_schedule_id") {
-            Some(AttributeValue::S(schedule_id)) => Some(schedule_id.clone()),
-            Some(AttributeValue::Null(_)) => None,
-            None => {
-                return Err("maintenance_schedule_id missing from item".into());
+        let maintenance_schedule_id = item.get("maintenance_schedule_id").and_then(|v| {
+            match v {
+                AttributeValue::S(s) => Some(s.clone()),
+                AttributeValue::Null(_) => None,
+                _ => None,
             }
-            Some(other) => {
-                return Err(format!("Unexpected type for 'name-of-field': {:?}", other).into());
-            }
-        };
+        });
 
         let interval_days = item
             .get("interval_days")
@@ -327,8 +325,8 @@ impl Asset {
             .cloned()
             .unwrap_or_default();
 
-        let workorder_ids = item
-            .get("workorder_ids")
+        let work_order_ids = item
+            .get("work_order_ids")
             .and_then(|v| v.as_ss().ok())
             .cloned()
             .unwrap_or_default();
@@ -369,7 +367,7 @@ impl Asset {
         let res = Some(Self {
             id,
             name,
-            type_id,
+            r#type_id,
             serial_number,
             model_number,
             purchase_date,
@@ -381,7 +379,7 @@ impl Asset {
             maintenance_schedule_id,
             interval_days,
             documentation_keys,
-            workorder_ids,
+            work_order_ids,
             warranty_start_date,
             warranty_end_date,
             total_downtime_hours,
@@ -408,7 +406,7 @@ impl Asset {
 
         item.insert("id".to_string(), AttributeValue::S(self.id.clone()));
         item.insert("name".to_string(), AttributeValue::S(self.name.clone()));
-        item.insert("type_id".to_string(), AttributeValue::S(self.type_id.clone()));
+        item.insert("r#type_id".to_string(), AttributeValue::S(self.r#type_id.clone()));
         item.insert("serial_number".to_string(), AttributeValue::S(self.serial_number.clone()));
         item.insert("model_number".to_string(), AttributeValue::S(self.model_number.clone()));
         item.insert("purchase_date".to_string(), AttributeValue::S(self.purchase_date.to_string()));
@@ -448,10 +446,10 @@ impl Asset {
             );
         }
 
-        if !self.workorder_ids.is_empty() {
+        if !self.work_order_ids.is_empty() {
             item.insert(
-                "workorder_ids".to_string(),
-                AttributeValue::Ss(self.workorder_ids.clone())
+                "work_order_ids".to_string(),
+                AttributeValue::Ss(self.work_order_ids.clone())
             );
         }
 
@@ -494,8 +492,8 @@ impl Asset {
         &self.name
     }
 
-    async fn type_id(&self) -> &str {
-        &self.type_id
+    async fn r#type_id(&self) -> &str {
+        &self.r#type_id
     }
 
     async fn serial_number(&self) -> &str {
@@ -538,8 +536,8 @@ impl Asset {
         &self.documentation_keys
     }
 
-    async fn workorder_ids(&self) -> &Vec<String> {
-        &self.workorder_ids
+    async fn work_order_ids(&self) -> &Vec<String> {
+        &self.work_order_ids
     }
 
     async fn warranty_start_date(&self) -> Option<&DateTime<Utc>> {
