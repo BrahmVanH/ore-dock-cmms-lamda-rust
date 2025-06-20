@@ -368,12 +368,13 @@ impl Permission {
     async fn updated_at(&self) -> &DateTime<Utc> {
         &self.updated_at
     }
-
-    async fn expired(&self) -> bool {
+    #[graphql(name = "is_expired")]
+    async fn get_is_expired(&self) -> bool {
         self.is_expired()
     }
 
-    async fn check_action(&self, action: String) -> bool {
+    #[graphql(name = "allows_action")]
+    async fn check_allows_action(&self, action: String) -> bool {
         if let Ok(action_enum) = PermissionAction::from_string(&action) {
             self.allows_action(&action_enum)
         } else {
