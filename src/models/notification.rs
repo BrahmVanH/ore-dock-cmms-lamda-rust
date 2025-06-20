@@ -2,8 +2,8 @@ use std::collections::HashMap;
 
 use async_graphql::Object;
 use aws_sdk_dynamodb::types::AttributeValue;
-use chrono::{DateTime, Utc};
-use serde::{Deserialize, Serialize};
+use chrono::{ DateTime, Utc };
+use serde::{ Deserialize, Serialize };
 use serde_json::Value as Json;
 use tracing::info;
 
@@ -202,7 +202,7 @@ impl Notification {
         context: Option<Json>,
         severity: String,
         scheduled_at: DateTime<Utc>,
-        expires_at: Option<DateTime<Utc>>,
+        expires_at: Option<DateTime<Utc>>
     ) -> Result<Self, AppError> {
         let now = Utc::now();
 
@@ -393,8 +393,7 @@ impl Notification {
 
         // Convert delivered channels to string set
         if !self.delivered_channels.is_empty() {
-            let delivered_strings: Vec<String> = self
-                .delivered_channels
+            let delivered_strings: Vec<String> = self.delivered_channels
                 .iter()
                 .map(|c| c.to_str().to_string())
                 .collect();
@@ -403,8 +402,7 @@ impl Notification {
 
         // Convert failed channels to string set
         if !self.failed_channels.is_empty() {
-            let failed_strings: Vec<String> = self
-                .failed_channels
+            let failed_strings: Vec<String> = self.failed_channels
                 .iter()
                 .map(|c| c.to_str().to_string())
                 .collect();
@@ -470,11 +468,17 @@ impl Notification {
     }
 
     async fn delivered_channels(&self) -> Vec<String> {
-        self.delivered_channels.iter().map(|c| c.to_str().to_string()).collect()
+        self.delivered_channels
+            .iter()
+            .map(|c| c.to_str().to_string())
+            .collect()
     }
 
     async fn failed_channels(&self) -> Vec<String> {
-        self.failed_channels.iter().map(|c| c.to_str().to_string()).collect()
+        self.failed_channels
+            .iter()
+            .map(|c| c.to_str().to_string())
+            .collect()
     }
 
     async fn read_at(&self) -> Option<&DateTime<Utc>> {

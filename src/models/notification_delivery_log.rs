@@ -2,11 +2,11 @@ use std::collections::HashMap;
 
 use async_graphql::Object;
 use aws_sdk_dynamodb::types::AttributeValue;
-use chrono::{DateTime, Utc};
-use serde::{Deserialize, Serialize};
+use chrono::{ DateTime, Utc };
+use serde::{ Deserialize, Serialize };
 use tracing::info;
 
-use crate::{error::AppError, models::notification::NotificationChannels};
+use crate::{ error::AppError, models::notification::NotificationChannels };
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "snake_case")]
@@ -103,7 +103,7 @@ impl NotificationDeliveryLog {
         delivered_at: Option<DateTime<Utc>>,
         error_message: Option<String>,
         retry_count: i32,
-        recipient_address: Option<String>,
+        recipient_address: Option<String>
     ) -> Result<Self, AppError> {
         let now = Utc::now();
 
@@ -226,7 +226,10 @@ impl NotificationDeliveryLog {
         item.insert("id".to_string(), AttributeValue::S(self.id.clone()));
         item.insert("notification_id".to_string(), AttributeValue::S(self.notification_id.clone()));
         item.insert("channel".to_string(), AttributeValue::S(self.channel.to_str().to_string()));
-        item.insert("delivery_status".to_string(), AttributeValue::S(self.delivery_status.to_str().to_string()));
+        item.insert(
+            "delivery_status".to_string(),
+            AttributeValue::S(self.delivery_status.to_str().to_string())
+        );
         item.insert("attempted_at".to_string(), AttributeValue::S(self.attempted_at.to_string()));
 
         if let Some(delivered) = &self.delivered_at {

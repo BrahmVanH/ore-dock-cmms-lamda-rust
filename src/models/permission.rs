@@ -2,21 +2,21 @@ use std::collections::HashMap;
 
 use async_graphql::Object;
 use aws_sdk_dynamodb::types::AttributeValue;
-use chrono::{DateTime, Utc};
-use serde::{Deserialize, Serialize};
+use chrono::{ DateTime, Utc };
+use serde::{ Deserialize, Serialize };
 use serde_json::Value as Json;
 use tracing::info;
 
-use crate::{error::AppError, models::permission_log::{PermissionAction, ResourceType}};
+use crate::{ error::AppError, models::permission_log::{ PermissionAction, ResourceType } };
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub enum PermissionScope {
-    Global,     // System-wide access
+    Global, // System-wide access
     Organization, // Organization-level access
-    Location,   // Location-specific access
-    Asset,      // Asset-specific access
-    Own,        // Only own resources
+    Location, // Location-specific access
+    Asset, // Asset-specific access
+    Own, // Only own resources
 }
 
 impl PermissionScope {
@@ -108,7 +108,7 @@ impl Permission {
         resource_filters: Option<Json>,
         active: bool,
         expires_at: Option<DateTime<Utc>>,
-        created_by: String,
+        created_by: String
     ) -> Result<Self, AppError> {
         let now = Utc::now();
 
@@ -254,11 +254,13 @@ impl Permission {
 
         item.insert("id".to_string(), AttributeValue::S(self.id.clone()));
         item.insert("role_id".to_string(), AttributeValue::S(self.role_id.clone()));
-        item.insert("resource_type".to_string(), AttributeValue::S(self.resource_type.to_str().to_string()));
+        item.insert(
+            "resource_type".to_string(),
+            AttributeValue::S(self.resource_type.to_str().to_string())
+        );
 
         // Convert actions to string set
-        let action_strings: Vec<String> = self
-            .actions
+        let action_strings: Vec<String> = self.actions
             .iter()
             .map(|a| a.to_str().to_string())
             .collect();
@@ -300,11 +302,7 @@ impl Permission {
 
     /// Checks if the permission has expired
     pub fn is_expired(&self) -> bool {
-        if let Some(expires_at) = &self.expires_at {
-            Utc::now() > *expires_at
-        } else {
-            false
-        }
+        if let Some(expires_at) = &self.expires_at { Utc::now() > *expires_at } else { false }
     }
 
     /// Checks if permission applies to a specific resource
@@ -334,7 +332,10 @@ impl Permission {
     }
 
     async fn actions(&self) -> Vec<String> {
-        self.actions.iter().map(|a| a.to_str().to_string()).collect()
+        self.actions
+            .iter()
+            .map(|a| a.to_str().to_string())
+            .collect()
     }
 
     async fn scope(&self) -> &str {
