@@ -1,0 +1,212 @@
+{
+  "layout": "grid",
+  "columns": 12,
+  "rowHeight": 100,
+  "margin": [10, 10],
+  "containerPadding": [20, 20],
+  "breakpoints": {
+    "lg": 1200,
+    "md": 996,
+    "sm": 768,
+    "xs": 480,
+    "xxs": 0
+  },
+  "widgets": [
+    {
+      "id": "asset_summary",
+      "type": "asset_summary",
+      "title": "Asset Overview",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "w": 6,
+        "h": 4
+      },
+      "config": {
+        "showTotalAssets": true,
+        "showActiveAssets": true,
+        "showMaintenanceNeeded": true,
+        "showCriticalAlerts": true,
+        "refreshInterval": 30
+      },
+      "permissions": ["view_assets"],
+      "visible": true,
+      "resizable": true,
+      "draggable": true
+    },
+    {
+      "id": "maintenance_schedule",
+      "type": "maintenance_schedule",
+      "title": "Upcoming Maintenance",
+      "position": {
+        "x": 6,
+        "y": 0,
+        "w": 6,
+        "h": 4
+      },
+      "config": {
+        "daysAhead": 7,
+        "showOverdue": true,
+        "showCompleted": false,
+        "groupByLocation": true,
+        "maxItems": 10
+      },
+      "permissions": ["view_maintenance"],
+      "visible": true,
+      "resizable": true,
+      "draggable": true
+    },
+    {
+      "id": "recent_notifications",
+      "type": "notifications",
+      "title": "Recent Notifications",
+      "position": {
+        "x": 0,
+        "y": 4,
+        "w": 8,
+        "h": 3
+      },
+      "config": {
+        "maxItems": 5,
+        "showUnreadOnly": false,
+        "severityFilter": ["high", "critical"],
+        "autoMarkAsRead": false,
+        "showTimestamps": true
+      },
+      "permissions": ["view_notifications"],
+      "visible": true,
+      "resizable": true,
+      "draggable": true
+    },
+    {
+      "id": "quick_actions",
+      "type": "quick_actions",
+      "title": "Quick Actions",
+      "position": {
+        "x": 8,
+        "y": 4,
+        "w": 4,
+        "h": 3
+      },
+      "config": {
+        "actions": [
+          {
+            "id": "create_asset",
+            "label": "Add Asset",
+            "icon": "plus",
+            "route": "/assets/new",
+            "permission": "create_assets"
+          },
+          {
+            "id": "schedule_maintenance",
+            "label": "Schedule Maintenance",
+            "icon": "calendar",
+            "route": "/maintenance/new",
+            "permission": "create_maintenance"
+          },
+          {
+            "id": "view_reports",
+            "label": "View Reports",
+            "icon": "chart",
+            "route": "/reports",
+            "permission": "view_reports"
+          }
+        ]
+      },
+      "permissions": ["view_dashboard"],
+      "visible": true,
+      "resizable": false,
+      "draggable": true
+    },
+    {
+      "id": "location_status",
+      "type": "location_status",
+      "title": "Location Status",
+      "position": {
+        "x": 0,
+        "y": 7,
+        "w": 6,
+        "h": 4
+      },
+      "config": {
+        "showMap": true,
+        "showAssetCounts": true,
+        "filterByUserAccess": true,
+        "defaultLocation": null,
+        "zoomLevel": 10
+      },
+      "permissions": ["view_locations"],
+      "visible": true,
+      "resizable": true,
+      "draggable": true
+    },
+    {
+      "id": "performance_metrics",
+      "type": "metrics_chart",
+      "title": "Performance Metrics",
+      "position": {
+        "x": 6,
+        "y": 7,
+        "w": 6,
+        "h": 4
+      },
+      "config": {
+        "chartType": "line",
+        "timeRange": "7d",
+        "metrics": ["uptime", "maintenance_cost", "efficiency"],
+        "showLegend": true,
+        "showGrid": true,
+        "colors": ["#3498db", "#e74c3c", "#2ecc71"]
+      },
+      "permissions": ["view_metrics"],
+      "visible": true,
+      "resizable": true,
+      "draggable": true
+    }
+  ],
+  "themes": {
+    "light": {
+      "backgroundColor": "#ffffff",
+      "cardBackground": "#f8f9fa",
+      "textColor": "#2c3e50",
+      "borderColor": "#dee2e6"
+    },
+    "dark": {
+      "backgroundColor": "#1a1a1a",
+      "cardBackground": "#2d3748",
+      "textColor": "#e2e8f0",
+      "borderColor": "#4a5568"
+    }
+  },
+  "responsive": {
+    "lg": {
+      "columns": 12,
+      "breakpoint": 1200
+    },
+    "md": {
+      "columns": 10,
+      "breakpoint": 996
+    },
+    "sm": {
+      "columns": 6,
+      "breakpoint": 768
+    },
+    "xs": {
+      "columns": 4,
+      "breakpoint": 480
+    },
+    "xxs": {
+      "columns": 2,
+      "breakpoint": 0
+    }
+  },
+  "settings": {
+    "autoSave": true,
+    "saveInterval": 30000,
+    "allowWidgetRemoval": true,
+    "allowWidgetAddition": true,
+    "showGridLines": false,
+    "snapToGrid": true,
+    "compactMode": false
+  }
+}

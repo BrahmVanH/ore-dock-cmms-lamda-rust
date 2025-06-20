@@ -6,10 +6,7 @@ use chrono::{ DateTime, Utc };
 use serde::{ Deserialize, Serialize };
 use tracing::info;
 
-use crate::{
-    error::AppError,
-    models::{ notification::SeverityLevel, notification_delivery_log::NotificationChannels },
-};
+use crate::{ error::AppError, models::notification::{ SeverityLevel, NotificationChannels } };
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "snake_case")]

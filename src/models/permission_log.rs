@@ -2,8 +2,8 @@ use std::collections::HashMap;
 
 use async_graphql::Object;
 use aws_sdk_dynamodb::types::AttributeValue;
-use chrono::{DateTime, Utc};
-use serde::{Deserialize, Serialize};
+use chrono::{ DateTime, Utc };
+use serde::{ Deserialize, Serialize };
 use tracing::info;
 
 use crate::error::AppError;
@@ -220,7 +220,7 @@ impl PermissionLog {
         ip_address: String,
         user_agent: String,
         session_id: Option<String>,
-        role_at_time: Option<String>,
+        role_at_time: Option<String>
     ) -> Result<Self, AppError> {
         let now = Utc::now();
 
@@ -364,7 +364,10 @@ impl PermissionLog {
 
         item.insert("id".to_string(), AttributeValue::S(self.id.clone()));
         item.insert("user_id".to_string(), AttributeValue::S(self.user_id.clone()));
-        item.insert("resource_type".to_string(), AttributeValue::S(self.resource_type.to_str().to_string()));
+        item.insert(
+            "resource_type".to_string(),
+            AttributeValue::S(self.resource_type.to_str().to_string())
+        );
         item.insert("resource_id".to_string(), AttributeValue::S(self.resource_id.clone()));
         item.insert("action".to_string(), AttributeValue::S(self.action.to_str().to_string()));
         item.insert("status".to_string(), AttributeValue::S(self.status.to_str().to_string()));

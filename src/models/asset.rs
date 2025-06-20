@@ -88,7 +88,7 @@ impl MaintenanceFrequencyOptions {
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "snake_case")]
-enum AssetCurrentStatusOptions {
+pub enum AssetCurrentStatusOptions {
     Operational,
     Down,
     Maintenance,
