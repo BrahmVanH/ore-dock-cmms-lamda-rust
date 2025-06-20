@@ -12,7 +12,6 @@ pub mod permission;
 pub mod permission_log;
 pub mod role;
 pub mod role_hierarchy;
-pub mod task;
 pub mod temp_role_elevation;
 pub mod user;
 pub mod user_notification_preferences;
