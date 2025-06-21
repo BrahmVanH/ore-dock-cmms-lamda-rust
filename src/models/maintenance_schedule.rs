@@ -1,6 +1,5 @@
 use std::collections::HashMap;
 
-use async_graphql::Object;
 use aws_sdk_dynamodb::types::AttributeValue;
 use chrono::{ DateTime, Utc };
 use serde::{ Deserialize, Serialize };
@@ -26,11 +25,11 @@ pub struct MaintenanceCadence {
 }
 
 impl MaintenanceCadence {
-    pub fn to_string(&self) -> String {
+    pub(crate) fn to_string(&self) -> String {
         format!("{}_{}", self.interval, self.unit.to_str())
     }
 
-    pub fn from_string(s: &str) -> Result<Self, AppError> {
+    pub(crate) fn from_string(s: &str) -> Result<Self, AppError> {
         let parts: Vec<&str> = s.split('_').collect();
         if parts.len() != 2 {
             return Err(AppError::ValidationError("Invalid cadence format".to_string()));
@@ -44,7 +43,7 @@ impl MaintenanceCadence {
         Ok(Self { interval, unit })
     }
 
-    pub fn to_days(&self) -> Result<i32, AppError> {
+    pub(crate) fn to_days(&self) -> Result<i32, AppError> {
         match self.unit {
             CadenceUnit::Hours => Ok(self.interval / 24),
             CadenceUnit::Days => Ok(self.interval),
@@ -63,7 +62,7 @@ impl MaintenanceCadence {
 }
 
 impl CadenceUnit {
-    fn to_str(&self) -> &str {
+    pub(crate) fn to_str(&self) -> &str {
         match self {
             CadenceUnit::Hours => "hours",
             CadenceUnit::Days => "days",
@@ -75,7 +74,7 @@ impl CadenceUnit {
         }
     }
 
-    fn from_string(s: &str) -> Result<Self, AppError> {
+    pub(crate) fn from_string(s: &str) -> Result<Self, AppError> {
         match s {
             "hours" => Ok(Self::Hours),
             "days" => Ok(Self::Days),
@@ -163,7 +162,7 @@ impl MaintenanceSchedule {
     /// # Returns
     ///
     /// 'Some' MaintenanceSchedule if item fields match, 'None' otherwise
-    pub fn from_item(item: &HashMap<String, AttributeValue>) -> Option<Self> {
+    pub(crate) fn from_item(item: &HashMap<String, AttributeValue>) -> Option<Self> {
         let id = item.get("id")?.as_s().ok()?.to_string();
         let asset_id = item.get("asset_id")?.as_s().ok()?.to_string();
 
@@ -235,8 +234,8 @@ impl MaintenanceSchedule {
             last_completed_by_user_id,
             next_due_at,
             duration_estimate,
-            recurring,
-            active,
+            recurring: *recurring,
+            active: *active,
             created_at,
             updated_at,
         });
@@ -253,7 +252,7 @@ impl MaintenanceSchedule {
     /// # Returns
     ///
     /// HashMap representing DB item for MaintenanceSchedule instance
-    pub fn to_item(&self) -> HashMap<String, AttributeValue> {
+    pub(crate)  fn to_item(&self) -> HashMap<String, AttributeValue> {
         let mut item = HashMap::new();
 
         item.insert("id".to_string(), AttributeValue::S(self.id.clone()));
