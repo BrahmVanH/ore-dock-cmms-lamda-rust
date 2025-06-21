@@ -1,6 +1,7 @@
+use ore_dock_cmms_lambda::{ models::prelude::*, schema::build_schema, error::AppError };
+
 use aws_sdk_dynamodb::Client;
 use axum::{ extract::Extension, http::Method, middleware::from_fn, routing::get, Router };
-use error::AppError;
 use schema::{ MutationRoot, QueryRoot };
 use tower::builder::ServiceBuilder;
 use tower_http::{ compression::CompressionLayer, cors::{ Any, CorsLayer } };
@@ -14,10 +15,6 @@ use tracing::{ warn, error };
 
 use std::sync::{ Arc, Mutex };
 
-mod schema;
-mod error;
-mod db;
-mod models;
 mod auth;
 
 // App state, replace with dynamo db connection

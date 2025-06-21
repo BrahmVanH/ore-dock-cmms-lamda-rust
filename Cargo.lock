@@ -1769,35 +1769,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "lambda-rust"
-version = "0.1.0"
-dependencies = [
- "argon2",
- "async-graphql",
- "async-graphql-axum",
- "aws-config",
- "aws-sdk-dynamodb",
- "axum",
- "axum-extra",
- "chrono",
- "dotenvy",
- "jsonwebtoken",
- "rand_core 0.9.3",
- "regex",
- "rust_decimal",
- "serde",
- "serde_json",
- "thiserror 2.0.12",
- "time",
- "tokio",
- "tower",
- "tower-http",
- "tracing",
- "tracing-subscriber",
- "uuid",
-]
-
-[[package]]
 name = "lazy_static"
 version = "1.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2003,6 +1974,35 @@ name = "openssl-probe"
 version = "0.1.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d05e27ee213611ffe7d6348b942e8f942b37114c00cc03cec254295a4a17852e"
+
+[[package]]
+name = "ore_dock_cmms_lambda"
+version = "0.1.0"
+dependencies = [
+ "argon2",
+ "async-graphql",
+ "async-graphql-axum",
+ "aws-config",
+ "aws-sdk-dynamodb",
+ "axum",
+ "axum-extra",
+ "chrono",
+ "dotenvy",
+ "jsonwebtoken",
+ "rand_core 0.9.3",
+ "regex",
+ "rust_decimal",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.12",
+ "time",
+ "tokio",
+ "tower",
+ "tower-http",
+ "tracing",
+ "tracing-subscriber",
+ "uuid",
+]
 
 [[package]]
 name = "outref"

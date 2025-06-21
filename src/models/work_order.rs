@@ -1,10 +1,9 @@
 use std::collections::HashMap;
 
-use async_graphql::Object;
 use aws_sdk_dynamodb::types::AttributeValue;
-use chrono::{DateTime, Utc};
+use chrono::{ DateTime, Utc };
 use rust_decimal::Decimal;
-use serde::{Deserialize, Serialize};
+use serde::{ Deserialize, Serialize };
 use serde_json::Value as Json;
 use tracing::info;
 
@@ -13,20 +12,20 @@ use crate::error::AppError;
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub enum WorkOrderStatus {
-    Draft,          // Draft work order not yet scheduled
-    Scheduled,      // Scheduled but not started
-    InProgress,     // Currently being worked on
-    OnHold,         // Temporarily paused
-    Completed,      // Work completed successfully
-    Cancelled,      // Work order cancelled
-    Failed,         // Work failed and needs to be rescheduled
-    Deferred,       // Deferred to a later time
-    WaitingParts,   // Waiting for parts/materials
+    Draft, // Draft work order not yet scheduled
+    Scheduled, // Scheduled but not started
+    InProgress, // Currently being worked on
+    OnHold, // Temporarily paused
+    Completed, // Work completed successfully
+    Cancelled, // Work order cancelled
+    Failed, // Work failed and needs to be rescheduled
+    Deferred, // Deferred to a later time
+    WaitingParts, // Waiting for parts/materials
     WaitingApproval, // Waiting for approval to proceed
 }
 
 impl WorkOrderStatus {
-    fn to_str(&self) -> &str {
+    pub(crate) fn to_str(&self) -> &str {
         match self {
             WorkOrderStatus::Draft => "draft",
             WorkOrderStatus::Scheduled => "scheduled",
@@ -41,11 +40,11 @@ impl WorkOrderStatus {
         }
     }
 
-    fn to_string(&self) -> String {
+    pub(crate) fn to_string(&self) -> String {
         self.to_str().to_string()
     }
 
-    fn from_string(s: &str) -> Result<WorkOrderStatus, AppError> {
+    pub(crate) fn from_string(s: &str) -> Result<WorkOrderStatus, AppError> {
         match s {
             "draft" => Ok(Self::Draft),
             "scheduled" => Ok(Self::Scheduled),
@@ -65,15 +64,15 @@ impl WorkOrderStatus {
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub enum WorkOrderPriority {
-    Low,        // Low priority, can be scheduled later
-    Normal,     // Normal priority
-    High,       // High priority, should be addressed soon
-    Urgent,     // Urgent, needs immediate attention
-    Emergency,  // Emergency, critical safety or operational issue
+    Low, // Low priority, can be scheduled later
+    Normal, // Normal priority
+    High, // High priority, should be addressed soon
+    Urgent, // Urgent, needs immediate attention
+    Emergency, // Emergency, critical safety or operational issue
 }
 
 impl WorkOrderPriority {
-    fn to_str(&self) -> &str {
+    pub(crate) fn to_str(&self) -> &str {
         match self {
             WorkOrderPriority::Low => "low",
             WorkOrderPriority::Normal => "normal",
@@ -83,11 +82,11 @@ impl WorkOrderPriority {
         }
     }
 
-    fn to_string(&self) -> String {
+    pub(crate) fn to_string(&self) -> String {
         self.to_str().to_string()
     }
 
-    fn from_string(s: &str) -> Result<WorkOrderPriority, AppError> {
+    pub(crate) fn from_string(s: &str) -> Result<WorkOrderPriority, AppError> {
         match s {
             "low" => Ok(Self::Low),
             "normal" => Ok(Self::Normal),
@@ -102,20 +101,20 @@ impl WorkOrderPriority {
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub enum WorkOrderType {
-    Preventive,     // Preventive maintenance
-    Corrective,     // Corrective/repair work
-    Emergency,      // Emergency repairs
-    Inspection,     // Inspection work
-    Calibration,    // Equipment calibration
-    Installation,   // New equipment installation
-    Upgrade,        // Equipment upgrades
-    Replacement,    // Equipment replacement
-    Cleaning,       // Cleaning/housekeeping
-    Safety,         // Safety-related work
+    Preventive, // Preventive maintenance
+    Corrective, // Corrective/repair work
+    Emergency, // Emergency repairs
+    Inspection, // Inspection work
+    Calibration, // Equipment calibration
+    Installation, // New equipment installation
+    Upgrade, // Equipment upgrades
+    Replacement, // Equipment replacement
+    Cleaning, // Cleaning/housekeeping
+    Safety, // Safety-related work
 }
 
 impl WorkOrderType {
-    fn to_str(&self) -> &str {
+    pub(crate) fn to_str(&self) -> &str {
         match self {
             WorkOrderType::Preventive => "preventive",
             WorkOrderType::Corrective => "corrective",
@@ -130,11 +129,11 @@ impl WorkOrderType {
         }
     }
 
-    fn to_string(&self) -> String {
+    pub(crate) fn to_string(&self) -> String {
         self.to_str().to_string()
     }
 
-    fn from_string(s: &str) -> Result<WorkOrderType, AppError> {
+    pub(crate) fn from_string(s: &str) -> Result<WorkOrderType, AppError> {
         match s {
             "preventive" => Ok(Self::Preventive),
             "corrective" => Ok(Self::Corrective),
@@ -299,7 +298,7 @@ impl WorkOrder {
         attachment_urls: Vec<String>,
         tags: Vec<String>,
         custom_fields: Option<Json>,
-        created_by: String,
+        created_by: String
     ) -> Result<Self, AppError> {
         let now = Utc::now();
 
@@ -325,7 +324,9 @@ impl WorkOrder {
         }
 
         if requested_by_user_id.trim().is_empty() {
-            return Err(AppError::ValidationError("Requested by user ID cannot be empty".to_string()));
+            return Err(
+                AppError::ValidationError("Requested by user ID cannot be empty".to_string())
+            );
         }
 
         if created_by.trim().is_empty() {
@@ -334,7 +335,9 @@ impl WorkOrder {
 
         // Validate estimated duration
         if estimated_duration_minutes <= 0 {
-            return Err(AppError::ValidationError("Estimated duration must be positive".to_string()));
+            return Err(
+                AppError::ValidationError("Estimated duration must be positive".to_string())
+            );
         }
 
         // Validate estimated cost
@@ -345,7 +348,11 @@ impl WorkOrder {
         // Validate scheduled dates
         if let Some(end) = &scheduled_end {
             if *end <= scheduled_start {
-                return Err(AppError::ValidationError("Scheduled end must be after scheduled start".to_string()));
+                return Err(
+                    AppError::ValidationError(
+                        "Scheduled end must be after scheduled start".to_string()
+                    )
+                );
             }
         }
 
@@ -406,7 +413,7 @@ impl WorkOrder {
     /// # Returns
     ///
     /// 'Some' WorkOrder if item fields match, 'None' otherwise
-    pub fn from_item(item: &HashMap<String, AttributeValue>) -> Option<Self> {
+    pub(crate) fn from_item(item: &HashMap<String, AttributeValue>) -> Option<Self> {
         info!("calling from_item with: {:?}", &item);
 
         let id = item.get("id")?.as_s().ok()?.to_string();
@@ -446,8 +453,7 @@ impl WorkOrder {
             .get("assigned_team_ids")
             .and_then(|v| v.as_ss().ok())
             .map(|ids| {
-                ids
-                    .iter()
+                ids.iter()
                     .map(|s| s.to_string())
                     .collect()
             })
@@ -528,8 +534,7 @@ impl WorkOrder {
             .get("safety_requirements")
             .and_then(|v| v.as_ss().ok())
             .map(|reqs| {
-                reqs
-                    .iter()
+                reqs.iter()
                     .map(|s| s.to_string())
                     .collect()
             })
@@ -573,7 +578,7 @@ impl WorkOrder {
         let follow_up_required = item
             .get("follow_up_required")
             .and_then(|v| v.as_bool().ok())
-            .unwrap_or(false);
+            .unwrap_or(&false);
 
         let follow_up_date = item
             .get("follow_up_date")
@@ -584,8 +589,7 @@ impl WorkOrder {
             .get("attachment_urls")
             .and_then(|v| v.as_ss().ok())
             .map(|urls| {
-                urls
-                    .iter()
+                urls.iter()
                     .map(|s| s.to_string())
                     .collect()
             })
@@ -655,7 +659,7 @@ impl WorkOrder {
             vendor_id,
             purchase_order_number,
             warranty_expiration,
-            follow_up_required,
+            follow_up_required: *follow_up_required,
             follow_up_date,
             attachment_urls,
             tags,
@@ -678,11 +682,14 @@ impl WorkOrder {
     /// # Returns
     ///
     /// HashMap representing DB item for WorkOrder instance
-    pub fn to_item(&self) -> HashMap<String, AttributeValue> {
+    pub(crate) fn to_item(&self) -> HashMap<String, AttributeValue> {
         let mut item = HashMap::new();
 
         item.insert("id".to_string(), AttributeValue::S(self.id.clone()));
-        item.insert("work_order_number".to_string(), AttributeValue::S(self.work_order_number.clone()));
+        item.insert(
+            "work_order_number".to_string(),
+            AttributeValue::S(self.work_order_number.clone())
+        );
         item.insert("title".to_string(), AttributeValue::S(self.title.clone()));
         item.insert("description".to_string(), AttributeValue::S(self.description.clone()));
 
@@ -691,8 +698,14 @@ impl WorkOrder {
         }
 
         item.insert("asset_id".to_string(), AttributeValue::S(self.asset_id.clone()));
-        item.insert("asset_location_id".to_string(), AttributeValue::S(self.asset_location_id.clone()));
-        item.insert("work_order_type".to_string(), AttributeValue::S(self.work_order_type.to_str().to_string()));
+        item.insert(
+            "asset_location_id".to_string(),
+            AttributeValue::S(self.asset_location_id.clone())
+        );
+        item.insert(
+            "work_order_type".to_string(),
+            AttributeValue::S(self.work_order_type.to_str().to_string())
+        );
         item.insert("status".to_string(), AttributeValue::S(self.status.to_str().to_string()));
         item.insert("priority".to_string(), AttributeValue::S(self.priority.to_str().to_string()));
 
@@ -701,16 +714,25 @@ impl WorkOrder {
         }
 
         if !self.assigned_team_ids.is_empty() {
-            item.insert("assigned_team_ids".to_string(), AttributeValue::Ss(self.assigned_team_ids.clone()));
+            item.insert(
+                "assigned_team_ids".to_string(),
+                AttributeValue::Ss(self.assigned_team_ids.clone())
+            );
         }
 
-        item.insert("requested_by_user_id".to_string(), AttributeValue::S(self.requested_by_user_id.clone()));
+        item.insert(
+            "requested_by_user_id".to_string(),
+            AttributeValue::S(self.requested_by_user_id.clone())
+        );
 
         if let Some(approved_by) = &self.approved_by_user_id {
             item.insert("approved_by_user_id".to_string(), AttributeValue::S(approved_by.clone()));
         }
 
-        item.insert("scheduled_start".to_string(), AttributeValue::S(self.scheduled_start.to_string()));
+        item.insert(
+            "scheduled_start".to_string(),
+            AttributeValue::S(self.scheduled_start.to_string())
+        );
 
         if let Some(scheduled_end) = &self.scheduled_end {
             item.insert("scheduled_end".to_string(), AttributeValue::S(scheduled_end.to_string()));
@@ -724,13 +746,22 @@ impl WorkOrder {
             item.insert("actual_end".to_string(), AttributeValue::S(actual_end.to_string()));
         }
 
-        item.insert("estimated_duration_minutes".to_string(), AttributeValue::N(self.estimated_duration_minutes.to_string()));
+        item.insert(
+            "estimated_duration_minutes".to_string(),
+            AttributeValue::N(self.estimated_duration_minutes.to_string())
+        );
 
         if let Some(actual_duration) = &self.actual_duration_minutes {
-            item.insert("actual_duration_minutes".to_string(), AttributeValue::N(actual_duration.to_string()));
+            item.insert(
+                "actual_duration_minutes".to_string(),
+                AttributeValue::N(actual_duration.to_string())
+            );
         }
 
-        item.insert("estimated_cost".to_string(), AttributeValue::S(self.estimated_cost.to_string()));
+        item.insert(
+            "estimated_cost".to_string(),
+            AttributeValue::S(self.estimated_cost.to_string())
+        );
 
         if let Some(actual_cost) = &self.actual_cost {
             item.insert("actual_cost".to_string(), AttributeValue::S(actual_cost.to_string()));
@@ -747,11 +778,17 @@ impl WorkOrder {
         }
 
         if !self.tools_required.is_empty() {
-            item.insert("tools_required".to_string(), AttributeValue::Ss(self.tools_required.clone()));
+            item.insert(
+                "tools_required".to_string(),
+                AttributeValue::Ss(self.tools_required.clone())
+            );
         }
 
         if !self.safety_requirements.is_empty() {
-            item.insert("safety_requirements".to_string(), AttributeValue::Ss(self.safety_requirements.clone()));
+            item.insert(
+                "safety_requirements".to_string(),
+                AttributeValue::Ss(self.safety_requirements.clone())
+            );
         }
 
         if let Some(notes) = &self.completion_notes {
@@ -767,7 +804,10 @@ impl WorkOrder {
         }
 
         if let Some(satisfaction) = &self.customer_satisfaction {
-            item.insert("customer_satisfaction".to_string(), AttributeValue::N(satisfaction.to_string()));
+            item.insert(
+                "customer_satisfaction".to_string(),
+                AttributeValue::N(satisfaction.to_string())
+            );
         }
 
         if let Some(vendor) = &self.vendor_id {
@@ -782,14 +822,20 @@ impl WorkOrder {
             item.insert("warranty_expiration".to_string(), AttributeValue::S(warranty.to_string()));
         }
 
-        item.insert("follow_up_required".to_string(), AttributeValue::Bool(self.follow_up_required));
+        item.insert(
+            "follow_up_required".to_string(),
+            AttributeValue::Bool(self.follow_up_required)
+        );
 
         if let Some(follow_up) = &self.follow_up_date {
             item.insert("follow_up_date".to_string(), AttributeValue::S(follow_up.to_string()));
         }
 
         if !self.attachment_urls.is_empty() {
-            item.insert("attachment_urls".to_string(), AttributeValue::Ss(self.attachment_urls.clone()));
+            item.insert(
+                "attachment_urls".to_string(),
+                AttributeValue::Ss(self.attachment_urls.clone())
+            );
         }
 
         if !self.tags.is_empty() {
@@ -831,7 +877,9 @@ impl WorkOrder {
     /// Starts the work order
     pub fn start_work(&mut self, technician_id: String) -> Result<(), AppError> {
         if !matches!(self.status, WorkOrderStatus::Scheduled) {
-            return Err(AppError::ValidationError("Only scheduled work orders can be started".to_string()));
+            return Err(
+                AppError::ValidationError("Only scheduled work orders can be started".to_string())
+            );
         }
 
         self.status = WorkOrderStatus::InProgress;
@@ -842,15 +890,25 @@ impl WorkOrder {
     }
 
     /// Completes the work order
-    pub fn complete_work(&mut self, completion_notes: Option<String>, quality_rating: Option<i32>) -> Result<(), AppError> {
+    pub fn complete_work(
+        &mut self,
+        completion_notes: Option<String>,
+        quality_rating: Option<i32>
+    ) -> Result<(), AppError> {
         if !matches!(self.status, WorkOrderStatus::InProgress) {
-            return Err(AppError::ValidationError("Only in-progress work orders can be completed".to_string()));
+            return Err(
+                AppError::ValidationError(
+                    "Only in-progress work orders can be completed".to_string()
+                )
+            );
         }
 
         // Validate quality rating
         if let Some(rating) = quality_rating {
             if rating < 1 || rating > 5 {
-                return Err(AppError::ValidationError("Quality rating must be between 1 and 5".to_string()));
+                return Err(
+                    AppError::ValidationError("Quality rating must be between 1 and 5".to_string())
+                );
             }
         }
 
@@ -873,7 +931,11 @@ impl WorkOrder {
     /// Cancels the work order
     pub fn cancel_work(&mut self, reason: String) -> Result<(), AppError> {
         if matches!(self.status, WorkOrderStatus::Completed | WorkOrderStatus::Cancelled) {
-            return Err(AppError::ValidationError("Cannot cancel completed or already cancelled work order".to_string()));
+            return Err(
+                AppError::ValidationError(
+                    "Cannot cancel completed or already cancelled work order".to_string()
+                )
+            );
         }
 
         self.status = WorkOrderStatus::Cancelled;
@@ -885,7 +947,11 @@ impl WorkOrder {
     /// Puts the work order on hold
     pub fn put_on_hold(&mut self, reason: String) -> Result<(), AppError> {
         if !matches!(self.status, WorkOrderStatus::InProgress | WorkOrderStatus::Scheduled) {
-            return Err(AppError::ValidationError("Only scheduled or in-progress work orders can be put on hold".to_string()));
+            return Err(
+                AppError::ValidationError(
+                    "Only scheduled or in-progress work orders can be put on hold".to_string()
+                )
+            );
         }
 
         self.status = WorkOrderStatus::OnHold;
@@ -897,7 +963,9 @@ impl WorkOrder {
     /// Resumes work from hold
     pub fn resume_from_hold(&mut self) -> Result<(), AppError> {
         if !matches!(self.status, WorkOrderStatus::OnHold) {
-            return Err(AppError::ValidationError("Only work orders on hold can be resumed".to_string()));
+            return Err(
+                AppError::ValidationError("Only work orders on hold can be resumed".to_string())
+            );
         }
 
         self.status = if self.actual_start.is_some() {

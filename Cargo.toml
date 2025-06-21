@@ -1,5 +1,5 @@
 [package]
-name = "lambda-rust"
+name = "ore_dock_cmms_lambda"
 version = "0.1.0"
 edition = "2024"
 

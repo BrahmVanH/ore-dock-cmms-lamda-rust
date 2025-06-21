@@ -1,3 +1,4 @@
+use crate::models::{ prelude::*, work_order::{ WorkOrderPriority, WorkOrderType } };
 
 #[Object]
 impl WorkOrder {
@@ -165,15 +166,18 @@ impl WorkOrder {
         &self.updated_at
     }
 
-    async fn is_in_progress(&self) -> bool {
+    #[graphql(name = "is_in_progress")]
+    async fn check_is_in_progress(&self) -> bool {
         self.is_in_progress()
     }
 
-    async fn is_completed(&self) -> bool {
+    #[graphql(name = "is_completed")]
+    async fn check_is_completed(&self) -> bool {
         self.is_completed()
     }
 
-    async fn is_overdue(&self) -> bool {
+    #[graphql(name = "is_overdue")]
+    async fn check_is_overdue(&self) -> bool {
         self.is_overdue()
     }
 
@@ -191,8 +195,8 @@ impl WorkOrder {
     }
 
     async fn is_emergency(&self) -> bool {
-        matches!(self.priority, WorkOrderPriority::Emergency) || 
-        matches!(self.work_order_type, WorkOrderType::Emergency)
+        matches!(self.priority, WorkOrderPriority::Emergency) ||
+            matches!(self.work_order_type, WorkOrderType::Emergency)
     }
 
     async fn has_vendor(&self) -> bool {
