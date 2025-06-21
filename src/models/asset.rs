@@ -1,13 +1,12 @@
 use std::collections::HashMap;
 
-use async_graphql::Object;
 use aws_sdk_dynamodb::types::AttributeValue;
-use chrono::{ DateTime, Utc };
+use chrono::{ offset::LocalResult, DateTime, TimeZone, Utc };
 use rust_decimal::Decimal;
 use serde::{ Deserialize, Serialize };
 use tracing::info;
 
-use crate::{ error::AppError, models::maintenance_schedule };
+use crate::error::AppError;
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "snake_case")]
@@ -27,13 +26,6 @@ impl MaintenanceFrequencyOptions {
             &MaintenanceFrequencyOptions::Quarterly => "quarterly".to_string(),
             &MaintenanceFrequencyOptions::Monthly => "monthly".to_string(),
             &MaintenanceFrequencyOptions::AsNeeded => "as-needed".to_string(),
-            _ => {
-                return Err(
-                    AppError::DatabaseError(
-                        "Invalid maintenance frequency option for asset".to_string()
-                    )
-                );
-            }
         }
     }
     fn to_str(&self) -> &str {
@@ -43,13 +35,6 @@ impl MaintenanceFrequencyOptions {
             &MaintenanceFrequencyOptions::Quarterly => "quarterly",
             &MaintenanceFrequencyOptions::Monthly => "monthly",
             &MaintenanceFrequencyOptions::AsNeeded => "as-needed",
-            _ => {
-                return Err(
-                    AppError::DatabaseError(
-                        "Invalid maintenance frequency option for asset".to_string()
-                    )
-                );
-            }
         }
     }
     fn from_string(s: &str) -> Result<MaintenanceFrequencyOptions, AppError> {
@@ -59,13 +44,6 @@ impl MaintenanceFrequencyOptions {
             "quarterly" => Ok(Self::Quarterly),
             "monthly" => Ok(Self::Monthly),
             "as-needed" => Ok(Self::AsNeeded),
-            _ => {
-                return Err(
-                    AppError::DatabaseError(
-                        "Invalid maintenance frequency option string for asset".to_string()
-                    )
-                );
-            }
         }
     }
     fn to_days(f: &MaintenanceFrequencyOptions) -> Result<i32, AppError> {
@@ -75,13 +53,6 @@ impl MaintenanceFrequencyOptions {
             &MaintenanceFrequencyOptions::Quarterly => Ok(90),
             &MaintenanceFrequencyOptions::Monthly => Ok(30),
             &MaintenanceFrequencyOptions::AsNeeded => Ok(0),
-            _ => {
-                return Err(
-                    AppError::DatabaseError(
-                        "Invalid maintenance frequency option for asset".to_string()
-                    )
-                );
-            }
         }
     }
 }
@@ -104,13 +75,6 @@ impl AssetCurrentStatusOptions {
             &AssetCurrentStatusOptions::Maintenance => "maintenance".to_string(),
             &AssetCurrentStatusOptions::Retired => "retired".to_string(),
             &AssetCurrentStatusOptions::NeedsAttention => "needs-attention".to_string(),
-            _ => {
-                return Err(
-                    AppError::DatabaseError(
-                        "Invalid maintenance frequency option for asset".to_string()
-                    )
-                );
-            }
         }
     }
     fn to_str(&self) -> &str {
@@ -120,13 +84,6 @@ impl AssetCurrentStatusOptions {
             &AssetCurrentStatusOptions::Maintenance => "maintenance",
             &AssetCurrentStatusOptions::Retired => "retired",
             &AssetCurrentStatusOptions::NeedsAttention => "needs-attention",
-            _ => {
-                return Err(
-                    AppError::DatabaseError(
-                        "Invalid maintenance frequency option for asset".to_string()
-                    )
-                );
-            }
         }
     }
     fn from_string(s: &str) -> Result<AssetCurrentStatusOptions, AppError> {
@@ -223,7 +180,7 @@ impl Asset {
         r#type_id: String,
         serial_number: String,
         model_number: String,
-        purchase_date: Option<DateTime<Utc>>,
+        purchase_date: DateTime<Utc>,
         installation_date: DateTime<Utc>,
         location_id: String,
         manufacturer_id: String,
@@ -250,12 +207,15 @@ impl Asset {
             maintenance_frequency: maint_freq,
             maintenance_schedule_id: None,
             interval_days: maint_freq_days,
-            documentation_keys: None,
+            documentation_keys: Vec::new(),
             work_order_ids: Vec::new(),
             warranty_start_date,
             warranty_end_date,
-            total_downtime_hours: 0.0,
-            last_downtime_date: Utc.timestamp_opt(0, 0),
+            total_downtime_hours: Decimal::new(0, 0),
+            last_downtime_date: match Utc.timestamp_opt(0, 0) {
+                LocalResult::Single(d) => d,
+                _ => DateTime::<Utc>::UNIX_EPOCH,
+            },
             created_at: Utc::now(),
             updated_at: Utc::now(),
         })
@@ -269,7 +229,7 @@ impl Asset {
     /// # Returns
     ///
     /// 'Some' Asset if item fields match, 'None' otherwise
-    pub fn from_item(item: &HashMap<String, AttributeValue>) -> Option<Self> {
+    pub(crate) fn from_item(item: &HashMap<String, AttributeValue>) -> Option<Self> {
         info!("calling from_item with: {:?}", &item);
 
         let id = item.get("id")?.as_s().ok()?.to_string();
@@ -401,7 +361,7 @@ impl Asset {
     /// # Returns
     ///
     /// HashMap representing DB item for Asset instance
-    pub fn to_item(&self) -> HashMap<String, AttributeValue> {
+    pub(crate)  fn to_item(&self) -> HashMap<String, AttributeValue> {
         let mut item = HashMap::new();
 
         item.insert("id".to_string(), AttributeValue::S(self.id.clone()));
@@ -479,88 +439,5 @@ impl Asset {
         item.insert("updated_at".to_string(), AttributeValue::S(self.updated_at.to_string()));
 
         item
-    }
-}
-
-#[Object]
-impl Asset {
-    async fn id(&self) -> &str {
-        &self.id
-    }
-
-    async fn name(&self) -> &str {
-        &self.name
-    }
-
-    async fn r#type_id(&self) -> &str {
-        &self.r#type_id
-    }
-
-    async fn serial_number(&self) -> &str {
-        &self.serial_number
-    }
-
-    async fn model_number(&self) -> &str {
-        &self.model_number
-    }
-
-    async fn purchase_date(&self) -> &DateTime<Utc> {
-        &self.purchase_date
-    }
-
-    async fn installation_date(&self) -> &DateTime<Utc> {
-        &self.installation_date
-    }
-
-    async fn current_status(&self) -> &str {
-        self.current_status.to_str()
-    }
-
-    async fn location_id(&self) -> &str {
-        &self.location_id
-    }
-
-    async fn manufacturer_id(&self) -> &str {
-        &self.manufacturer_id
-    }
-
-    async fn maintenance_frequency(&self) -> &str {
-        self.maintenance_frequency.to_str()
-    }
-
-    async fn interval_days(&self) -> i32 {
-        self.interval_days
-    }
-
-    async fn documentation_keys(&self) -> &Vec<String> {
-        &self.documentation_keys
-    }
-
-    async fn work_order_ids(&self) -> &Vec<String> {
-        &self.work_order_ids
-    }
-
-    async fn warranty_start_date(&self) -> Option<&DateTime<Utc>> {
-        self.warranty_start_date.as_ref()
-    }
-
-    async fn warranty_end_date(&self) -> Option<&DateTime<Utc>> {
-        self.warranty_end_date.as_ref()
-    }
-
-    async fn total_downtime_hours(&self) -> String {
-        self.total_downtime_hours.to_string()
-    }
-
-    async fn last_downtime_date(&self) -> &DateTime<Utc> {
-        &self.last_downtime_date
-    }
-
-    async fn created_at(&self) -> &DateTime<Utc> {
-        &self.created_at
-    }
-
-    async fn updated_at(&self) -> &DateTime<Utc> {
-        &self.updated_at
     }
 }

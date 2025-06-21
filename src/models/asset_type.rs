@@ -1,6 +1,5 @@
 use std::collections::HashMap;
 
-use async_graphql::Object;
 use aws_sdk_dynamodb::types::AttributeValue;
 use chrono::{ DateTime, Utc };
 use serde::{ Deserialize, Serialize };
@@ -27,7 +26,7 @@ impl AssetType {
         }
     }
 
-    pub fn validate(&self) -> Result<(), String> {
+    pub(crate)  fn validate(&self) -> Result<(), String> {
         if self.name.trim().is_empty() || self.description.trim().is_empty() {
             return Err("Name and Description cannot be empty".to_string());
         }
@@ -35,7 +34,7 @@ impl AssetType {
         Ok(())
     }
 
-    pub fn from_item(item: &HashMap<String, AttributeValue>) -> Option<Self> {
+    pub(crate)  fn from_item(item: &HashMap<String, AttributeValue>) -> Option<Self> {
         let id = item.get("id")?.as_s().ok()?.to_string();
         let name = item.get("name")?.as_s().ok()?.to_string();
         let description = item.get("description")?.as_s().ok()?.to_string();
@@ -62,7 +61,7 @@ impl AssetType {
         res
     }
 
-    pub fn to_item(&self) -> HashMap<String, AttributeValue> {
+    pub(crate)  fn to_item(&self) -> HashMap<String, AttributeValue> {
         let mut item = HashMap::new();
 
         item.insert("id".to_string(), AttributeValue::S(self.id.clone()));
@@ -72,28 +71,5 @@ impl AssetType {
         item.insert("updated_at".to_string(), AttributeValue::S(self.updated_at.to_string()));
 
         item
-    }
-}
-
-#[Object]
-impl AssetType {
-    async fn id(&self) -> &str {
-        &self.id
-    }
-
-    async fn name(&self) -> &str {
-        &self.name
-    }
-
-    async fn description(&self) -> &str {
-        &self.description
-    }
-
-    async fn created_at(&self) -> &DateTime<Utc> {
-        &self.created_at
-    }
-
-    async fn updated_at(&self) -> &DateTime<Utc> {
-        &self.updated_at
     }
 }
