@@ -19,7 +19,7 @@ pub enum RoleAssignmentStatus {
 }
 
 impl RoleAssignmentStatus {
-    fn to_str(&self) -> &str {
+    pub(crate) fn to_str(&self) -> &str {
         match self {
             RoleAssignmentStatus::Active => "active",
             RoleAssignmentStatus::Suspended => "suspended",
@@ -29,11 +29,11 @@ impl RoleAssignmentStatus {
         }
     }
 
-    fn to_string(&self) -> String {
+    pub(crate) fn to_string(&self) -> String {
         self.to_str().to_string()
     }
 
-    fn from_string(s: &str) -> Result<RoleAssignmentStatus, AppError> {
+    pub(crate) fn from_string(s: &str) -> Result<RoleAssignmentStatus, AppError> {
         match s {
             "active" => Ok(Self::Active),
             "suspended" => Ok(Self::Suspended),
@@ -56,7 +56,7 @@ pub enum AssignmentSource {
 }
 
 impl AssignmentSource {
-    fn to_str(&self) -> &str {
+    pub(crate) fn to_str(&self) -> &str {
         match self {
             AssignmentSource::Manual => "manual",
             AssignmentSource::Automatic => "automatic",
@@ -66,11 +66,11 @@ impl AssignmentSource {
         }
     }
 
-    fn to_string(&self) -> String {
+    pub(crate) fn to_string(&self) -> String {
         self.to_str().to_string()
     }
 
-    fn from_string(s: &str) -> Result<AssignmentSource, AppError> {
+    pub(crate) fn from_string(s: &str) -> Result<AssignmentSource, AppError> {
         match s {
             "manual" => Ok(Self::Manual),
             "automatic" => Ok(Self::Automatic),
@@ -213,7 +213,7 @@ impl UserRole {
     /// # Returns
     ///
     /// 'Some' UserRole if item fields match, 'None' otherwise
-    pub fn from_item(item: &HashMap<String, AttributeValue>) -> Option<Self> {
+    pub(crate) fn from_item(item: &HashMap<String, AttributeValue>) -> Option<Self> {
         info!("calling from_item with: {:?}", &item);
 
         let id = item.get("id")?.as_s().ok()?.to_string();
@@ -310,7 +310,7 @@ impl UserRole {
             role_id,
             assignment_source,
             status,
-            is_primary_role,
+            is_primary_role: *is_primary_role,
             assigned_at,
             assigned_by_user_id,
             effective_from,
@@ -339,7 +339,7 @@ impl UserRole {
     /// # Returns
     ///
     /// HashMap representing DB item for UserRole instance
-    pub fn to_item(&self) -> HashMap<String, AttributeValue> {
+    pub(crate) fn to_item(&self) -> HashMap<String, AttributeValue> {
         let mut item = HashMap::new();
 
         item.insert("id".to_string(), AttributeValue::S(self.id.clone()));
@@ -404,7 +404,7 @@ impl UserRole {
     }
 
     /// Checks if the role assignment is currently active and effective
-    pub fn is_effective(&self) -> bool {
+    pub(crate) fn is_effective(&self) -> bool {
         let now = Utc::now();
 
         // Must be active status
@@ -433,7 +433,7 @@ impl UserRole {
     }
 
     /// Checks if the role assignment has expired
-    pub fn is_expired(&self) -> bool {
+    fn is_expired(&self) -> bool {
         if let Some(expires_at) = &self.expires_at { Utc::now() > *expires_at } else { false }
     }
 
@@ -444,7 +444,7 @@ impl UserRole {
     }
 
     /// Revokes the role assignment
-    pub fn revoke(
+    fn revoke(
         &mut self,
         revoked_by_user_id: String,
         reason: Option<String>
@@ -462,7 +462,7 @@ impl UserRole {
     }
 
     /// Suspends the role assignment temporarily
-    pub fn suspend(
+    fn suspend(
         &mut self,
         suspended_by_user_id: String,
         reason: Option<String>
@@ -483,7 +483,7 @@ impl UserRole {
     }
 
     /// Reactivates a suspended role assignment
-    pub fn reactivate(&mut self) -> Result<(), AppError> {
+    fn reactivate(&mut self) -> Result<(), AppError> {
         if !matches!(self.status, RoleAssignmentStatus::Suspended) {
             return Err(
                 AppError::ValidationError(
@@ -500,7 +500,7 @@ impl UserRole {
     }
 
     /// Extends the expiration date of the role assignment
-    pub fn extend_expiration(&mut self, new_expiration: DateTime<Utc>) -> Result<(), AppError> {
+    fn extend_expiration(&mut self, new_expiration: DateTime<Utc>) -> Result<(), AppError> {
         if new_expiration <= Utc::now() {
             return Err(
                 AppError::ValidationError("New expiration must be in the future".to_string())
@@ -510,120 +510,5 @@ impl UserRole {
         self.expires_at = Some(new_expiration);
         self.updated_at = Utc::now();
         Ok(())
-    }
-}
-
-#[Object]
-impl UserRole {
-    async fn id(&self) -> &str {
-        &self.id
-    }
-
-    async fn user_id(&self) -> &str {
-        &self.user_id
-    }
-
-    async fn role_id(&self) -> &str {
-        &self.role_id
-    }
-
-    async fn assignment_source(&self) -> &str {
-        self.assignment_source.to_str()
-    }
-
-    async fn status(&self) -> &str {
-        self.status.to_str()
-    }
-
-    async fn is_primary_role(&self) -> bool {
-        self.is_primary_role
-    }
-
-    async fn assigned_at(&self) -> &DateTime<Utc> {
-        &self.assigned_at
-    }
-
-    async fn assigned_by_user_id(&self) -> Option<&str> {
-        self.assigned_by_user_id.as_deref()
-    }
-
-    async fn effective_from(&self) -> &DateTime<Utc> {
-        &self.effective_from
-    }
-
-    async fn expires_at(&self) -> Option<&DateTime<Utc>> {
-        self.expires_at.as_ref()
-    }
-
-    async fn last_used_at(&self) -> Option<&DateTime<Utc>> {
-        self.last_used_at.as_ref()
-    }
-
-    async fn conditions(&self) -> Option<&str> {
-        self.conditions.as_deref()
-    }
-
-    async fn elevation_request_id(&self) -> Option<&str> {
-        self.elevation_request_id.as_deref()
-    }
-
-    async fn revoked_at(&self) -> Option<&DateTime<Utc>> {
-        self.revoked_at.as_ref()
-    }
-
-    async fn revoked_by_user_id(&self) -> Option<&str> {
-        self.revoked_by_user_id.as_deref()
-    }
-
-    async fn revocation_reason(&self) -> Option<&str> {
-        self.revocation_reason.as_deref()
-    }
-
-    async fn metadata(&self) -> Option<&str> {
-        self.metadata.as_deref()
-    }
-
-    async fn created_at(&self) -> &DateTime<Utc> {
-        &self.created_at
-    }
-
-    async fn updated_at(&self) -> &DateTime<Utc> {
-        &self.updated_at
-    }
-
-    #[graphql(name = "is_effective")]
-    async fn check_is_effective(&self) -> bool {
-        self.is_effective()
-    }
-
-    #[graphql(name = "is_expired")]
-    async fn check_is_expired(&self) -> bool {
-        self.is_expired()
-    }
-
-    async fn is_temporary(&self) -> bool {
-        self.expires_at.is_some()
-    }
-
-    async fn is_from_elevation(&self) -> bool {
-        self.elevation_request_id.is_some()
-    }
-
-    async fn days_until_expiration(&self) -> Option<i64> {
-        if let Some(expires_at) = &self.expires_at {
-            let duration = *expires_at - Utc::now();
-            Some(duration.num_days().max(0))
-        } else {
-            None
-        }
-    }
-
-    async fn days_since_last_used(&self) -> Option<i64> {
-        if let Some(last_used) = &self.last_used_at {
-            let duration = Utc::now() - *last_used;
-            Some(duration.num_days())
-        } else {
-            None
-        }
     }
 }

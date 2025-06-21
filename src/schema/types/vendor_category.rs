@@ -90,50 +90,52 @@ impl VendorCategory {
         &self.updated_at
     }
 
-    #[graphql(name = "is_root_category")]
-    async fn check_is_root_category(&self) -> bool {
-        self.is_root_category()
-    }
+    // Domain entity methods - expose if needed
 
-    #[graphql(name = "has_parent")]
-    async fn check_has_parent(&self) -> bool {
-        self.has_parent()
-    }
+    // #[graphql(name = "is_root_category")]
+    // async fn check_is_root_category(&self) -> bool {
+    //     self.is_root_category()
+    // }
 
-    #[graphql(name = "is_usable")]
-    async fn check_is_usable(&self) -> bool {
-        self.is_usable()
-    }
+    // #[graphql(name = "has_parent")]
+    // async fn check_has_parent(&self) -> bool {
+    //     self.has_parent()
+    // }
 
-    async fn required_fields_count(&self) -> i32 {
-        self.required_fields.len() as i32
-    }
+    // #[graphql(name = "is_usable")]
+    // async fn check_is_usable(&self) -> bool {
+    //     self.is_usable()
+    // }
 
-    async fn compliance_requirements_count(&self) -> i32 {
-        self.compliance_requirements.len() as i32
-    }
+    // async fn required_fields_count(&self) -> i32 {
+    //     self.required_fields.len() as i32
+    // }
 
-    async fn has_auto_approval(&self) -> bool {
-        self.auto_approval_limit.is_some()
-    }
+    // async fn compliance_requirements_count(&self) -> i32 {
+    //     self.compliance_requirements.len() as i32
+    // }
 
-    async fn has_vendors(&self) -> bool {
-        self.vendor_count > 0
-    }
+    // async fn has_auto_approval(&self) -> bool {
+    //     self.auto_approval_limit.is_some()
+    // }
 
-    async fn is_high_risk(&self) -> bool {
-        matches!(self.risk_level.as_str(), "high" | "critical")
-    }
+    // async fn has_vendors(&self) -> bool {
+    //     self.vendor_count > 0
+    // }
 
-    async fn is_archived(&self) -> bool {
-        matches!(self.status, CategoryStatus::Archived)
-    }
+    // async fn is_high_risk(&self) -> bool {
+    //     matches!(self.risk_level.as_str(), "high" | "critical")
+    // }
 
-    async fn display_name(&self) -> String {
-        if let Some(code) = &self.code {
-            format!("{} ({})", self.name, code)
-        } else {
-            self.name.clone()
-        }
-    }
+    // async fn is_archived(&self) -> bool {
+    //     matches!(self.status, CategoryStatus::Archived)
+    // }
+
+    // async fn display_name(&self) -> String {
+    //     if let Some(code) = &self.code {
+    //         format!("{} ({})", self.name, code)
+    //     } else {
+    //         self.name.clone()
+    //     }
+    // }
 }

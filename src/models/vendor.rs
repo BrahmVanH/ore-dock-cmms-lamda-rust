@@ -109,7 +109,6 @@ impl VendorTier {
 /// * `primary_contact_phone` - Phone of primary contact
 /// * `billing_address` - Billing address as JSON
 /// * `shipping_address` - Shipping address as JSON
-/// * `bank_details` - Banking information as JSON
 /// * `certifications` - List of certifications
 /// * `compliance_status` - Compliance verification status
 /// * `insurance_info` - Insurance information as JSON
@@ -158,7 +157,6 @@ pub struct Vendor {
     pub primary_contact_phone: Option<String>,
     pub billing_address: Option<Json>,
     pub shipping_address: Option<Json>,
-    pub bank_details: Option<Json>,
     pub certifications: Vec<String>,
     pub compliance_status: String,
     pub insurance_info: Option<Json>,
@@ -213,7 +211,6 @@ impl Vendor {
     /// * `primary_contact_phone` - Optional primary contact phone
     /// * `billing_address` - Optional billing address as JSON
     /// * `shipping_address` - Optional shipping address as JSON
-    /// * `bank_details` - Optional bank details as JSON
     /// * `certifications` - List of certifications
     /// * `compliance_status` - Compliance status
     /// * `insurance_info` - Optional insurance info as JSON
@@ -258,7 +255,6 @@ impl Vendor {
         primary_contact_phone: Option<String>,
         billing_address: Option<Json>,
         shipping_address: Option<Json>,
-        bank_details: Option<Json>,
         certifications: Vec<String>,
         compliance_status: String,
         insurance_info: Option<Json>,
@@ -412,7 +408,6 @@ impl Vendor {
             primary_contact_phone,
             billing_address,
             shipping_address,
-            bank_details,
             certifications,
             compliance_status,
             insurance_info,
@@ -533,10 +528,6 @@ impl Vendor {
             .and_then(|v| v.as_s().ok())
             .and_then(|s| serde_json::from_str::<Json>(s).ok());
 
-        let bank_details = item
-            .get("bank_details")
-            .and_then(|v| v.as_s().ok())
-            .and_then(|s| serde_json::from_str::<Json>(s).ok());
 
         let certifications = item
             .get("certifications")
@@ -693,7 +684,6 @@ impl Vendor {
             primary_contact_phone,
             billing_address,
             shipping_address,
-            bank_details,
             certifications,
             compliance_status,
             insurance_info,
@@ -816,11 +806,6 @@ impl Vendor {
             }
         }
 
-        if let Some(bank) = &self.bank_details {
-            if let Ok(bank_json) = serde_json::to_string(bank) {
-                item.insert("bank_details".to_string(), AttributeValue::S(bank_json));
-            }
-        }
 
         // Store certifications as string set
         if !self.certifications.is_empty() {

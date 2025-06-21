@@ -94,10 +94,6 @@ impl Vendor {
         self.shipping_address.as_ref().and_then(|addr| serde_json::to_string(addr).ok())
     }
 
-    async fn bank_details(&self) -> Option<String> {
-        self.bank_details.as_ref().and_then(|bank| serde_json::to_string(bank).ok())
-    }
-
     async fn certifications(&self) -> &Vec<String> {
         &self.certifications
     }
@@ -190,69 +186,70 @@ impl Vendor {
         &self.updated_at
     }
 
-    #[graphql(name = "is_active")]
-    async fn check_is_active(&self) -> bool {
-        self.is_active()
-    }
+    // Domain entity methods - expose if needed
+    // #[graphql(name = "is_active")]
+    // async fn check_is_active(&self) -> bool {
+    //     self.is_active()
+    // }
 
-    #[graphql(name = "is_contract_expired")]
-    async fn check_is_contract_expired(&self) -> bool {
-        self.is_contract_expired()
-    }
+    // #[graphql(name = "is_contract_expired")]
+    // async fn check_is_contract_expired(&self) -> bool {
+    //     self.is_contract_expired()
+    // }
 
-    #[graphql(name = "can_place_orders")]
-    async fn check_can_place_orders(&self) -> bool {
-        self.can_place_orders()
-    }
+    // #[graphql(name = "can_place_orders")]
+    // async fn check_can_place_orders(&self) -> bool {
+    //     self.can_place_orders()
+    // }
 
-    #[graphql(name = "average_order_value")]
-    async fn check_average_order_value(&self) -> f64 {
-        self.average_order_value()
-    }
+    // #[graphql(name = "average_order_value")]
+    // async fn check_average_order_value(&self) -> f64 {
+    //     self.average_order_value()
+    // }
 
-    async fn certification_count(&self) -> i32 {
-        self.certifications.len() as i32
-    }
+    // async fn certification_count(&self) -> i32 {
+    //     self.certifications.len() as i32
+    // }
 
-    async fn tag_count(&self) -> i32 {
-        self.tags.len() as i32
-    }
+    // async fn tag_count(&self) -> i32 {
+    //     self.tags.len() as i32
+    // }
 
-    async fn attachment_count(&self) -> i32 {
-        self.attachments.len() as i32
-    }
+    // async fn attachment_count(&self) -> i32 {
+    //     self.attachments.len() as i32
+    // }
 
-    async fn days_since_last_order(&self) -> Option<i64> {
-        self.last_order_date.map(|last_order| {
-            let duration = Utc::now() - last_order;
-            duration.num_days()
-        })
-    }
+    // async fn days_since_last_order(&self) -> Option<i64> {
+    //     self.last_order_date.map(|last_order| {
+    //         let duration = Utc::now() - last_order;
+    //         duration.num_days()
+    //     })
+    // }
 
-    async fn contract_days_remaining(&self) -> Option<i64> {
-        self.contract_end_date.map(|end_date| {
-            let duration = end_date - Utc::now();
-            duration.num_days().max(0)
-        })
-    }
+    // async fn contract_days_remaining(&self) -> Option<i64> {
+    //     self.contract_end_date.map(|end_date| {
+    //         let duration = end_date - Utc::now();
+    //         duration.num_days().max(0)
+    //     })
+    // }
 
-    async fn is_preferred_vendor(&self) -> bool {
-        matches!(self.tier, VendorTier::Preferred)
-    }
+    // async fn is_preferred_vendor(&self) -> bool {
+    //     matches!(self.tier, VendorTier::Preferred)
+    // }
 
-    async fn has_credit_limit(&self) -> bool {
-        self.credit_limit.is_some()
-    }
+    // async fn has_credit_limit(&self) -> bool {
+    //     self.credit_limit.is_some()
+    // }
 
-    async fn has_auto_approval(&self) -> bool {
-        self.auto_approval_limit.is_some()
-    }
+    // async fn has_auto_approval(&self) -> bool {
+    //     self.auto_approval_limit.is_some()
+    // }
 
-    async fn display_name(&self) -> String {
-        if let Some(code) = &self.vendor_code {
-            format!("{} ({})", self.name, code)
-        } else {
-            self.name.clone()
-        }
-    }
+    // async fn display_name(&self) -> String {
+    //     if let Some(code) = &self.vendor_code {
+    //         format!("{} ({})", self.name, code)
+    //     } else {
+    //         self.name.clone()
+    //     }
+    // }
 }

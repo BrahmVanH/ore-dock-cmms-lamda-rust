@@ -1,4 +1,4 @@
-use crate::models::{prelude::*, user::UserType};
+use crate::models::{ prelude::*, user::UserType };
 
 #[Object]
 impl User {
@@ -137,6 +137,7 @@ impl User {
     async fn updated_at(&self) -> &DateTime<Utc> {
         &self.updated_at
     }
+
     #[graphql(name = "full_name")]
     async fn check_full_name(&self) -> String {
         self.full_name()
@@ -149,42 +150,45 @@ impl User {
     async fn check_is_active(&self) -> bool {
         self.is_active()
     }
+
     #[graphql(name = "is_notification_allowed_now")]
     async fn check_is_account_locked(&self) -> bool {
         self.is_account_locked()
     }
-    #[graphql(name = "is_terminated")]
-    async fn check_is_terminated(&self) -> bool {
-        self.is_terminated()
-    }
+    // Other Domain entity methods - expose if needed
 
-    async fn days_since_last_login(&self) -> Option<i64> {
-        self.last_login_at.map(|last_login| {
-            let duration = Utc::now() - last_login;
-            duration.num_days()
-        })
-    }
+    // #[graphql(name = "is_terminated")]
+    // async fn check_is_terminated(&self) -> bool {
+    //     self.is_terminated()
+    // }
 
-    async fn days_since_password_change(&self) -> Option<i64> {
-        self.password_changed_at.map(|pwd_change| {
-            let duration = Utc::now() - pwd_change;
-            duration.num_days()
-        })
-    }
+    // async fn days_since_last_login(&self) -> Option<i64> {
+    //     self.last_login_at.map(|last_login| {
+    //         let duration = Utc::now() - last_login;
+    //         duration.num_days()
+    //     })
+    // }
 
-    async fn has_secondary_email(&self) -> bool {
-        self.secondary_email.is_some() && !self.secondary_email.as_ref().unwrap().trim().is_empty()
-    }
+    // async fn days_since_password_change(&self) -> Option<i64> {
+    //     self.password_changed_at.map(|pwd_change| {
+    //         let duration = Utc::now() - pwd_change;
+    //         duration.num_days()
+    //     })
+    // }
 
-    async fn is_employee(&self) -> bool {
-        matches!(self.user_type, UserType::Employee)
-    }
+    // async fn has_secondary_email(&self) -> bool {
+    //     self.secondary_email.is_some() && !self.secondary_email.as_ref().unwrap().trim().is_empty()
+    // }
 
-    async fn is_contractor(&self) -> bool {
-        matches!(self.user_type, UserType::Contractor)
-    }
+    // async fn is_employee(&self) -> bool {
+    //     matches!(self.user_type, UserType::Employee)
+    // }
 
-    async fn has_manager(&self) -> bool {
-        self.manager_id.is_some()
-    }
+    // async fn is_contractor(&self) -> bool {
+    //     matches!(self.user_type, UserType::Contractor)
+    // }
+
+    // async fn has_manager(&self) -> bool {
+    //     self.manager_id.is_some()
+    // }
 }

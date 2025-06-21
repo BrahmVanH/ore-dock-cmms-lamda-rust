@@ -223,67 +223,68 @@ impl WorkOrder {
         &self.updated_at
     }
 
-    /// Computed field: checks if work order is currently in progress.
-    /// Delegates to [`WorkOrder::is_in_progress`].
-    #[graphql(name = "is_in_progress")]
-    async fn check_is_in_progress(&self) -> bool {
-        self.is_in_progress()
-    }
+    // Domain entity methods, exposes if needed in client development
+    // /// Computed field: checks if work order is currently in progress.
+    // /// Delegates to [`WorkOrder::is_in_progress`].
+    // #[graphql(name = "is_in_progress")]
+    // async fn check_is_in_progress(&self) -> bool {
+    //     self.is_in_progress()
+    // }
 
-    /// Computed field: checks if work order is completed.
-    /// Delegates to [`WorkOrder::is_completed`].
-    #[graphql(name = "is_completed")]
-    async fn check_is_completed(&self) -> bool {
-        self.is_completed()
-    }
+    // /// Computed field: checks if work order is completed.
+    // /// Delegates to [`WorkOrder::is_completed`].
+    // #[graphql(name = "is_completed")]
+    // async fn check_is_completed(&self) -> bool {
+    //     self.is_completed()
+    // }
 
-    /// Computed field: checks if work order is overdue.
-    /// Delegates to [`WorkOrder::is_overdue`].
-    #[graphql(name = "is_overdue")]
-    async fn check_is_overdue(&self) -> bool {
-        self.is_overdue()
-    }
+    // /// Computed field: checks if work order is overdue.
+    // /// Delegates to [`WorkOrder::is_overdue`].
+    // #[graphql(name = "is_overdue")]
+    // async fn check_is_overdue(&self) -> bool {
+    //     self.is_overdue()
+    // }
 
-    /// Computed field: total cost (actual if available, otherwise estimated).
-    /// Delegates to [`WorkOrder::calculate_total_cost`].
-    async fn total_cost(&self) -> String {
-        self.calculate_total_cost().to_string()
-    }
+    // /// Computed field: total cost (actual if available, otherwise estimated).
+    // /// Delegates to [`WorkOrder::calculate_total_cost`].
+    // async fn total_cost(&self) -> String {
+    //     self.calculate_total_cost().to_string()
+    // }
 
-    /// Computed field: variance between estimated and actual duration in minutes.
-    async fn duration_variance_minutes(&self) -> Option<i32> {
-        self.actual_duration_minutes.map(|actual| actual - self.estimated_duration_minutes)
-    }
+    // /// Computed field: variance between estimated and actual duration in minutes.
+    // async fn duration_variance_minutes(&self) -> Option<i32> {
+    //     self.actual_duration_minutes.map(|actual| actual - self.estimated_duration_minutes)
+    // }
 
-    /// Computed field: days remaining until scheduled start (minimum 0).
-    async fn days_until_scheduled(&self) -> i64 {
-        let duration = self.scheduled_start - Utc::now();
-        duration.num_days().max(0)
-    }
+    // /// Computed field: days remaining until scheduled start (minimum 0).
+    // async fn days_until_scheduled(&self) -> i64 {
+    //     let duration = self.scheduled_start - Utc::now();
+    //     duration.num_days().max(0)
+    // }
 
-    /// Computed field: checks if this is an emergency work order.
-    async fn is_emergency(&self) -> bool {
-        matches!(self.priority, WorkOrderPriority::Emergency) ||
-            matches!(self.work_order_type, WorkOrderType::Emergency)
-    }
+    // /// Computed field: checks if this is an emergency work order.
+    // async fn is_emergency(&self) -> bool {
+    //     matches!(self.priority, WorkOrderPriority::Emergency) ||
+    //         matches!(self.work_order_type, WorkOrderType::Emergency)
+    // }
 
-    /// Computed field: checks if work is assigned to an external vendor.
-    async fn has_vendor(&self) -> bool {
-        self.vendor_id.is_some()
-    }
+    // /// Computed field: checks if work is assigned to an external vendor.
+    // async fn has_vendor(&self) -> bool {
+    //     self.vendor_id.is_some()
+    // }
 
-    /// Computed field: number of attached documents and files.
-    async fn attachment_count(&self) -> i32 {
-        self.attachment_urls.len() as i32
-    }
+    // /// Computed field: number of attached documents and files.
+    // async fn attachment_count(&self) -> i32 {
+    //     self.attachment_urls.len() as i32
+    // }
 
-    /// Computed field: number of classification tags applied.
-    async fn tag_count(&self) -> i32 {
-        self.tags.len() as i32
-    }
+    // /// Computed field: number of classification tags applied.
+    // async fn tag_count(&self) -> i32 {
+    //     self.tags.len() as i32
+    // }
 
-    /// Computed field: number of teams assigned to this work order.
-    async fn team_count(&self) -> i32 {
-        self.assigned_team_ids.len() as i32
-    }
+    // /// Computed field: number of teams assigned to this work order.
+    // async fn team_count(&self) -> i32 {
+    //     self.assigned_team_ids.len() as i32
+    // }
 }
