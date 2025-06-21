@@ -1,6 +1,5 @@
 use std::collections::HashMap;
 
-use async_graphql::Object;
 use aws_sdk_dynamodb::types::AttributeValue;
 use regex::Regex;
 use serde::{ Deserialize, Serialize };
@@ -45,7 +44,7 @@ impl Address {
         }
     }
 
-    pub fn validate(&self) -> Result<(), String> {
+    pub(crate)  fn validate(&self) -> Result<(), String> {
         let po_box_regex = Regex::new(r"P([.]?(O|0)[.]?|ost|ostal).((O|0)ffice.)?Box{1}\b/i");
         let street_addr_regex = Regex::new(r"/\d{1,}(\s{1}\w{1,})(\s{1}?\w{1,})+)/g");
         if self.street.trim().is_empty() {
@@ -74,7 +73,7 @@ impl Address {
         Ok(())
     }
 
-    pub fn from_item(item: &HashMap<String, AttributeValue>) -> Option<Self> {
+    pub(crate)  fn from_item(item: &HashMap<String, AttributeValue>) -> Option<Self> {
         let street = item.get("street")?.as_s().ok()?.to_string();
         let unit = item.get("unit").and_then(|v| {
             match v {
@@ -97,7 +96,7 @@ impl Address {
             zip,
         })
     }
-    pub fn to_item(&self) -> HashMap<String, AttributeValue> {
+    pub(crate)  fn to_item(&self) -> HashMap<String, AttributeValue> {
         let mut item = HashMap::new();
 
         item.insert("street".to_string(), AttributeValue::S(self.id.clone()));
@@ -110,30 +109,5 @@ impl Address {
         item.insert("state".to_string(), AttributeValue::S(self.name.clone()));
         item.insert("country".to_string(), AttributeValue::S(self.name.clone()));
         item.insert("zip".to_string(), AttributeValue::S(self.name.clone()));
-    }
-}
-
-#[Object]
-impl Address {
-    async fn street(&self) -> &str {
-        &self.street
-    }
-
-    async fn unit(&self) -> &str {
-        self.unit.as_deref().unwrap_or(" ")
-    }
-    async fn city(&self) -> &str {
-        &self.city
-    }
-
-    async fn state(&self) -> &str {
-        &self.state
-    }
-    async fn country(&self) -> &str {
-        &self.country
-    }
-
-    async fn zip(&self) -> &str {
-        &self.zip
     }
 }

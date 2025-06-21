@@ -1,4 +1,4 @@
-use crate::models::{ prelude::* };
+use crate::models::prelude::*;
 #[Object]
 impl Asset {
     async fn id(&self) -> &str {
