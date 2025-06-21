@@ -1,6 +1,5 @@
 use std::collections::HashMap;
 
-use async_graphql::Object;
 use aws_sdk_dynamodb::types::AttributeValue;
 use chrono::{ DateTime, Utc };
 use serde::{ Deserialize, Serialize };
@@ -20,7 +19,7 @@ pub enum NotificationType {
 }
 
 impl NotificationType {
-    fn to_str(&self) -> &str {
+    pub(crate) fn to_str(&self) -> &str {
         match self {
             NotificationType::Alert => "alert",
             NotificationType::Reminder => "reminder",
@@ -31,11 +30,11 @@ impl NotificationType {
         }
     }
 
-    fn to_string(&self) -> String {
+    pub(crate) fn to_string(&self) -> String {
         self.to_str().to_string()
     }
 
-    fn from_string(s: &str) -> Result<NotificationType, AppError> {
+    pub(crate) fn from_string(s: &str) -> Result<NotificationType, AppError> {
         match s {
             "alert" => Ok(Self::Alert),
             "reminder" => Ok(Self::Reminder),
@@ -176,7 +175,7 @@ impl NotificationTemplate {
     /// # Returns
     ///
     /// 'Some' NotificationTemplate if item fields match, 'None' otherwise
-    pub fn from_item(item: &HashMap<String, AttributeValue>) -> Option<Self> {
+    pub(crate)  fn from_item(item: &HashMap<String, AttributeValue>) -> Option<Self> {
         info!("calling from_item with: {:?}", &item);
 
         let id = item.get("id")?.as_s().ok()?.to_string();
@@ -287,7 +286,7 @@ impl NotificationTemplate {
     /// # Returns
     ///
     /// HashMap representing DB item for NotificationTemplate instance
-    pub fn to_item(&self) -> HashMap<String, AttributeValue> {
+    pub(crate)  fn to_item(&self) -> HashMap<String, AttributeValue> {
         let mut item = HashMap::new();
 
         item.insert("id".to_string(), AttributeValue::S(self.id.clone()));
@@ -344,7 +343,7 @@ impl NotificationTemplate {
 
 impl TemplateVariable {
     /// Creates TemplateVariable from DynamoDB item
-    pub fn from_item(item: &HashMap<String, AttributeValue>) -> Option<Self> {
+    pub(crate)  fn from_item(item: &HashMap<String, AttributeValue>) -> Option<Self> {
         let name = item.get("name")?.as_s().ok()?.to_string();
         let description = item.get("description")?.as_s().ok()?.to_string();
         let variable_type = item.get("variable_type")?.as_s().ok()?.to_string();
@@ -364,7 +363,7 @@ impl TemplateVariable {
     }
 
     /// Creates DynamoDB item from TemplateVariable
-    pub fn to_item(&self) -> HashMap<String, AttributeValue> {
+    pub(crate)  fn to_item(&self) -> HashMap<String, AttributeValue> {
         let mut item = HashMap::new();
 
         item.insert("name".to_string(), AttributeValue::S(self.name.clone()));
@@ -377,90 +376,5 @@ impl TemplateVariable {
         }
 
         item
-    }
-}
-
-#[Object]
-impl NotificationTemplate {
-    async fn id(&self) -> &str {
-        &self.id
-    }
-
-    async fn name(&self) -> &str {
-        &self.name
-    }
-
-    async fn notification_type(&self) -> &str {
-        self.notification_type.to_str()
-    }
-
-    async fn subject_template(&self) -> &str {
-        &self.subject_template
-    }
-
-    async fn message_template(&self) -> &str {
-        &self.message_template
-    }
-
-    async fn default_severity(&self) -> &str {
-        self.default_severity.to_str()
-    }
-
-    async fn supported_channels(&self) -> Vec<String> {
-        self.supported_channels
-            .iter()
-            .map(|c| c.to_str().to_string())
-            .collect()
-    }
-
-    async fn variables(&self) -> &Vec<TemplateVariable> {
-        &self.variables
-    }
-
-    async fn template_engine(&self) -> &str {
-        &self.template_engine
-    }
-
-    async fn active(&self) -> bool {
-        self.active
-    }
-
-    async fn version(&self) -> i32 {
-        self.version
-    }
-
-    async fn created_by(&self) -> Option<&str> {
-        self.created_by.as_deref()
-    }
-
-    async fn created_at(&self) -> &DateTime<Utc> {
-        &self.created_at
-    }
-
-    async fn updated_at(&self) -> &DateTime<Utc> {
-        &self.updated_at
-    }
-}
-
-#[Object]
-impl TemplateVariable {
-    async fn name(&self) -> &str {
-        &self.name
-    }
-
-    async fn description(&self) -> &str {
-        &self.description
-    }
-
-    async fn variable_type(&self) -> &str {
-        &self.variable_type
-    }
-
-    async fn required(&self) -> bool {
-        self.required
-    }
-
-    async fn default_value(&self) -> Option<&str> {
-        self.default_value.as_deref()
     }
 }

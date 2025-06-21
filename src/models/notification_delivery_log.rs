@@ -1,6 +1,5 @@
 use std::collections::HashMap;
 
-use async_graphql::Object;
 use aws_sdk_dynamodb::types::AttributeValue;
 use chrono::{ DateTime, Utc };
 use serde::{ Deserialize, Serialize };
@@ -19,7 +18,7 @@ pub enum DeliveryStatus {
 }
 
 impl DeliveryStatus {
-    fn to_str(&self) -> &str {
+    pub(crate) fn to_str(&self) -> &str {
         match self {
             DeliveryStatus::Pending => "pending",
             DeliveryStatus::Delivered => "delivered",
@@ -29,11 +28,11 @@ impl DeliveryStatus {
         }
     }
 
-    fn to_string(&self) -> String {
+    pub(crate) fn to_string(&self) -> String {
         self.to_str().to_string()
     }
 
-    fn from_string(s: &str) -> Result<DeliveryStatus, AppError> {
+    pub(crate) fn from_string(s: &str) -> Result<DeliveryStatus, AppError> {
         match s {
             "pending" => Ok(Self::Pending),
             "delivered" => Ok(Self::Delivered),
@@ -138,7 +137,7 @@ impl NotificationDeliveryLog {
     /// # Returns
     ///
     /// 'Some' NotificationDeliveryLog if item fields match, 'None' otherwise
-    pub fn from_item(item: &HashMap<String, AttributeValue>) -> Option<Self> {
+    pub(crate) fn from_item(item: &HashMap<String, AttributeValue>) -> Option<Self> {
         info!("calling from_item with: {:?}", &item);
 
         let id = item.get("id")?.as_s().ok()?.to_string();
@@ -220,7 +219,7 @@ impl NotificationDeliveryLog {
     /// # Returns
     ///
     /// HashMap representing DB item for NotificationDeliveryLog instance
-    pub fn to_item(&self) -> HashMap<String, AttributeValue> {
+    pub(crate) fn to_item(&self) -> HashMap<String, AttributeValue> {
         let mut item = HashMap::new();
 
         item.insert("id".to_string(), AttributeValue::S(self.id.clone()));
@@ -250,52 +249,5 @@ impl NotificationDeliveryLog {
         item.insert("updated_at".to_string(), AttributeValue::S(self.updated_at.to_string()));
 
         item
-    }
-}
-
-#[Object]
-impl NotificationDeliveryLog {
-    async fn id(&self) -> &str {
-        &self.id
-    }
-
-    async fn notification_id(&self) -> &str {
-        &self.notification_id
-    }
-
-    async fn channel(&self) -> &str {
-        self.channel.to_str()
-    }
-
-    async fn delivery_status(&self) -> &str {
-        self.delivery_status.to_str()
-    }
-
-    async fn attempted_at(&self) -> &DateTime<Utc> {
-        &self.attempted_at
-    }
-
-    async fn delivered_at(&self) -> Option<&DateTime<Utc>> {
-        self.delivered_at.as_ref()
-    }
-
-    async fn error_message(&self) -> Option<&str> {
-        self.error_message.as_deref()
-    }
-
-    async fn retry_count(&self) -> i32 {
-        self.retry_count
-    }
-
-    async fn recipient_address(&self) -> Option<&str> {
-        self.recipient_address.as_deref()
-    }
-
-    async fn created_at(&self) -> &DateTime<Utc> {
-        &self.created_at
-    }
-
-    async fn updated_at(&self) -> &DateTime<Utc> {
-        &self.updated_at
     }
 }

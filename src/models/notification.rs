@@ -1,6 +1,5 @@
 use std::collections::HashMap;
 
-use async_graphql::Object;
 use aws_sdk_dynamodb::types::AttributeValue;
 use chrono::{ DateTime, Utc };
 use serde::{ Deserialize, Serialize };
@@ -20,7 +19,7 @@ pub enum SeverityLevel {
 }
 
 impl SeverityLevel {
-    pub fn to_str(&self) -> &str {
+    pub(crate)  fn to_str(&self) -> &str {
         match self {
             SeverityLevel::Low => "low",
             SeverityLevel::Medium => "medium",
@@ -30,11 +29,11 @@ impl SeverityLevel {
         }
     }
 
-    pub fn to_string(&self) -> String {
+    pub(crate)  fn to_string(&self) -> String {
         self.to_str().to_string()
     }
 
-    pub fn from_string(s: &str) -> Result<SeverityLevel, AppError> {
+    pub(crate)  fn from_string(s: &str) -> Result<SeverityLevel, AppError> {
         match s {
             "low" => Ok(Self::Low),
             "medium" => Ok(Self::Medium),
@@ -60,7 +59,7 @@ pub enum NotificationChannels {
 }
 
 impl NotificationChannels {
-    pub fn to_str(&self) -> &str {
+    pub(crate)  fn to_str(&self) -> &str {
         match self {
             NotificationChannels::Email => "email",
             NotificationChannels::Push => "push",
@@ -73,11 +72,11 @@ impl NotificationChannels {
         }
     }
 
-    pub fn to_string(&self) -> String {
+    pub(crate)  fn to_string(&self) -> String {
         self.to_str().to_string()
     }
 
-    pub fn from_string(s: &str) -> Result<NotificationChannels, AppError> {
+    pub(crate)  fn from_string(s: &str) -> Result<NotificationChannels, AppError> {
         match s {
             "email" => Ok(Self::Email),
             "push" => Ok(Self::Push),
@@ -104,7 +103,7 @@ pub enum NotificationStatus {
 }
 
 impl NotificationStatus {
-    fn to_str(&self) -> &str {
+    pub(crate) fn to_str(&self) -> &str {
         match self {
             NotificationStatus::Draft => "draft",
             NotificationStatus::Pending => "pending",
@@ -115,11 +114,11 @@ impl NotificationStatus {
         }
     }
 
-    fn to_string(&self) -> String {
+    pub(crate) fn to_string(&self) -> String {
         self.to_str().to_string()
     }
 
-    fn from_string(s: &str) -> Result<NotificationStatus, AppError> {
+    pub(crate) fn from_string(s: &str) -> Result<NotificationStatus, AppError> {
         match s {
             "draft" => Ok(Self::Draft),
             "pending" => Ok(Self::Pending),
@@ -250,7 +249,7 @@ impl Notification {
     /// # Returns
     ///
     /// 'Some' Notification if item fields match, 'None' otherwise
-    pub fn from_item(item: &HashMap<String, AttributeValue>) -> Option<Self> {
+    pub(crate)  fn from_item(item: &HashMap<String, AttributeValue>) -> Option<Self> {
         info!("calling from_item with: {:?}", &item);
 
         let id = item.get("id")?.as_s().ok()?.to_string();
@@ -368,7 +367,7 @@ impl Notification {
     /// # Returns
     ///
     /// HashMap representing DB item for Notification instance
-    pub fn to_item(&self) -> HashMap<String, AttributeValue> {
+    pub(crate)  fn to_item(&self) -> HashMap<String, AttributeValue> {
         let mut item = HashMap::new();
 
         item.insert("id".to_string(), AttributeValue::S(self.id.clone()));
@@ -422,82 +421,5 @@ impl Notification {
         item.insert("updated_at".to_string(), AttributeValue::S(self.updated_at.to_string()));
 
         item
-    }
-}
-
-#[Object]
-impl Notification {
-    async fn id(&self) -> &str {
-        &self.id
-    }
-
-    async fn template_id(&self) -> &str {
-        &self.template_id
-    }
-
-    async fn recipient_id(&self) -> &str {
-        &self.recipient_id
-    }
-
-    async fn subject(&self) -> &str {
-        &self.subject
-    }
-
-    async fn message(&self) -> &str {
-        &self.message
-    }
-
-    async fn context(&self) -> Option<String> {
-        self.context.as_ref().and_then(|c| serde_json::to_string(c).ok())
-    }
-
-    async fn severity(&self) -> &str {
-        self.severity.to_str()
-    }
-
-    async fn status(&self) -> &str {
-        self.status.to_str()
-    }
-
-    async fn scheduled_at(&self) -> &DateTime<Utc> {
-        &self.scheduled_at
-    }
-
-    async fn sent_at(&self) -> Option<&DateTime<Utc>> {
-        self.sent_at.as_ref()
-    }
-
-    async fn delivered_channels(&self) -> Vec<String> {
-        self.delivered_channels
-            .iter()
-            .map(|c| c.to_str().to_string())
-            .collect()
-    }
-
-    async fn failed_channels(&self) -> Vec<String> {
-        self.failed_channels
-            .iter()
-            .map(|c| c.to_str().to_string())
-            .collect()
-    }
-
-    async fn read_at(&self) -> Option<&DateTime<Utc>> {
-        self.read_at.as_ref()
-    }
-
-    async fn expires_at(&self) -> Option<&DateTime<Utc>> {
-        self.expires_at.as_ref()
-    }
-
-    async fn retry_count(&self) -> i32 {
-        self.retry_count
-    }
-
-    async fn created_at(&self) -> &DateTime<Utc> {
-        &self.created_at
-    }
-
-    async fn updated_at(&self) -> &DateTime<Utc> {
-        &self.updated_at
     }
 }
