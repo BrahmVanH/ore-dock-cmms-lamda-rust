@@ -74,3 +74,126 @@ impl AssetType {
         item
     }
 }
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use chrono::Utc;
+
+    fn create_valid_asset_type() -> AssetType {
+        AssetType::new(
+            "type-123".to_string(),
+            "Industrial Pump".to_string(),
+            "High-pressure industrial water pump".to_string(),
+        )
+    }
+
+    #[test]
+    fn test_new_asset_type() {
+        let asset_type = AssetType::new(
+            "type-456".to_string(),
+            "HVAC System".to_string(),
+            "Commercial heating and cooling system".to_string(),
+        );
+
+        assert_eq!(asset_type.id, "type-456");
+        assert_eq!(asset_type.name, "HVAC System");
+        assert_eq!(asset_type.description, "Commercial heating and cooling system");
+        assert!(asset_type.created_at <= Utc::now());
+        assert!(asset_type.updated_at <= Utc::now());
+        assert_eq!(asset_type.created_at, asset_type.updated_at);
+    }
+
+    #[test]
+    fn test_new_asset_type_timestamps_are_current() {
+        let before = Utc::now();
+        let asset_type = create_valid_asset_type();
+        let after = Utc::now();
+
+        assert!(asset_type.created_at >= before);
+        assert!(asset_type.created_at <= after);
+        assert!(asset_type.updated_at >= before);
+        assert!(asset_type.updated_at <= after);
+    }
+
+    #[test]
+    fn test_validate_valid_asset_type() {
+        let asset_type = create_valid_asset_type();
+        let result = asset_type.validate();
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_validate_empty_name() {
+        let mut asset_type = create_valid_asset_type();
+        asset_type.name = "".to_string();
+        
+        let result = asset_type.validate();
+        assert!(result.is_err());
+        assert_eq!(result.unwrap_err(), "Name and Description cannot be empty");
+    }
+
+    #[test]
+    fn test_validate_whitespace_only_name() {
+        let mut asset_type = create_valid_asset_type();
+        asset_type.name = "   ".to_string();
+        
+        let result = asset_type.validate();
+        assert!(result.is_err());
+        assert_eq!(result.unwrap_err(), "Name and Description cannot be empty");
+    }
+
+    #[test]
+    fn test_validate_empty_description() {
+        let mut asset_type = create_valid_asset_type();
+        asset_type.description = "".to_string();
+        
+        let result = asset_type.validate();
+        assert!(result.is_err());
+        assert_eq!(result.unwrap_err(), "Name and Description cannot be empty");
+    }
+
+    #[test]
+    fn test_validate_whitespace_only_description() {
+        let mut asset_type = create_valid_asset_type();
+        asset_type.description = "   ".to_string();
+        
+        let result = asset_type.validate();
+        assert!(result.is_err());
+        assert_eq!(result.unwrap_err(), "Name and Description cannot be empty");
+    }
+
+    #[test]
+    fn test_validate_both_empty() {
+        let mut asset_type = create_valid_asset_type();
+        asset_type.name = "".to_string();
+        asset_type.description = "".to_string();
+        
+        let result = asset_type.validate();
+        assert!(result.is_err());
+        assert_eq!(result.unwrap_err(), "Name and Description cannot be empty");
+    }
+
+    #[test]
+    fn test_clone() {
+        let asset_type = create_valid_asset_type();
+        let cloned = asset_type.clone();
+        
+        assert_eq!(asset_type.id, cloned.id);
+        assert_eq!(asset_type.name, cloned.name);
+        assert_eq!(asset_type.description, cloned.description);
+        assert_eq!(asset_type.created_at, cloned.created_at);
+        assert_eq!(asset_type.updated_at, cloned.updated_at);
+    }
+
+    #[test]
+    fn test_debug_format() {
+        let asset_type = create_valid_asset_type();
+        let debug_str = format!("{:?}", asset_type);
+        
+        assert!(debug_str.contains("type-123"));
+        assert!(debug_str.contains("Industrial Pump"));
+        assert!(debug_str.contains("High-pressure industrial water pump"));
+    }
+}

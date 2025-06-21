@@ -14,6 +14,7 @@ fn create_test_address() -> Address {
     )
 }
 
+
 fn create_test_address_no_unit() -> Address {
     Address::new(
         "456 Oak Avenue".to_string(),
@@ -150,6 +151,8 @@ fn test_from_item_wrong_attribute_type() {
     assert!(address.is_none());
 }
 
+/// Tests full path from Asset struct to item and back and compares pre and post
+/// trip values
 #[test]
 fn test_roundtrip_to_item_from_item_with_unit() {
     let original = create_test_address();
@@ -167,6 +170,9 @@ fn test_roundtrip_to_item_from_item_with_unit() {
     assert_eq!(original.zip, restored.zip);
 }
 
+
+/// Tests full path from Asset struct with None unit field value to item and back and compares pre and post
+/// trip values 
 #[test]
 fn test_roundtrip_to_item_from_item_without_unit() {
     let original = create_test_address_no_unit();
