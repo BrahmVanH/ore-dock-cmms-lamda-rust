@@ -8,7 +8,7 @@ use tracing::info;
 
 use crate::error::AppError;
 
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
 #[serde(rename_all = "snake_case")]
 pub enum PermissionAction {
     Create,
@@ -97,7 +97,7 @@ impl PermissionStatus {
     }
 }
 
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
 #[serde(rename_all = "snake_case")]
 pub enum ResourceType {
     Asset,

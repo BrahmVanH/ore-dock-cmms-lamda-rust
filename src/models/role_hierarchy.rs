@@ -1,6 +1,5 @@
 use std::collections::HashMap;
 
-use async_graphql::Object;
 use aws_sdk_dynamodb::types::AttributeValue;
 use chrono::{ DateTime, Utc };
 use serde::{ Deserialize, Serialize };
@@ -18,7 +17,7 @@ pub enum HierarchyType {
 }
 
 impl HierarchyType {
-    fn to_str(&self) -> &str {
+    pub(crate) fn to_str(&self) -> &str {
         match self {
             HierarchyType::Direct => "direct",
             HierarchyType::Inherited => "inherited",
@@ -27,11 +26,11 @@ impl HierarchyType {
         }
     }
 
-    fn to_string(&self) -> String {
+    pub(crate) fn to_string(&self) -> String {
         self.to_str().to_string()
     }
 
-    fn from_string(s: &str) -> Result<HierarchyType, AppError> {
+    pub(crate) fn from_string(s: &str) -> Result<HierarchyType, AppError> {
         match s {
             "direct" => Ok(Self::Direct),
             "inherited" => Ok(Self::Inherited),
@@ -163,7 +162,7 @@ impl RoleHierarchy {
     /// # Returns
     ///
     /// 'Some' RoleHierarchy if item fields match, 'None' otherwise
-    pub fn from_item(item: &HashMap<String, AttributeValue>) -> Option<Self> {
+    pub(crate)  fn from_item(item: &HashMap<String, AttributeValue>) -> Option<Self> {
         info!("calling from_item with: {:?}", &item);
 
         let id = item.get("id")?.as_s().ok()?.to_string();
@@ -262,7 +261,7 @@ impl RoleHierarchy {
     /// # Returns
     ///
     /// HashMap representing DB item for RoleHierarchy instance
-    pub fn to_item(&self) -> HashMap<String, AttributeValue> {
+    pub(crate)  fn to_item(&self) -> HashMap<String, AttributeValue> {
         let mut item = HashMap::new();
 
         item.insert("id".to_string(), AttributeValue::S(self.id.clone()));
@@ -308,7 +307,7 @@ impl RoleHierarchy {
     }
 
     /// Checks if this hierarchy relationship has expired (for delegated relationships)
-    pub fn is_expired(&self) -> bool {
+     fn is_expired(&self) -> bool {
         if let Some(expires_at) = &self.delegation_expires_at {
             Utc::now() > *expires_at
         } else {
@@ -317,12 +316,12 @@ impl RoleHierarchy {
     }
 
     /// Checks if this hierarchy relationship is currently effective
-    pub fn is_effective(&self) -> bool {
+     fn is_effective(&self) -> bool {
         self.active && !self.is_expired()
     }
 
     /// Adds a permission override to this hierarchy
-    pub fn add_permission_override(&mut self, permission_id: String) {
+     fn add_permission_override(&mut self, permission_id: String) {
         if !self.permission_overrides.contains(&permission_id) {
             self.permission_overrides.push(permission_id);
             self.updated_at = Utc::now();
@@ -330,7 +329,7 @@ impl RoleHierarchy {
     }
 
     /// Removes a permission override from this hierarchy
-    pub fn remove_permission_override(&mut self, permission_id: &str) {
+    fn remove_permission_override(&mut self, permission_id: &str) {
         if let Some(pos) = self.permission_overrides.iter().position(|x| x == permission_id) {
             self.permission_overrides.remove(pos);
             self.updated_at = Utc::now();
@@ -338,84 +337,7 @@ impl RoleHierarchy {
     }
 
     /// Checks if a specific permission is overridden in this hierarchy
-    pub fn has_permission_override(&self, permission_id: &str) -> bool {
+     fn has_permission_override(&self, permission_id: &str) -> bool {
         self.permission_overrides.contains(&permission_id.to_string())
-    }
-}
-
-#[Object]
-impl RoleHierarchy {
-    async fn id(&self) -> &str {
-        &self.id
-    }
-
-    async fn parent_role_id(&self) -> &str {
-        &self.parent_role_id
-    }
-
-    async fn child_role_id(&self) -> &str {
-        &self.child_role_id
-    }
-
-    async fn hierarchy_type(&self) -> &str {
-        self.hierarchy_type.to_str()
-    }
-
-    async fn inherited_permissions(&self) -> bool {
-        self.inherited_permissions
-    }
-
-    async fn permission_overrides(&self) -> &Vec<String> {
-        &self.permission_overrides
-    }
-
-    async fn depth_level(&self) -> i32 {
-        self.depth_level
-    }
-
-    async fn active(&self) -> bool {
-        self.active
-    }
-
-    async fn priority(&self) -> i32 {
-        self.priority
-    }
-
-    async fn conditions(&self) -> Option<&str> {
-        self.conditions.as_deref()
-    }
-
-    async fn delegation_expires_at(&self) -> Option<&DateTime<Utc>> {
-        self.delegation_expires_at.as_ref()
-    }
-
-    async fn created_by(&self) -> &str {
-        &self.created_by
-    }
-
-    async fn created_at(&self) -> &DateTime<Utc> {
-        &self.created_at
-    }
-
-    async fn updated_at(&self) -> &DateTime<Utc> {
-        &self.updated_at
-    }
-
-    #[graphql(name = "is_expired")]
-    async fn get_is_expired(&self) -> bool {
-        self.is_expired()
-    }
-
-    #[graphql(name = "is_effective")]
-    async fn check_is_effective(&self) -> bool {
-        self.is_effective()
-    }
-    #[graphql(name = "has_permission_override")]
-    async fn check_has_permission_override(&self, permission_id: String) -> bool {
-        self.has_permission_override(&permission_id)
-    }
-
-    async fn override_count(&self) -> i32 {
-        self.permission_overrides.len() as i32
     }
 }
