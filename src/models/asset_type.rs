@@ -26,7 +26,7 @@ impl AssetType {
         }
     }
 
-    pub(crate)  fn validate(&self) -> Result<(), String> {
+    pub(crate) fn validate(&self) -> Result<(), String> {
         if self.name.trim().is_empty() || self.description.trim().is_empty() {
             return Err("Name and Description cannot be empty".to_string());
         }
@@ -34,21 +34,22 @@ impl AssetType {
         Ok(())
     }
 
-    pub(crate)  fn from_item(item: &HashMap<String, AttributeValue>) -> Option<Self> {
+    pub(crate) fn from_item(item: &HashMap<String, AttributeValue>) -> Option<Self> {
         let id = item.get("id")?.as_s().ok()?.to_string();
         let name = item.get("name")?.as_s().ok()?.to_string();
         let description = item.get("description")?.as_s().ok()?.to_string();
 
-        let created_at: DateTime<Utc> = item
+        let created_at = item
             .get("created_at")
             .and_then(|v| v.as_s().ok())
             .and_then(|s| s.parse::<DateTime<Utc>>().ok())
             .unwrap_or_else(|| Utc::now());
 
-        let updated_at: DateTime<Utc> = item
+        let updated_at = item
             .get("updated_at")
             .and_then(|v| v.as_s().ok())
-            .and_then(|s| s.parse::<DateTime<Utc>>().ok());
+            .and_then(|s| s.parse::<DateTime<Utc>>().ok())
+            .unwrap_or_else(|| Utc::now());
 
         let res = Some(Self {
             id,
@@ -61,7 +62,7 @@ impl AssetType {
         res
     }
 
-    pub(crate)  fn to_item(&self) -> HashMap<String, AttributeValue> {
+    pub(crate) fn to_item(&self) -> HashMap<String, AttributeValue> {
         let mut item = HashMap::new();
 
         item.insert("id".to_string(), AttributeValue::S(self.id.clone()));

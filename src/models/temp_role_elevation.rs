@@ -1,6 +1,5 @@
 use std::collections::HashMap;
 
-use async_graphql::Object;
 use aws_sdk_dynamodb::types::AttributeValue;
 use chrono::{ DateTime, Utc };
 use serde::{ Deserialize, Serialize };
@@ -242,7 +241,7 @@ impl TempRoleElevation {
     /// # Returns
     ///
     /// 'Some' TempRoleElevation if item fields match, 'None' otherwise
-    pub(crate)  fn from_item(item: &HashMap<String, AttributeValue>) -> Option<Self> {
+    pub(crate) fn from_item(item: &HashMap<String, AttributeValue>) -> Option<Self> {
         info!("calling from_item with: {:?}", &item);
 
         let id = item.get("id")?.as_s().ok()?.to_string();
@@ -379,7 +378,7 @@ impl TempRoleElevation {
     /// # Returns
     ///
     /// HashMap representing DB item for TempRoleElevation instance
-    pub(crate)  fn to_item(&self) -> HashMap<String, AttributeValue> {
+    pub(crate) fn to_item(&self) -> HashMap<String, AttributeValue> {
         let mut item = HashMap::new();
 
         item.insert("id".to_string(), AttributeValue::S(self.id.clone()));
@@ -452,7 +451,7 @@ impl TempRoleElevation {
     }
 
     /// Checks if the elevation is currently active
-     fn is_active(&self) -> bool {
+    fn is_active(&self) -> bool {
         let now = Utc::now();
         matches!(self.status, ElevationStatus::Active) &&
             now >= self.start_time &&
@@ -460,17 +459,17 @@ impl TempRoleElevation {
     }
 
     /// Checks if the elevation has expired
-     fn is_expired(&self) -> bool {
+    fn is_expired(&self) -> bool {
         Utc::now() > self.end_time
     }
 
     /// Checks if the elevation is pending approval
-     fn is_pending(&self) -> bool {
+    fn is_pending(&self) -> bool {
         matches!(self.status, ElevationStatus::Pending)
     }
 
     /// Activates the elevation
-     fn activate(&mut self) -> Result<(), AppError> {
+    fn activate(&mut self) -> Result<(), AppError> {
         if !matches!(self.status, ElevationStatus::Approved) {
             return Err(
                 AppError::ValidationError(
@@ -486,7 +485,7 @@ impl TempRoleElevation {
     }
 
     /// Revokes the elevation
-     fn revoke(
+    fn revoke(
         &mut self,
         revoked_by_user_id: String,
         reason: Option<String>
@@ -506,7 +505,7 @@ impl TempRoleElevation {
     }
 
     /// Approves the elevation
-     fn approve(&mut self, approved_by_user_id: String) -> Result<(), AppError> {
+    fn approve(&mut self, approved_by_user_id: String) -> Result<(), AppError> {
         if !matches!(self.status, ElevationStatus::Pending) {
             return Err(
                 AppError::ValidationError("Only pending elevations can be approved".to_string())
@@ -520,11 +519,7 @@ impl TempRoleElevation {
     }
 
     /// Denies the elevation
-     fn deny(
-        &mut self,
-        denied_by_user_id: String,
-        reason: Option<String>
-    ) -> Result<(), AppError> {
+    fn deny(&mut self, denied_by_user_id: String, reason: Option<String>) -> Result<(), AppError> {
         if !matches!(self.status, ElevationStatus::Pending) {
             return Err(
                 AppError::ValidationError("Only pending elevations can be denied".to_string())

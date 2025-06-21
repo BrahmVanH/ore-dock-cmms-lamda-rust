@@ -7,7 +7,7 @@ use tracing::info;
 
 use crate::error::AppError;
 
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
 #[serde(rename_all = "snake_case")]
 pub enum RoleType {
     System, // Built-in system roles
@@ -233,11 +233,11 @@ impl Role {
             name,
             description,
             role_type,
-            is_system_role,
+            is_system_role: *is_system_role,
             permission_ids,
             parent_role_id,
             priority,
-            active,
+            active: *active,
             expires_at,
             max_users,
             created_by,

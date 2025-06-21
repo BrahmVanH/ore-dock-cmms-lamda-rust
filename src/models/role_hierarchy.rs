@@ -162,7 +162,7 @@ impl RoleHierarchy {
     /// # Returns
     ///
     /// 'Some' RoleHierarchy if item fields match, 'None' otherwise
-    pub(crate)  fn from_item(item: &HashMap<String, AttributeValue>) -> Option<Self> {
+    pub(crate) fn from_item(item: &HashMap<String, AttributeValue>) -> Option<Self> {
         info!("calling from_item with: {:?}", &item);
 
         let id = item.get("id")?.as_s().ok()?.to_string();
@@ -236,10 +236,10 @@ impl RoleHierarchy {
             parent_role_id,
             child_role_id,
             hierarchy_type,
-            inherited_permissions,
+            inherited_permissions: *inherited_permissions,
             permission_overrides,
             depth_level,
-            active,
+            active: *active,
             priority,
             conditions,
             delegation_expires_at,
@@ -261,7 +261,7 @@ impl RoleHierarchy {
     /// # Returns
     ///
     /// HashMap representing DB item for RoleHierarchy instance
-    pub(crate)  fn to_item(&self) -> HashMap<String, AttributeValue> {
+    pub(crate) fn to_item(&self) -> HashMap<String, AttributeValue> {
         let mut item = HashMap::new();
 
         item.insert("id".to_string(), AttributeValue::S(self.id.clone()));
@@ -307,7 +307,7 @@ impl RoleHierarchy {
     }
 
     /// Checks if this hierarchy relationship has expired (for delegated relationships)
-     fn is_expired(&self) -> bool {
+    fn is_expired(&self) -> bool {
         if let Some(expires_at) = &self.delegation_expires_at {
             Utc::now() > *expires_at
         } else {
@@ -316,12 +316,12 @@ impl RoleHierarchy {
     }
 
     /// Checks if this hierarchy relationship is currently effective
-     fn is_effective(&self) -> bool {
+    fn is_effective(&self) -> bool {
         self.active && !self.is_expired()
     }
 
     /// Adds a permission override to this hierarchy
-     fn add_permission_override(&mut self, permission_id: String) {
+    fn add_permission_override(&mut self, permission_id: String) {
         if !self.permission_overrides.contains(&permission_id) {
             self.permission_overrides.push(permission_id);
             self.updated_at = Utc::now();
@@ -337,7 +337,7 @@ impl RoleHierarchy {
     }
 
     /// Checks if a specific permission is overridden in this hierarchy
-     fn has_permission_override(&self, permission_id: &str) -> bool {
+    fn has_permission_override(&self, permission_id: &str) -> bool {
         self.permission_overrides.contains(&permission_id.to_string())
     }
 }

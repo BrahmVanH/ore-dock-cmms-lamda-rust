@@ -4,12 +4,12 @@ use axum::{
   middleware::Next,
   response::Response,
 };
+use ore_dock_cmms_lambda::AppError;
 
-use crate::error::AppError;
 
 use super::jwt::validate_token;
 
-pub async fn auth_middleware<B>(
+ async fn auth_middleware<B>(
   headers: HeaderMap,
   request: Request<Body>,
   next: Next

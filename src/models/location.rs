@@ -81,13 +81,13 @@ impl Location {
     /// # Returns
     ///
     /// 'Some' Location if item fields match, 'None' otherwise
-    pub(crate)  fn from_item(item: &HashMap<String, AttributeValue>) -> Option<Self> {
+    pub(crate) fn from_item(item: &HashMap<String, AttributeValue>) -> Option<Self> {
         info!("calling from_item with: {:?}", &item);
 
         let id = item.get("id")?.as_s().ok()?.to_string();
         let name = item.get("name")?.as_s().ok()?.to_string();
 
-        let r#type_id = item.get("r#type_id")?.as_s().ok()?;
+        let r#type_id = item.get("r#type_id")?.as_s().ok()?.to_string();
 
         let parent_location_id = item
             .get("parent_location_id")
@@ -99,7 +99,7 @@ impl Location {
             .and_then(|v| v.as_s().ok())
             .map(|s| s.to_string());
 
-        let address = item
+        let address: Address = item
             .get("address")
             .and_then(|v| v.as_m().ok())
             .and_then(|address_map| Address::from_item(address_map))?;
@@ -140,7 +140,7 @@ impl Location {
     /// # Returns
     ///
     /// HashMap representing DB item for Location instance
-    pub(crate)  fn to_item(&self) -> HashMap<String, AttributeValue> {
+    pub(crate) fn to_item(&self) -> HashMap<String, AttributeValue> {
         let mut item = HashMap::new();
 
         item.insert("id".to_string(), AttributeValue::S(self.id.clone()));

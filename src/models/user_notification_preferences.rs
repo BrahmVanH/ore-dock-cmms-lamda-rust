@@ -1,18 +1,11 @@
 use std::collections::HashMap;
 
-use async_graphql::Object;
 use aws_sdk_dynamodb::types::AttributeValue;
 use chrono::{ DateTime, Utc, NaiveTime };
 use serde::{ Deserialize, Serialize };
 use tracing::info;
 
-use crate::{
-    error::AppError,
-    models::{
-        notification::{ NotificationChannels, SeverityLevel },
-        notification_template::NotificationType,
-    },
-};
+use crate::{ error::AppError, models::{ notification::{ NotificationChannels, SeverityLevel } } };
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "snake_case")]
@@ -24,7 +17,7 @@ pub enum PreferenceScope {
 }
 
 impl PreferenceScope {
-    fn to_str(&self) -> &str {
+    pub(crate) fn to_str(&self) -> &str {
         match self {
             PreferenceScope::Global => "global",
             PreferenceScope::Template => "template",
@@ -33,11 +26,11 @@ impl PreferenceScope {
         }
     }
 
-    fn to_string(&self) -> String {
+    pub(crate) fn to_string(&self) -> String {
         self.to_str().to_string()
     }
 
-    fn from_string(s: &str) -> Result<PreferenceScope, AppError> {
+    pub(crate) fn from_string(s: &str) -> Result<PreferenceScope, AppError> {
         match s {
             "global" => Ok(Self::Global),
             "template" => Ok(Self::Template),
@@ -207,7 +200,7 @@ impl UserNotificationPreferences {
     /// # Returns
     ///
     /// 'Some' UserNotificationPreferences if item fields match, 'None' otherwise
-    pub fn from_item(item: &HashMap<String, AttributeValue>) -> Option<Self> {
+    pub(crate) fn from_item(item: &HashMap<String, AttributeValue>) -> Option<Self> {
         info!("calling from_item with: {:?}", &item);
 
         let id = item.get("id")?.as_s().ok()?.to_string();
@@ -325,20 +318,20 @@ impl UserNotificationPreferences {
             user_id,
             scope,
             scope_value,
-            enabled,
+            enabled: *enabled,
             preferred_channels,
             blocked_channels,
-            do_not_disturb,
+            do_not_disturb: *do_not_disturb,
             quiet_hours_start,
             quiet_hours_end,
             quiet_hours_timezone,
             min_severity_level,
             frequency_limit,
-            digest_enabled,
+            digest_enabled: *digest_enabled,
             digest_frequency_hours,
-            escalation_enabled,
+            escalation_enabled: *escalation_enabled,
             escalation_delay_minutes,
-            active,
+            active: *active,
             created_at,
             updated_at,
         });
@@ -356,7 +349,7 @@ impl UserNotificationPreferences {
     /// # Returns
     ///
     /// HashMap representing DB item for UserNotificationPreferences instance
-    pub fn to_item(&self) -> HashMap<String, AttributeValue> {
+    pub(crate) fn to_item(&self) -> HashMap<String, AttributeValue> {
         let mut item = HashMap::new();
 
         item.insert("id".to_string(), AttributeValue::S(self.id.clone()));
@@ -470,7 +463,7 @@ impl UserNotificationPreferences {
     }
 
     /// Checks if a specific channel is allowed
-    pub fn is_channel_allowed(&self, channel: &NotificationChannels) -> bool {
+    fn is_channel_allowed(&self, channel: &NotificationChannels) -> bool {
         if self.blocked_channels.contains(channel) {
             return false;
         }
@@ -484,7 +477,7 @@ impl UserNotificationPreferences {
     }
 
     /// Checks if a severity level meets the minimum threshold
-    pub fn is_severity_allowed(&self, severity: &SeverityLevel) -> bool {
+    fn is_severity_allowed(&self, severity: &SeverityLevel) -> bool {
         if let Some(min_severity) = &self.min_severity_level {
             // Define severity hierarchy (higher number = more severe)
             let severity_level = match severity {
@@ -506,118 +499,6 @@ impl UserNotificationPreferences {
             severity_level >= min_level
         } else {
             true
-        }
-    }
-}
-
-#[Object]
-impl UserNotificationPreferences {
-    async fn id(&self) -> &str {
-        &self.id
-    }
-
-    async fn user_id(&self) -> &str {
-        &self.user_id
-    }
-
-    async fn scope(&self) -> &str {
-        self.scope.to_str()
-    }
-
-    async fn scope_value(&self) -> Option<&str> {
-        self.scope_value.as_deref()
-    }
-
-    async fn enabled(&self) -> bool {
-        self.enabled
-    }
-
-    async fn preferred_channels(&self) -> Vec<String> {
-        self.preferred_channels
-            .iter()
-            .map(|c| c.to_str().to_string())
-            .collect()
-    }
-
-    async fn blocked_channels(&self) -> Vec<String> {
-        self.blocked_channels
-            .iter()
-            .map(|c| c.to_str().to_string())
-            .collect()
-    }
-
-    async fn do_not_disturb(&self) -> bool {
-        self.do_not_disturb
-    }
-
-    async fn quiet_hours_start(&self) -> Option<String> {
-        self.quiet_hours_start.map(|t| t.format("%H:%M:%S").to_string())
-    }
-
-    async fn quiet_hours_end(&self) -> Option<String> {
-        self.quiet_hours_end.map(|t| t.format("%H:%M:%S").to_string())
-    }
-
-    async fn quiet_hours_timezone(&self) -> Option<&str> {
-        self.quiet_hours_timezone.as_deref()
-    }
-
-    async fn min_severity_level(&self) -> Option<String> {
-        self.min_severity_level.as_ref().map(|s| s.to_str().to_string())
-    }
-
-    async fn frequency_limit(&self) -> i32 {
-        self.frequency_limit
-    }
-
-    async fn digest_enabled(&self) -> bool {
-        self.digest_enabled
-    }
-
-    async fn digest_frequency_hours(&self) -> i32 {
-        self.digest_frequency_hours
-    }
-
-    async fn escalation_enabled(&self) -> bool {
-        self.escalation_enabled
-    }
-
-    async fn escalation_delay_minutes(&self) -> i32 {
-        self.escalation_delay_minutes
-    }
-
-    async fn active(&self) -> bool {
-        self.active
-    }
-
-    async fn created_at(&self) -> &DateTime<Utc> {
-        &self.created_at
-    }
-
-    async fn updated_at(&self) -> &DateTime<Utc> {
-        &self.updated_at
-    }
-
-    #[graphql(name = "is_notification_allowed_now")]
-    async fn check_is_notification_allowed_now(&self) -> bool {
-        self.is_notification_allowed_now()
-    }
-
-    #[graphql(name = "is_channel_allowed")]
-    async fn check_is_channel_allowed(&self, channel: String) -> bool {
-        if let Ok(channel_enum) = NotificationChannels::from_string(&channel) {
-            self.is_channel_allowed(&channel_enum)
-        } else {
-            false
-        }
-    }
-
-    #[graphql(name = "is_severity_allowed")]
-    async fn check_is_severity_allowed(&self, severity: String) -> bool {
-        if let Ok(severity_enum) = SeverityLevel::from_string(&severity) {
-            self.is_severity_allowed(&severity_enum)
-        } else {
-            false
         }
     }
 }

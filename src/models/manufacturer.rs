@@ -106,7 +106,7 @@ impl Manufacturer {
     /// # Returns
     ///
     /// 'Some' Manufacturer if item fields match, 'None' otherwise
-    pub(crate)  fn from_item(item: &HashMap<String, AttributeValue>) -> Option<Self> {
+    pub(crate) fn from_item(item: &HashMap<String, AttributeValue>) -> Option<Self> {
         info!("calling from_item with: {:?}", &item);
 
         let id = item.get("id")?.as_s().ok()?.to_string();
@@ -166,7 +166,7 @@ impl Manufacturer {
             address,
             support_contact,
             warranty_contact,
-            active,
+            active: *active,
             created_at,
             updated_at,
         });
@@ -184,7 +184,7 @@ impl Manufacturer {
     /// # Returns
     ///
     /// HashMap representing DB item for Manufacturer instance
-    pub(crate)  fn to_item(&self) -> HashMap<String, AttributeValue> {
+    pub(crate) fn to_item(&self) -> HashMap<String, AttributeValue> {
         let mut item = HashMap::new();
 
         item.insert("id".to_string(), AttributeValue::S(self.id.clone()));

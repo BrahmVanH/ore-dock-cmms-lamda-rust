@@ -28,7 +28,7 @@ pub struct Address {
 }
 
 impl Address {
-    fn new(
+    pub fn new(
         street: String,
         unit: Option<String>,
         city: String,
@@ -48,12 +48,12 @@ impl Address {
 
     pub(crate) fn validate(&self) -> Result<(), String> {
         let po_box_regex = Regex::new(
-            r"P([.]?(O|0)[.]?|ost|ostal).((O|0)ffice.)?Box{1}\b/i"
+            r"(?i)^P\.?O\.?\s*Box\s+\d+|Post\s*Office\s*Box\s+\d+|Postal\s*Box\s+\d+"
         ).map_err(|e| {
             return AppError::InternalServerError(e.to_string()).to_string();
         })?;
 
-        let street_addr_regex = Regex::new(r"/\d{1,}(\s{1}\w{1,})(\s{1}?\w{1,})+)/g").map_err(|e| {
+        let street_addr_regex = Regex::new(r"^\d+\s+\w+.*").map_err(|e| {
             return AppError::InternalServerError(e.to_string()).to_string();
         })?;
 
@@ -120,5 +120,128 @@ impl Address {
         item.insert("country".to_string(), AttributeValue::S(self.country.clone()));
         item.insert("zip".to_string(), AttributeValue::S(self.zip.clone()));
         item
+    }
+}
+
+/// Tests
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn create_valid_address() -> Address {
+        Address::new(
+            "123 Main St".to_string(),
+            Some("Apt 4B".to_string()),
+            "Springfield".to_string(),
+            "IL".to_string(),
+            "United States".to_string(),
+            "62701".to_string()
+        )
+    }
+
+    #[test]
+    fn test_new_address_with_unit() {
+        let address = Address::new(
+            "123 Main St".to_string(),
+            Some("Apt 4B".to_string()),
+            "Springfield".to_string(),
+            "IL".to_string(),
+            "United States".to_string(),
+            "62701".to_string()
+        );
+
+        assert_eq!(address.street, "123 Main St");
+        assert_eq!(address.unit, Some("Apt 4B".to_string()));
+        assert_eq!(address.city, "Springfield");
+        assert_eq!(address.state, "IL");
+        assert_eq!(address.country, "United States");
+        assert_eq!(address.zip, "62701");
+    }
+
+    #[test]
+    fn test_new_address_without_unit() {
+        let address = Address::new(
+            "456 Oak Avenue".to_string(),
+            None,
+            "Chicago".to_string(),
+            "IL".to_string(),
+            "United States".to_string(),
+            "60601".to_string()
+        );
+
+        assert_eq!(address.street, "456 Oak Avenue");
+        assert_eq!(address.unit, None);
+        assert_eq!(address.city, "Chicago");
+    }
+
+    #[test]
+    fn test_validate_empty_street() {
+        let mut address = create_valid_address();
+        address.street = "".to_string();
+
+        let result = address.validate();
+        assert!(result.is_err());
+        assert_eq!(result.unwrap_err(), "Street field cannot be empty");
+    }
+
+    #[test]
+    fn test_validate_whitespace_only_street() {
+        let mut address = create_valid_address();
+        address.street = "   ".to_string();
+
+        let result = address.validate();
+        assert!(result.is_err());
+        assert_eq!(result.unwrap_err(), "Street field cannot be empty");
+    }
+
+    #[test]
+    fn test_validate_empty_city() {
+        let mut address = create_valid_address();
+        address.city = "".to_string();
+
+        let result = address.validate();
+        assert!(result.is_err());
+        assert_eq!(result.unwrap_err(), "City field cannot be empty");
+    }
+
+    #[test]
+    fn test_validate_empty_state() {
+        let mut address = create_valid_address();
+        address.state = "".to_string();
+
+        let result = address.validate();
+        assert!(result.is_err());
+        assert_eq!(result.unwrap_err(), "State field cannot be empty");
+    }
+
+    #[test]
+    fn test_validate_empty_country() {
+        let mut address = create_valid_address();
+        address.country = "".to_string();
+
+        let result = address.validate();
+        assert!(result.is_err());
+        assert_eq!(result.unwrap_err(), "Country field cannot be empty");
+    }
+
+    #[test]
+    fn test_validate_empty_zip() {
+        let mut address = create_valid_address();
+        address.zip = "".to_string();
+
+        let result = address.validate();
+        assert!(result.is_err());
+        assert_eq!(result.unwrap_err(), "Zip field cannot be empty");
+    }
+
+    #[test]
+    fn test_clone() {
+        let address = create_valid_address();
+        let cloned = address.clone();
+
+        assert_eq!(address.street, cloned.street);
+        assert_eq!(address.unit, cloned.unit);
+        assert_eq!(address.city, cloned.city);
     }
 }

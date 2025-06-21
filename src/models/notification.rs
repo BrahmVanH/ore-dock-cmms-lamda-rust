@@ -19,7 +19,7 @@ pub enum SeverityLevel {
 }
 
 impl SeverityLevel {
-    pub(crate)  fn to_str(&self) -> &str {
+    pub(crate) fn to_str(&self) -> &str {
         match self {
             SeverityLevel::Low => "low",
             SeverityLevel::Medium => "medium",
@@ -29,11 +29,11 @@ impl SeverityLevel {
         }
     }
 
-    pub(crate)  fn to_string(&self) -> String {
+    pub(crate) fn to_string(&self) -> String {
         self.to_str().to_string()
     }
 
-    pub(crate)  fn from_string(s: &str) -> Result<SeverityLevel, AppError> {
+    pub(crate) fn from_string(s: &str) -> Result<SeverityLevel, AppError> {
         match s {
             "low" => Ok(Self::Low),
             "medium" => Ok(Self::Medium),
@@ -45,7 +45,7 @@ impl SeverityLevel {
     }
 }
 
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
 #[serde(rename_all = "snake_case")]
 pub enum NotificationChannels {
     Email,
@@ -59,7 +59,7 @@ pub enum NotificationChannels {
 }
 
 impl NotificationChannels {
-    pub(crate)  fn to_str(&self) -> &str {
+    pub(crate) fn to_str(&self) -> &str {
         match self {
             NotificationChannels::Email => "email",
             NotificationChannels::Push => "push",
@@ -72,11 +72,11 @@ impl NotificationChannels {
         }
     }
 
-    pub(crate)  fn to_string(&self) -> String {
+    pub(crate) fn to_string(&self) -> String {
         self.to_str().to_string()
     }
 
-    pub(crate)  fn from_string(s: &str) -> Result<NotificationChannels, AppError> {
+    pub(crate) fn from_string(s: &str) -> Result<NotificationChannels, AppError> {
         match s {
             "email" => Ok(Self::Email),
             "push" => Ok(Self::Push),
@@ -249,7 +249,7 @@ impl Notification {
     /// # Returns
     ///
     /// 'Some' Notification if item fields match, 'None' otherwise
-    pub(crate)  fn from_item(item: &HashMap<String, AttributeValue>) -> Option<Self> {
+    pub(crate) fn from_item(item: &HashMap<String, AttributeValue>) -> Option<Self> {
         info!("calling from_item with: {:?}", &item);
 
         let id = item.get("id")?.as_s().ok()?.to_string();
@@ -367,7 +367,7 @@ impl Notification {
     /// # Returns
     ///
     /// HashMap representing DB item for Notification instance
-    pub(crate)  fn to_item(&self) -> HashMap<String, AttributeValue> {
+    pub(crate) fn to_item(&self) -> HashMap<String, AttributeValue> {
         let mut item = HashMap::new();
 
         item.insert("id".to_string(), AttributeValue::S(self.id.clone()));

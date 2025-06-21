@@ -425,7 +425,7 @@ impl Vendor {
             tags,
             custom_fields,
             attachments,
-            approval_required,
+            approval_required: *approval_required,
             auto_approval_limit,
             notes,
             created_by,
@@ -527,7 +527,6 @@ impl Vendor {
             .get("shipping_address")
             .and_then(|v| v.as_s().ok())
             .and_then(|s| serde_json::from_str::<Json>(s).ok());
-
 
         let certifications = item
             .get("certifications")
@@ -701,7 +700,7 @@ impl Vendor {
             tags,
             custom_fields,
             attachments,
-            approval_required,
+            approval_required: *approval_required,
             auto_approval_limit,
             notes,
             created_by,
@@ -805,7 +804,6 @@ impl Vendor {
                 item.insert("shipping_address".to_string(), AttributeValue::S(shipping_json));
             }
         }
-
 
         // Store certifications as string set
         if !self.certifications.is_empty() {

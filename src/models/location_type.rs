@@ -34,7 +34,7 @@ impl LocationType {
         Ok(())
     }
 
-    pub(crate)  fn from_item(item: &HashMap<String, AttributeValue>) -> Option<Self> {
+    pub(crate) fn from_item(item: &HashMap<String, AttributeValue>) -> Option<Self> {
         let id = item.get("id")?.as_s().ok()?.to_string();
         let name = item.get("name")?.as_s().ok()?.to_string();
         let description = item.get("description")?.as_s().ok()?.to_string();
@@ -48,7 +48,8 @@ impl LocationType {
         let updated_at: DateTime<Utc> = item
             .get("updated_at")
             .and_then(|v| v.as_s().ok())
-            .and_then(|s| s.parse::<DateTime<Utc>>().ok());
+            .and_then(|s| s.parse::<DateTime<Utc>>().ok())
+            .unwrap_or_else(|| Utc::now());
 
         let res = Some(Self {
             id,
@@ -61,7 +62,7 @@ impl LocationType {
         res
     }
 
-    pub(crate)  fn to_item(&self) -> HashMap<String, AttributeValue> {
+    pub(crate) fn to_item(&self) -> HashMap<String, AttributeValue> {
         let mut item = HashMap::new();
 
         item.insert("id".to_string(), AttributeValue::S(self.id.clone()));

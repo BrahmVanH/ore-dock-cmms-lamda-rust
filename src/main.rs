@@ -1,14 +1,25 @@
-use ore_dock_cmms_lambda::{ models::prelude::*, schema::build_schema, error::AppError };
+// use ore_dock_cmms_lambda::{ models::prelude::*, schema::build_schema, error::AppError };
 
 use aws_sdk_dynamodb::Client;
 use axum::{ extract::Extension, http::Method, middleware::from_fn, routing::get, Router };
-use schema::{ MutationRoot, QueryRoot };
+use ore_dock_cmms_lambda::db;
+// use schema::{ MutationRoot, QueryRoot };
 use tower::builder::ServiceBuilder;
 use tower_http::{ compression::CompressionLayer, cors::{ Any, CorsLayer } };
 
 use async_graphql_axum::{ GraphQLRequest, GraphQLResponse };
 
-use async_graphql::{ Context, EmptySubscription, Object, Schema, SimpleObject };
+use async_graphql::{ Context, EmptyMutation, EmptySubscription, Object, Schema, SimpleObject };
+
+#[derive(Default)]
+struct QueryRoot;
+
+#[Object]
+impl QueryRoot {
+    async fn hello(&self) -> &str {
+        "Hello World!"
+    }
+}
 
 use serde::Serialize;
 use tracing::{ warn, error };
@@ -45,7 +56,7 @@ impl std::fmt::Display for FailureResponse {
 impl std::error::Error for FailureResponse {}
 // Handler for graphql requests
 async fn graphql_handler(
-    Extension(schema): Extension<Schema<QueryRoot, MutationRoot, EmptySubscription>>,
+    Extension(schema): Extension<Schema<QueryRoot, EmptyMutation, EmptySubscription>>,
     req: GraphQLRequest
 ) -> GraphQLResponse {
     schema.execute(req.into_inner()).await.into()
@@ -78,6 +89,7 @@ async fn main() {
             std::process::exit(1);
         }
     };
+    let schema = Schema::build(QueryRoot::default(), EmptyMutation, EmptySubscription);
 
     db::init::ensure_tables_exist(&db_client).await.unwrap();
 
@@ -87,7 +99,8 @@ async fn main() {
     //     db_client,
     // });
 
-    let schema = Schema::build(QueryRoot, MutationRoot, EmptySubscription)
+    let schema = Schema::build(QueryRoot::default(), EmptyMutation, EmptySubscription)
+        // let schema = Schema::build(QueryRoot, MutationRoot, EmptySubscription)
         .data(db_client.clone())
         .finish();
 

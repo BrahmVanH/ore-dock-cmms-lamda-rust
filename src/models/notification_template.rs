@@ -175,7 +175,7 @@ impl NotificationTemplate {
     /// # Returns
     ///
     /// 'Some' NotificationTemplate if item fields match, 'None' otherwise
-    pub(crate)  fn from_item(item: &HashMap<String, AttributeValue>) -> Option<Self> {
+    pub(crate) fn from_item(item: &HashMap<String, AttributeValue>) -> Option<Self> {
         info!("calling from_item with: {:?}", &item);
 
         let id = item.get("id")?.as_s().ok()?.to_string();
@@ -266,7 +266,7 @@ impl NotificationTemplate {
             supported_channels,
             variables,
             template_engine,
-            active,
+            active: *active,
             version,
             created_by,
             created_at,
@@ -286,7 +286,7 @@ impl NotificationTemplate {
     /// # Returns
     ///
     /// HashMap representing DB item for NotificationTemplate instance
-    pub(crate)  fn to_item(&self) -> HashMap<String, AttributeValue> {
+    pub(crate) fn to_item(&self) -> HashMap<String, AttributeValue> {
         let mut item = HashMap::new();
 
         item.insert("id".to_string(), AttributeValue::S(self.id.clone()));
@@ -343,7 +343,7 @@ impl NotificationTemplate {
 
 impl TemplateVariable {
     /// Creates TemplateVariable from DynamoDB item
-    pub(crate)  fn from_item(item: &HashMap<String, AttributeValue>) -> Option<Self> {
+    pub(crate) fn from_item(item: &HashMap<String, AttributeValue>) -> Option<Self> {
         let name = item.get("name")?.as_s().ok()?.to_string();
         let description = item.get("description")?.as_s().ok()?.to_string();
         let variable_type = item.get("variable_type")?.as_s().ok()?.to_string();
@@ -357,13 +357,13 @@ impl TemplateVariable {
             name,
             description,
             variable_type,
-            required,
+            required: *required,
             default_value,
         })
     }
 
     /// Creates DynamoDB item from TemplateVariable
-    pub(crate)  fn to_item(&self) -> HashMap<String, AttributeValue> {
+    pub(crate) fn to_item(&self) -> HashMap<String, AttributeValue> {
         let mut item = HashMap::new();
 
         item.insert("name".to_string(), AttributeValue::S(self.name.clone()));

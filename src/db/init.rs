@@ -11,26 +11,6 @@ use crate::error::AppError;
 
 use super::ensure_table_exists;
 
-/// Ensures that all required tables for the application exist in DynamoDB.
-///
-/// This function checks if each required table exists, and creates
-/// any missing tables with the appropriate configuration.
-///
-/// # Arguments
-///
-/// * `client` - A reference to the DynamoDB client
-///
-/// # Returns
-///
-/// * `Result<(), Error>` - Ok if all tables exist or were created successfully,
-///                         Err if an AWS error occurred
-///
-/// # Example
-///
-/// ```rust
-/// let client = db::setup_local_client().await?;
-/// ensure_tables_exist(&client).await?;
-/// ```
 pub async fn ensure_tables_exist(client: &Client) -> Result<(), AppError> {
     // Get all existing tables
     let tables = client

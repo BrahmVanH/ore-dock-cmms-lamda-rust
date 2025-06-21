@@ -407,7 +407,7 @@ impl VendorCategory {
             risk_level,
             auto_approval_limit,
             vendor_count,
-            active,
+            active: *active,
             created_by,
             created_at,
             updated_at,

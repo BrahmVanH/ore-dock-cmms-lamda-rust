@@ -43,6 +43,59 @@ impl MaintenanceCadence {
         Ok(Self { interval, unit })
     }
 
+    pub(crate) fn from_item(item: &HashMap<String, AttributeValue>) -> Option<Self> {
+        let interval_str = item
+            .get("interval")
+            .ok_or_else(||
+                AppError::DatabaseError(
+                    "could not get MaintenanceCadence item field 'interval'".to_string()
+                )
+            )
+            .ok()?
+            .as_s()
+            .map_err(|_| AppError::DatabaseError("interval is not a string".to_string()))
+            .ok()?;
+
+        let interval = interval_str
+            .parse::<i32>()
+            .map_err(|_| AppError::ValidationError("Invalid interval".to_string()))
+            .ok()?;
+
+        let unit_str = item
+            .get("unit")
+            .ok_or_else(||
+                AppError::DatabaseError(
+                    "could not get MaintenanceCadence item field 'unit'".to_string()
+                )
+            )
+            .ok()?
+            .as_s()
+            .map_err(|_|
+                AppError::DatabaseError(
+                    "could not get MaintenanceCadence item field 'unit'".to_string()
+                )
+            )
+            .ok()?;
+
+        let unit = CadenceUnit::from_string(unit_str)
+            .map_err(|e| e)
+            .ok()?;
+
+        Some(Self {
+            interval,
+            unit,
+        })
+    }
+
+    pub(crate) fn to_item(&self) -> HashMap<String, AttributeValue> {
+        let mut item = HashMap::new();
+
+        item.insert("interval".to_string(), AttributeValue::S(self.interval.to_string()));
+        item.insert("unit".to_string(), AttributeValue::S(self.unit.to_string()));
+
+        item
+    }
+
     pub(crate) fn to_days(&self) -> Result<i32, AppError> {
         match self.unit {
             CadenceUnit::Hours => Ok(self.interval / 24),
@@ -71,6 +124,18 @@ impl CadenceUnit {
             CadenceUnit::Years => "years",
             CadenceUnit::RunHours => "run_hours",
             CadenceUnit::Cycles => "cycles",
+        }
+    }
+
+    pub(crate) fn to_string(&self) -> String {
+        match self {
+            CadenceUnit::Hours => "hours".to_string(),
+            CadenceUnit::Days => "days".to_string(),
+            CadenceUnit::Weeks => "weeks".to_string(),
+            CadenceUnit::Months => "months".to_string(),
+            CadenceUnit::Years => "years".to_string(),
+            CadenceUnit::RunHours => "run_hours".to_string(),
+            CadenceUnit::Cycles => "cycles".to_string(),
         }
     }
 
@@ -252,7 +317,7 @@ impl MaintenanceSchedule {
     /// # Returns
     ///
     /// HashMap representing DB item for MaintenanceSchedule instance
-    pub(crate)  fn to_item(&self) -> HashMap<String, AttributeValue> {
+    pub(crate) fn to_item(&self) -> HashMap<String, AttributeValue> {
         let mut item = HashMap::new();
 
         item.insert("id".to_string(), AttributeValue::S(self.id.clone()));
@@ -291,71 +356,5 @@ impl MaintenanceSchedule {
         item.insert("updated_at".to_string(), AttributeValue::S(self.updated_at.to_string()));
 
         item
-    }
-}
-
-#[Object]
-impl MaintenanceSchedule {
-    async fn id(&self) -> &str {
-        &self.id
-    }
-
-    async fn asset_id(&self) -> &str {
-        &self.asset_id
-    }
-
-    async fn cadences(&self) -> &Vec<MaintenanceCadence> {
-        &self.cadences
-    }
-
-    async fn last_completed_at(&self) -> Option<&DateTime<Utc>> {
-        self.last_completed_at.as_ref()
-    }
-
-    async fn last_completed_by_user_id(&self) -> Option<&str> {
-        self.last_completed_by_user_id.as_deref()
-    }
-
-    async fn next_due_at(&self) -> &DateTime<Utc> {
-        &self.next_due_at
-    }
-
-    async fn duration_estimate(&self) -> Option<i32> {
-        self.duration_estimate
-    }
-
-    async fn recurring(&self) -> bool {
-        self.recurring
-    }
-
-    async fn active(&self) -> bool {
-        self.active
-    }
-
-    async fn created_at(&self) -> &DateTime<Utc> {
-        &self.created_at
-    }
-
-    async fn updated_at(&self) -> &DateTime<Utc> {
-        &self.updated_at
-    }
-}
-
-#[Object]
-impl MaintenanceCadence {
-    async fn interval(&self) -> i32 {
-        self.interval
-    }
-
-    async fn unit(&self) -> &str {
-        self.unit.to_str()
-    }
-
-    async fn cadence_string(&self) -> String {
-        self.to_string()
-    }
-
-    async fn days(&self) -> Result<i32, String> {
-        self.to_days().map_err(|e| e.to_string())
     }
 }

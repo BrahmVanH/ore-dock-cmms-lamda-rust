@@ -228,7 +228,7 @@ impl Permission {
             scope,
             conditions,
             resource_filters,
-            active,
+            active: *active,
             expires_at,
             created_by,
             created_at,
@@ -315,4 +315,3 @@ impl Permission {
         true
     }
 }
-        

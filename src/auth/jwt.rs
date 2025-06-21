@@ -1,9 +1,9 @@
 use std::{ env, time::{ SystemTime, UNIX_EPOCH } };
 
+use ore_dock_cmms_lambda::AppError;
 use serde::{ Deserialize, Serialize };
 use jsonwebtoken::{ decode, encode, DecodingKey, EncodingKey, Header, Validation };
 
-use crate::error::AppError;
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Claims {
     pub sub: String, // user ID

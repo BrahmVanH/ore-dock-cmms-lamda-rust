@@ -10,7 +10,7 @@ use crate::error::AppError;
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "snake_case")]
-enum MaintenanceFrequencyOptions {
+pub enum MaintenanceFrequencyOptions {
     OneTime,
     Monthly,
     Quarterly,
@@ -19,7 +19,7 @@ enum MaintenanceFrequencyOptions {
 }
 
 impl MaintenanceFrequencyOptions {
-    fn to_string(&self) -> String {
+    pub(crate) fn to_string(&self) -> String {
         match self {
             &MaintenanceFrequencyOptions::OneTime => "one-time".to_string(),
             &MaintenanceFrequencyOptions::Annually => "annually".to_string(),
@@ -28,7 +28,7 @@ impl MaintenanceFrequencyOptions {
             &MaintenanceFrequencyOptions::AsNeeded => "as-needed".to_string(),
         }
     }
-    fn to_str(&self) -> &str {
+    pub(crate) fn to_str(&self) -> &str {
         match self {
             &MaintenanceFrequencyOptions::OneTime => "one-time",
             &MaintenanceFrequencyOptions::Annually => "annually",
@@ -37,16 +37,22 @@ impl MaintenanceFrequencyOptions {
             &MaintenanceFrequencyOptions::AsNeeded => "as-needed",
         }
     }
-    fn from_string(s: &str) -> Result<MaintenanceFrequencyOptions, AppError> {
+    pub(crate) fn from_string(s: &str) -> Result<MaintenanceFrequencyOptions, AppError> {
         match s {
             "one-time" => Ok(Self::OneTime),
             "annually" => Ok(Self::Annually),
             "quarterly" => Ok(Self::Quarterly),
             "monthly" => Ok(Self::Monthly),
             "as-needed" => Ok(Self::AsNeeded),
+            _ =>
+                Err(
+                    AppError::DatabaseError(
+                        "Cannot perform from_string on MaintenanceFrequencyOption input".to_string()
+                    )
+                ),
         }
     }
-    fn to_days(f: &MaintenanceFrequencyOptions) -> Result<i32, AppError> {
+    pub(crate) fn to_days(f: &MaintenanceFrequencyOptions) -> Result<i32, AppError> {
         match f {
             &MaintenanceFrequencyOptions::OneTime => Ok(0),
             &MaintenanceFrequencyOptions::Annually => Ok(365),
@@ -68,7 +74,7 @@ pub enum AssetCurrentStatusOptions {
 }
 
 impl AssetCurrentStatusOptions {
-    fn to_string(&self) -> String {
+    pub(crate) fn to_string(&self) -> String {
         match self {
             &AssetCurrentStatusOptions::Operational => "operational".to_string(),
             &AssetCurrentStatusOptions::Down => "down".to_string(),
@@ -77,7 +83,7 @@ impl AssetCurrentStatusOptions {
             &AssetCurrentStatusOptions::NeedsAttention => "needs-attention".to_string(),
         }
     }
-    fn to_str(&self) -> &str {
+    pub(crate) fn to_str(&self) -> &str {
         match self {
             &AssetCurrentStatusOptions::Operational => "operational",
             &AssetCurrentStatusOptions::Down => "down",
@@ -86,7 +92,7 @@ impl AssetCurrentStatusOptions {
             &AssetCurrentStatusOptions::NeedsAttention => "needs-attention",
         }
     }
-    fn from_string(s: &str) -> Result<AssetCurrentStatusOptions, AppError> {
+    pub(crate) fn from_string(s: &str) -> Result<AssetCurrentStatusOptions, AppError> {
         match s {
             "operational" => Ok(Self::Operational),
             "down" => Ok(Self::Down),
@@ -191,7 +197,7 @@ impl Asset {
         let now = Utc::now();
 
         let maint_freq = MaintenanceFrequencyOptions::from_string(&maintenance_frequency)?;
-        let maint_freq_days = MaintenanceFrequencyOptions::to_days(&maintenance_frequency)?;
+        let maint_freq_days = MaintenanceFrequencyOptions::to_days(&maint_freq)?;
         let curr_status = AssetCurrentStatusOptions::Operational;
         Ok(Self {
             id,
@@ -216,8 +222,8 @@ impl Asset {
                 LocalResult::Single(d) => d,
                 _ => DateTime::<Utc>::UNIX_EPOCH,
             },
-            created_at: Utc::now(),
-            updated_at: Utc::now(),
+            created_at: now,
+            updated_at: now,
         })
     }
     /// Creates Asset instance from DynamoDB item
@@ -322,7 +328,8 @@ impl Asset {
         let updated_at: DateTime<Utc> = item
             .get("updated_at")
             .and_then(|v| v.as_s().ok())
-            .and_then(|s| s.parse::<DateTime<Utc>>().ok());
+            .and_then(|s| s.parse::<DateTime<Utc>>().ok())
+            .unwrap_or_else(|| Utc::now());
 
         let res = Some(Self {
             id,
@@ -361,7 +368,7 @@ impl Asset {
     /// # Returns
     ///
     /// HashMap representing DB item for Asset instance
-    pub(crate)  fn to_item(&self) -> HashMap<String, AttributeValue> {
+    pub(crate) fn to_item(&self) -> HashMap<String, AttributeValue> {
         let mut item = HashMap::new();
 
         item.insert("id".to_string(), AttributeValue::S(self.id.clone()));
@@ -384,17 +391,9 @@ impl Asset {
             "maintenance_frequency".to_string(),
             AttributeValue::S(self.maintenance_frequency.to_str().to_string())
         );
-        let maintenance_schedule_id_attr_value = match self.maintenance_schedule_id {
-            Some(id) => AttributeValue::S(id),
+        let maintenance_schedule_id_attr_value = match &self.maintenance_schedule_id {
+            Some(id) => AttributeValue::S(id.clone()),
             None => AttributeValue::Null(true),
-            None => {
-                return Err("maintenance_schedule_id missing in to_item".into());
-            }
-            Some(other) => {
-                return Err(
-                    format!("Unexpected type for 'maintenance_schedule_id': {:?}", other).into()
-                );
-            }
         };
         item.insert("maintenance_interval_id".to_string(), maintenance_schedule_id_attr_value);
         item.insert("interval_days".to_string(), AttributeValue::N(self.interval_days.to_string()));
