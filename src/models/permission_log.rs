@@ -1,6 +1,5 @@
 use std::collections::HashMap;
 
-use async_graphql::Object;
 use aws_sdk_dynamodb::types::AttributeValue;
 use chrono::{ DateTime, Utc };
 use serde::{ Deserialize, Serialize };
@@ -24,7 +23,7 @@ pub enum PermissionAction {
 }
 
 impl PermissionAction {
-    pub fn to_str(&self) -> &str {
+    pub(crate)  fn to_str(&self) -> &str {
         match self {
             PermissionAction::Create => "create",
             PermissionAction::Read => "read",
@@ -39,11 +38,11 @@ impl PermissionAction {
         }
     }
 
-    pub fn to_string(&self) -> String {
+    pub(crate)  fn to_string(&self) -> String {
         self.to_str().to_string()
     }
 
-    pub fn from_string(s: &str) -> Result<PermissionAction, AppError> {
+    pub(crate)  fn from_string(s: &str) -> Result<PermissionAction, AppError> {
         match s {
             "create" => Ok(Self::Create),
             "read" => Ok(Self::Read),
@@ -71,7 +70,7 @@ pub enum PermissionStatus {
 }
 
 impl PermissionStatus {
-    fn to_str(&self) -> &str {
+    pub(crate) fn to_str(&self) -> &str {
         match self {
             PermissionStatus::Granted => "granted",
             PermissionStatus::Denied => "denied",
@@ -81,11 +80,11 @@ impl PermissionStatus {
         }
     }
 
-    fn to_string(&self) -> String {
+    pub(crate) fn to_string(&self) -> String {
         self.to_str().to_string()
     }
 
-    fn from_string(s: &str) -> Result<PermissionStatus, AppError> {
+    pub(crate) fn from_string(s: &str) -> Result<PermissionStatus, AppError> {
         match s {
             "granted" => Ok(Self::Granted),
             "denied" => Ok(Self::Denied),
@@ -112,7 +111,7 @@ pub enum ResourceType {
 }
 
 impl ResourceType {
-    pub fn to_str(&self) -> &str {
+    pub(crate)  fn to_str(&self) -> &str {
         match self {
             ResourceType::Asset => "asset",
             ResourceType::Location => "location",
@@ -126,11 +125,11 @@ impl ResourceType {
         }
     }
 
-    pub fn to_string(&self) -> String {
+    pub(crate)  fn to_string(&self) -> String {
         self.to_str().to_string()
     }
 
-    pub fn from_string(s: &str) -> Result<ResourceType, AppError> {
+    pub(crate)  fn from_string(s: &str) -> Result<ResourceType, AppError> {
         match s {
             "asset" => Ok(Self::Asset),
             "location" => Ok(Self::Location),
@@ -264,7 +263,7 @@ impl PermissionLog {
     /// # Returns
     ///
     /// 'Some' PermissionLog if item fields match, 'None' otherwise
-    pub fn from_item(item: &HashMap<String, AttributeValue>) -> Option<Self> {
+    pub(crate)  fn from_item(item: &HashMap<String, AttributeValue>) -> Option<Self> {
         info!("calling from_item with: {:?}", &item);
 
         let id = item.get("id")?.as_s().ok()?.to_string();
@@ -359,7 +358,7 @@ impl PermissionLog {
     /// # Returns
     ///
     /// HashMap representing DB item for PermissionLog instance
-    pub fn to_item(&self) -> HashMap<String, AttributeValue> {
+    pub(crate)  fn to_item(&self) -> HashMap<String, AttributeValue> {
         let mut item = HashMap::new();
 
         item.insert("id".to_string(), AttributeValue::S(self.id.clone()));
@@ -396,68 +395,5 @@ impl PermissionLog {
         item.insert("updated_at".to_string(), AttributeValue::S(self.updated_at.to_string()));
 
         item
-    }
-}
-
-#[Object]
-impl PermissionLog {
-    async fn id(&self) -> &str {
-        &self.id
-    }
-
-    async fn user_id(&self) -> &str {
-        &self.user_id
-    }
-
-    async fn resource_type(&self) -> &str {
-        self.resource_type.to_str()
-    }
-
-    async fn resource_id(&self) -> &str {
-        &self.resource_id
-    }
-
-    async fn action(&self) -> &str {
-        self.action.to_str()
-    }
-
-    async fn status(&self) -> &str {
-        self.status.to_str()
-    }
-
-    async fn attempted_at(&self) -> &DateTime<Utc> {
-        &self.attempted_at
-    }
-
-    async fn granted_at(&self) -> Option<&DateTime<Utc>> {
-        self.granted_at.as_ref()
-    }
-
-    async fn denied_reason(&self) -> Option<&str> {
-        self.denied_reason.as_deref()
-    }
-
-    async fn ip_address(&self) -> &str {
-        &self.ip_address
-    }
-
-    async fn user_agent(&self) -> &str {
-        &self.user_agent
-    }
-
-    async fn session_id(&self) -> Option<&str> {
-        self.session_id.as_deref()
-    }
-
-    async fn role_at_time(&self) -> Option<&str> {
-        self.role_at_time.as_deref()
-    }
-
-    async fn created_at(&self) -> &DateTime<Utc> {
-        &self.created_at
-    }
-
-    async fn updated_at(&self) -> &DateTime<Utc> {
-        &self.updated_at
     }
 }
