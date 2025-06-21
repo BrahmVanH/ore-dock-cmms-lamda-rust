@@ -1,5 +1,3 @@
-use crate::models::prelude::*;
-
 pub mod address;
 pub mod asset_type;
 pub mod asset;
