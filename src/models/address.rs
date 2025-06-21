@@ -4,6 +4,8 @@ use aws_sdk_dynamodb::types::AttributeValue;
 use regex::Regex;
 use serde::{ Deserialize, Serialize };
 
+use crate::AppError;
+
 /// Represents a street address for a location
 ///
 /// # Fields
@@ -44,9 +46,17 @@ impl Address {
         }
     }
 
-    pub(crate)  fn validate(&self) -> Result<(), String> {
-        let po_box_regex = Regex::new(r"P([.]?(O|0)[.]?|ost|ostal).((O|0)ffice.)?Box{1}\b/i");
-        let street_addr_regex = Regex::new(r"/\d{1,}(\s{1}\w{1,})(\s{1}?\w{1,})+)/g");
+    pub(crate) fn validate(&self) -> Result<(), String> {
+        let po_box_regex = Regex::new(
+            r"P([.]?(O|0)[.]?|ost|ostal).((O|0)ffice.)?Box{1}\b/i"
+        ).map_err(|e| {
+            return AppError::InternalServerError(e.to_string()).to_string();
+        })?;
+
+        let street_addr_regex = Regex::new(r"/\d{1,}(\s{1}\w{1,})(\s{1}?\w{1,})+)/g").map_err(|e| {
+            return AppError::InternalServerError(e.to_string()).to_string();
+        })?;
+
         if self.street.trim().is_empty() {
             return Err("Street field cannot be empty".to_string());
         }
@@ -73,7 +83,7 @@ impl Address {
         Ok(())
     }
 
-    pub(crate)  fn from_item(item: &HashMap<String, AttributeValue>) -> Option<Self> {
+    pub(crate) fn from_item(item: &HashMap<String, AttributeValue>) -> Option<Self> {
         let street = item.get("street")?.as_s().ok()?.to_string();
         let unit = item.get("unit").and_then(|v| {
             match v {
@@ -96,18 +106,19 @@ impl Address {
             zip,
         })
     }
-    pub(crate)  fn to_item(&self) -> HashMap<String, AttributeValue> {
+    pub(crate) fn to_item(&self) -> HashMap<String, AttributeValue> {
         let mut item = HashMap::new();
 
-        item.insert("street".to_string(), AttributeValue::S(self.id.clone()));
+        item.insert("street".to_string(), AttributeValue::S(self.street.clone()));
 
         if let Some(unit) = &self.unit {
-            item.insert("unit".to_string(), unit.clone());
+            item.insert("unit".to_string(), AttributeValue::S(unit.clone()));
         }
 
-        item.insert("city".to_string(), AttributeValue::S(self.name.clone()));
-        item.insert("state".to_string(), AttributeValue::S(self.name.clone()));
-        item.insert("country".to_string(), AttributeValue::S(self.name.clone()));
-        item.insert("zip".to_string(), AttributeValue::S(self.name.clone()));
+        item.insert("city".to_string(), AttributeValue::S(self.city.clone()));
+        item.insert("state".to_string(), AttributeValue::S(self.state.clone()));
+        item.insert("country".to_string(), AttributeValue::S(self.country.clone()));
+        item.insert("zip".to_string(), AttributeValue::S(self.zip.clone()));
+        item
     }
 }
