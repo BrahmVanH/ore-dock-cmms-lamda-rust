@@ -21,7 +21,7 @@ pub enum UserStatus {
 }
 
 impl UserStatus {
-    fn to_str(&self) -> &str {
+    pub(crate) fn to_str(&self) -> &str {
         match self {
             UserStatus::Active => "active",
             UserStatus::Inactive => "inactive",
@@ -32,11 +32,11 @@ impl UserStatus {
         }
     }
 
-    fn to_string(&self) -> String {
+    pub(crate) fn to_string(&self) -> String {
         self.to_str().to_string()
     }
 
-    fn from_string(s: &str) -> Result<UserStatus, AppError> {
+    pub(crate) fn from_string(s: &str) -> Result<UserStatus, AppError> {
         match s {
             "active" => Ok(Self::Active),
             "inactive" => Ok(Self::Inactive),
@@ -61,7 +61,7 @@ pub enum UserType {
 }
 
 impl UserType {
-    fn to_str(&self) -> &str {
+    pub(crate) fn to_str(&self) -> &str {
         match self {
             UserType::Employee => "employee",
             UserType::Contractor => "contractor",
@@ -72,11 +72,11 @@ impl UserType {
         }
     }
 
-    fn to_string(&self) -> String {
+    pub(crate) fn to_string(&self) -> String {
         self.to_str().to_string()
     }
 
-    fn from_string(s: &str) -> Result<UserType, AppError> {
+    pub(crate) fn from_string(s: &str) -> Result<UserType, AppError> {
         match s {
             "employee" => Ok(Self::Employee),
             "contractor" => Ok(Self::Contractor),
@@ -315,7 +315,7 @@ impl User {
     /// # Returns
     ///
     /// 'Some' User if item fields match, 'None' otherwise
-    pub fn from_item(item: &HashMap<String, AttributeValue>) -> Option<Self> {
+    pub(crate) fn from_item(item: &HashMap<String, AttributeValue>) -> Option<Self> {
         info!("calling from_item with: {:?}", &item);
 
         let id = item.get("id")?.as_s().ok()?.to_string();
@@ -523,7 +523,7 @@ impl User {
     /// # Returns
     ///
     /// HashMap representing DB item for User instance
-    pub fn to_item(&self) -> HashMap<String, AttributeValue> {
+    pub(crate) fn to_item(&self) -> HashMap<String, AttributeValue> {
         let mut item = HashMap::new();
 
         item.insert("id".to_string(), AttributeValue::S(self.id.clone()));
@@ -695,7 +695,7 @@ impl User {
     }
 
     /// Records a failed login attempt
-    pub fn record_failed_login(&mut self, max_attempts: i32, lockout_duration_minutes: i64) {
+    fn record_failed_login(&mut self, max_attempts: i32, lockout_duration_minutes: i64) {
         self.failed_login_attempts += 1;
 
         if self.failed_login_attempts >= max_attempts {
@@ -707,14 +707,14 @@ impl User {
     }
 
     /// Unlocks the user account
-    pub fn unlock_account(&mut self) {
+    fn unlock_account(&mut self) {
         self.failed_login_attempts = 0;
         self.account_locked_until = None;
         self.updated_at = Utc::now();
     }
 
     /// Suspends the user account
-    pub fn suspend(&mut self, reason: Option<String>) -> Result<(), AppError> {
+    fn suspend(&mut self, reason: Option<String>) -> Result<(), AppError> {
         if matches!(self.status, UserStatus::Terminated) {
             return Err(AppError::ValidationError("Cannot suspend terminated user".to_string()));
         }
@@ -730,7 +730,7 @@ impl User {
     }
 
     /// Reactivates a suspended user account
-    pub fn reactivate(&mut self) -> Result<(), AppError> {
+    fn reactivate(&mut self) -> Result<(), AppError> {
         if !matches!(self.status, UserStatus::Suspended | UserStatus::Inactive) {
             return Err(
                 AppError::ValidationError(
@@ -747,7 +747,7 @@ impl User {
     }
 
     /// Terminates the user account
-    pub fn terminate(&mut self, termination_date: Option<DateTime<Utc>>) -> Result<(), AppError> {
+    fn terminate(&mut self, termination_date: Option<DateTime<Utc>>) -> Result<(), AppError> {
         if matches!(self.status, UserStatus::Terminated) {
             return Err(AppError::ValidationError("User is already terminated".to_string()));
         }
@@ -759,7 +759,7 @@ impl User {
     }
 
     /// Updates the user's password change timestamp
-    pub fn record_password_change(&mut self) {
+    fn record_password_change(&mut self) {
         self.password_changed_at = Some(Utc::now());
         self.updated_at = Utc::now();
     }

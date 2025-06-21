@@ -1,5 +1,4 @@
-use async_graphql::Object;
-use super::User;
+use crate::models::{prelude::*, user::UserType};
 
 #[Object]
 impl User {

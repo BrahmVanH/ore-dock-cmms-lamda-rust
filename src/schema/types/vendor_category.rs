@@ -1,7 +1,4 @@
-use async_graphql::Object;
-use chrono::{ DateTime, Utc };
-
-use super::vendor_category::{ CategoryStatus, VendorCategory };
+use crate::models::{ prelude::*, vendor_category::{ VendorCategory, CategoryStatus } };
 
 #[Object]
 impl VendorCategory {
