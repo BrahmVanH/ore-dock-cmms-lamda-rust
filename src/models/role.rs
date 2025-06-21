@@ -1,6 +1,5 @@
 use std::collections::HashMap;
 
-use async_graphql::Object;
 use aws_sdk_dynamodb::types::AttributeValue;
 use chrono::{ DateTime, Utc };
 use serde::{ Deserialize, Serialize };
@@ -18,7 +17,7 @@ pub enum RoleType {
 }
 
 impl RoleType {
-    fn to_str(&self) -> &str {
+    pub(crate) fn to_str(&self) -> &str {
         match self {
             RoleType::System => "system",
             RoleType::Custom => "custom",
@@ -27,11 +26,11 @@ impl RoleType {
         }
     }
 
-    fn to_string(&self) -> String {
+    pub(crate) fn to_string(&self) -> String {
         self.to_str().to_string()
     }
 
-    fn from_string(s: &str) -> Result<RoleType, AppError> {
+    pub(crate) fn from_string(s: &str) -> Result<RoleType, AppError> {
         match s {
             "system" => Ok(Self::System),
             "custom" => Ok(Self::Custom),
@@ -154,7 +153,7 @@ impl Role {
     /// # Returns
     ///
     /// 'Some' Role if item fields match, 'None' otherwise
-    pub fn from_item(item: &HashMap<String, AttributeValue>) -> Option<Self> {
+    pub(crate) fn from_item(item: &HashMap<String, AttributeValue>) -> Option<Self> {
         info!("calling from_item with: {:?}", &item);
 
         let id = item.get("id")?.as_s().ok()?.to_string();
@@ -259,7 +258,7 @@ impl Role {
     /// # Returns
     ///
     /// HashMap representing DB item for Role instance
-    pub fn to_item(&self) -> HashMap<String, AttributeValue> {
+    pub(crate) fn to_item(&self) -> HashMap<String, AttributeValue> {
         let mut item = HashMap::new();
 
         item.insert("id".to_string(), AttributeValue::S(self.id.clone()));
@@ -309,17 +308,17 @@ impl Role {
     }
 
     /// Checks if the role has expired
-    pub fn is_expired(&self) -> bool {
+    fn is_expired(&self) -> bool {
         if let Some(expires_at) = &self.expires_at { Utc::now() > *expires_at } else { false }
     }
 
     /// Checks if the role is currently usable
-    pub fn is_usable(&self) -> bool {
+    fn is_usable(&self) -> bool {
         self.active && !self.is_expired()
     }
 
     /// Adds a permission to this role
-    pub fn add_permission(&mut self, permission_id: String) {
+    fn add_permission(&mut self, permission_id: String) {
         if !self.permission_ids.contains(&permission_id) {
             self.permission_ids.push(permission_id);
             self.updated_at = Utc::now();
@@ -327,7 +326,7 @@ impl Role {
     }
 
     /// Removes a permission from this role
-    pub fn remove_permission(&mut self, permission_id: &str) {
+    fn remove_permission(&mut self, permission_id: &str) {
         if let Some(pos) = self.permission_ids.iter().position(|x| x == permission_id) {
             self.permission_ids.remove(pos);
             self.updated_at = Utc::now();
@@ -335,85 +334,7 @@ impl Role {
     }
 
     /// Checks if this role has a specific permission
-    pub fn has_permission(&self, permission_id: &str) -> bool {
+    fn has_permission(&self, permission_id: &str) -> bool {
         self.permission_ids.contains(&permission_id.to_string())
-    }
-}
-
-#[Object]
-impl Role {
-    async fn id(&self) -> &str {
-        &self.id
-    }
-
-    async fn name(&self) -> &str {
-        &self.name
-    }
-
-    async fn description(&self) -> Option<&str> {
-        self.description.as_deref()
-    }
-
-    async fn role_type(&self) -> &str {
-        self.role_type.to_str()
-    }
-
-    async fn is_system_role(&self) -> bool {
-        self.is_system_role
-    }
-
-    async fn permission_ids(&self) -> &Vec<String> {
-        &self.permission_ids
-    }
-
-    async fn parent_role_id(&self) -> Option<&str> {
-        self.parent_role_id.as_deref()
-    }
-
-    async fn priority(&self) -> i32 {
-        self.priority
-    }
-
-    async fn active(&self) -> bool {
-        self.active
-    }
-
-    async fn expires_at(&self) -> Option<&DateTime<Utc>> {
-        self.expires_at.as_ref()
-    }
-
-    async fn max_users(&self) -> Option<i32> {
-        self.max_users
-    }
-
-    async fn created_by(&self) -> Option<&str> {
-        self.created_by.as_deref()
-    }
-
-    async fn created_at(&self) -> &DateTime<Utc> {
-        &self.created_at
-    }
-
-    async fn updated_at(&self) -> &DateTime<Utc> {
-        &self.updated_at
-    }
-
-    #[graphql(name = "is_expired")]
-    async fn get_is_expired(&self) -> bool {
-        self.is_expired()
-    }
-
-    #[graphql(name = "is_usable")]
-    async fn get_is_usable(&self) -> bool {
-        self.is_usable()
-    }
-
-    #[graphql(name = "has_permission")]
-    async fn check_permission(&self, permission_id: String) -> bool {
-        self.has_permission(&permission_id)
-    }
-
-    async fn permission_count(&self) -> i32 {
-        self.permission_ids.len() as i32
     }
 }
