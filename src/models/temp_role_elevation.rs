@@ -21,7 +21,7 @@ pub enum ElevationStatus {
 }
 
 impl ElevationStatus {
-    fn to_str(&self) -> &str {
+    pub(crate) fn to_str(&self) -> &str {
         match self {
             ElevationStatus::Pending => "pending",
             ElevationStatus::Approved => "approved",
@@ -33,11 +33,11 @@ impl ElevationStatus {
         }
     }
 
-    fn to_string(&self) -> String {
+    pub(crate) fn to_string(&self) -> String {
         self.to_str().to_string()
     }
 
-    fn from_string(s: &str) -> Result<ElevationStatus, AppError> {
+    pub(crate) fn from_string(s: &str) -> Result<ElevationStatus, AppError> {
         match s {
             "pending" => Ok(Self::Pending),
             "approved" => Ok(Self::Approved),
@@ -61,7 +61,7 @@ pub enum ElevationPriority {
 }
 
 impl ElevationPriority {
-    fn to_str(&self) -> &str {
+    pub(crate) fn to_str(&self) -> &str {
         match self {
             ElevationPriority::Low => "low",
             ElevationPriority::Normal => "normal",
@@ -70,11 +70,11 @@ impl ElevationPriority {
         }
     }
 
-    fn to_string(&self) -> String {
+    pub(crate) fn to_string(&self) -> String {
         self.to_str().to_string()
     }
 
-    fn from_string(s: &str) -> Result<ElevationPriority, AppError> {
+    pub(crate) fn from_string(s: &str) -> Result<ElevationPriority, AppError> {
         match s {
             "low" => Ok(Self::Low),
             "normal" => Ok(Self::Normal),
@@ -242,7 +242,7 @@ impl TempRoleElevation {
     /// # Returns
     ///
     /// 'Some' TempRoleElevation if item fields match, 'None' otherwise
-    pub fn from_item(item: &HashMap<String, AttributeValue>) -> Option<Self> {
+    pub(crate)  fn from_item(item: &HashMap<String, AttributeValue>) -> Option<Self> {
         info!("calling from_item with: {:?}", &item);
 
         let id = item.get("id")?.as_s().ok()?.to_string();
@@ -356,9 +356,9 @@ impl TempRoleElevation {
             actual_end_time,
             status,
             priority,
-            auto_revoke,
-            notification_sent,
-            approval_required,
+            auto_revoke: *auto_revoke,
+            notification_sent: *notification_sent,
+            approval_required: *approval_required,
             approval_deadline,
             revoked_by_user_id,
             revocation_reason,
@@ -379,7 +379,7 @@ impl TempRoleElevation {
     /// # Returns
     ///
     /// HashMap representing DB item for TempRoleElevation instance
-    pub fn to_item(&self) -> HashMap<String, AttributeValue> {
+    pub(crate)  fn to_item(&self) -> HashMap<String, AttributeValue> {
         let mut item = HashMap::new();
 
         item.insert("id".to_string(), AttributeValue::S(self.id.clone()));
@@ -452,7 +452,7 @@ impl TempRoleElevation {
     }
 
     /// Checks if the elevation is currently active
-    pub fn is_active(&self) -> bool {
+     fn is_active(&self) -> bool {
         let now = Utc::now();
         matches!(self.status, ElevationStatus::Active) &&
             now >= self.start_time &&
@@ -460,17 +460,17 @@ impl TempRoleElevation {
     }
 
     /// Checks if the elevation has expired
-    pub fn is_expired(&self) -> bool {
+     fn is_expired(&self) -> bool {
         Utc::now() > self.end_time
     }
 
     /// Checks if the elevation is pending approval
-    pub fn is_pending(&self) -> bool {
+     fn is_pending(&self) -> bool {
         matches!(self.status, ElevationStatus::Pending)
     }
 
     /// Activates the elevation
-    pub fn activate(&mut self) -> Result<(), AppError> {
+     fn activate(&mut self) -> Result<(), AppError> {
         if !matches!(self.status, ElevationStatus::Approved) {
             return Err(
                 AppError::ValidationError(
@@ -486,7 +486,7 @@ impl TempRoleElevation {
     }
 
     /// Revokes the elevation
-    pub fn revoke(
+     fn revoke(
         &mut self,
         revoked_by_user_id: String,
         reason: Option<String>
@@ -506,7 +506,7 @@ impl TempRoleElevation {
     }
 
     /// Approves the elevation
-    pub fn approve(&mut self, approved_by_user_id: String) -> Result<(), AppError> {
+     fn approve(&mut self, approved_by_user_id: String) -> Result<(), AppError> {
         if !matches!(self.status, ElevationStatus::Pending) {
             return Err(
                 AppError::ValidationError("Only pending elevations can be approved".to_string())
@@ -520,7 +520,7 @@ impl TempRoleElevation {
     }
 
     /// Denies the elevation
-    pub fn deny(
+     fn deny(
         &mut self,
         denied_by_user_id: String,
         reason: Option<String>
@@ -536,124 +536,5 @@ impl TempRoleElevation {
         self.revocation_reason = reason;
         self.updated_at = Utc::now();
         Ok(())
-    }
-}
-
-#[Object]
-impl TempRoleElevation {
-    async fn id(&self) -> &str {
-        &self.id
-    }
-
-    async fn user_id(&self) -> &str {
-        &self.user_id
-    }
-
-    async fn original_role_id(&self) -> &str {
-        &self.original_role_id
-    }
-
-    async fn elevated_role_id(&self) -> &str {
-        &self.elevated_role_id
-    }
-
-    async fn reason(&self) -> Option<&str> {
-        self.reason.as_deref()
-    }
-
-    async fn justification(&self) -> Option<&str> {
-        self.justification.as_deref()
-    }
-
-    async fn requested_by_user_id(&self) -> &str {
-        &self.requested_by_user_id
-    }
-
-    async fn approved_by_user_id(&self) -> Option<&str> {
-        self.approved_by_user_id.as_deref()
-    }
-
-    async fn start_time(&self) -> &DateTime<Utc> {
-        &self.start_time
-    }
-
-    async fn end_time(&self) -> &DateTime<Utc> {
-        &self.end_time
-    }
-
-    async fn actual_start_time(&self) -> Option<&DateTime<Utc>> {
-        self.actual_start_time.as_ref()
-    }
-
-    async fn actual_end_time(&self) -> Option<&DateTime<Utc>> {
-        self.actual_end_time.as_ref()
-    }
-
-    async fn status(&self) -> &str {
-        self.status.to_str()
-    }
-
-    async fn priority(&self) -> &str {
-        self.priority.to_str()
-    }
-
-    async fn auto_revoke(&self) -> bool {
-        self.auto_revoke
-    }
-
-    async fn notification_sent(&self) -> bool {
-        self.notification_sent
-    }
-
-    async fn approval_required(&self) -> bool {
-        self.approval_required
-    }
-
-    async fn approval_deadline(&self) -> Option<&DateTime<Utc>> {
-        self.approval_deadline.as_ref()
-    }
-
-    async fn revoked_by_user_id(&self) -> Option<&str> {
-        self.revoked_by_user_id.as_deref()
-    }
-
-    async fn revocation_reason(&self) -> Option<&str> {
-        self.revocation_reason.as_deref()
-    }
-
-    async fn created_at(&self) -> &DateTime<Utc> {
-        &self.created_at
-    }
-
-    async fn updated_at(&self) -> &DateTime<Utc> {
-        &self.updated_at
-    }
-
-    #[graphql(name = "is_active")]
-    async fn check_is_active(&self) -> bool {
-        self.is_active()
-    }
-
-    #[graphql(name = "is_expired")]
-    async fn get_is_expired(&self) -> bool {
-        self.is_expired()
-    }
-
-    #[graphql(name = "is_pending")]
-    async fn check_is_pending(&self) -> bool {
-        self.is_pending()
-    }
-
-    async fn duration_minutes(&self) -> i64 {
-        (self.end_time - self.start_time).num_minutes()
-    }
-
-    async fn time_remaining_minutes(&self) -> Option<i64> {
-        if self.is_active() {
-            let remaining = self.end_time - Utc::now();
-            Some(remaining.num_minutes().max(0))
-        } else {
-            None
-        }
     }
 }
