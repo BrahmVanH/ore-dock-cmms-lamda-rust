@@ -1,7 +1,7 @@
 use aws_config::{ meta::region::RegionProviderChain, BehaviorVersion };
 use aws_sdk_dynamodb::Client;
 use dotenvy::dotenv;
-use tracing::{ info, warn };
+use tracing::info;
 use std::env;
 
 use crate::error::AppError;
@@ -24,7 +24,7 @@ pub async fn setup_local_client() -> Result<Client, AppError> {
         Ok(env) => env,
         Err(e) => {
             eprintln!("Failed to get DB_URL from env");
-            return Err(AppError::EnvError(e));
+            return Err(AppError::InternalServerError(e.to_string()));
         }
     };
 

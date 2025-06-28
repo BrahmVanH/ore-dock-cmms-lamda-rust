@@ -4,6 +4,8 @@ use aws_sdk_dynamodb::types::AttributeValue;
 use chrono::{ DateTime, Utc };
 use serde::{ Deserialize, Serialize };
 
+use crate::DynamoDbEntity;
+
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct LocationType {
     pub id: String,
@@ -33,8 +35,19 @@ impl LocationType {
 
         Ok(())
     }
+}
 
-    pub(crate) fn from_item(item: &HashMap<String, AttributeValue>) -> Option<Self> {
+impl DynamoDbEntity for LocationType {
+    fn table_name() -> &'static str {
+        "LocationType"
+    }
+
+    fn primary_key(&self) -> String {
+        self.id.clone()
+    }
+
+    
+    fn from_item(item: &HashMap<String, AttributeValue>) -> Option<Self> {
         let id = item.get("id")?.as_s().ok()?.to_string();
         let name = item.get("name")?.as_s().ok()?.to_string();
         let description = item.get("description")?.as_s().ok()?.to_string();
@@ -62,7 +75,7 @@ impl LocationType {
         res
     }
 
-    pub(crate) fn to_item(&self) -> HashMap<String, AttributeValue> {
+    fn to_item(&self) -> HashMap<String, AttributeValue> {
         let mut item = HashMap::new();
 
         item.insert("id".to_string(), AttributeValue::S(self.id.clone()));

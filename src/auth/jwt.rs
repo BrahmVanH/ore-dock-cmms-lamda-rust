@@ -14,7 +14,9 @@ pub struct Claims {
 // Create jwt from user id and email
 pub fn create_token(user_id: &str, email: &str) -> Result<String, AppError> {
     // Load secret from ENV
-    let jwt_secret = env::var("JWT_SECRET").map_err(|e| AppError::EnvError(e))?;
+    let jwt_secret = env
+        ::var("JWT_SECRET")
+        .map_err(|e| AppError::InternalServerError(e.to_string()))?;
     let secret_as_bytes = jwt_secret.as_bytes();
 
     let expiration =
@@ -40,7 +42,9 @@ pub fn create_token(user_id: &str, email: &str) -> Result<String, AppError> {
 // Validate token against jwt secret
 pub fn validate_token(token: &str) -> Result<Claims, AppError> {
     // Load secret from ENV
-    let jwt_secret = env::var("JWT_SECRET").map_err(|e| AppError::EnvError(e))?;
+    let jwt_secret = env
+        ::var("JWT_SECRET")
+        .map_err(|e| AppError::InternalServerError(e.to_string()))?;
     let secret_as_bytes = jwt_secret.as_bytes();
 
     let token_data = decode::<Claims>(

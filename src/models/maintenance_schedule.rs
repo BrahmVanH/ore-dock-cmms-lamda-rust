@@ -4,7 +4,7 @@ use aws_sdk_dynamodb::types::AttributeValue;
 use chrono::{ DateTime, Utc };
 use serde::{ Deserialize, Serialize };
 
-use crate::error::AppError;
+use crate::{ error::AppError, repository::DynamoDbEntity };
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "snake_case")]
@@ -217,6 +217,16 @@ impl MaintenanceSchedule {
             updated_at: now,
         })
     }
+}
+
+impl DynamoDbEntity for MaintenanceSchedule {
+    fn table_name() -> &'static str {
+        "MaintenanceSchedules"
+    }
+
+    fn primary_key(&self) -> String {
+        self.id.clone()
+    }
 
     /// Creates MaintenanceSchedule instance from DynamoDB item
     ///
@@ -227,7 +237,7 @@ impl MaintenanceSchedule {
     /// # Returns
     ///
     /// 'Some' MaintenanceSchedule if item fields match, 'None' otherwise
-    pub(crate) fn from_item(item: &HashMap<String, AttributeValue>) -> Option<Self> {
+    fn from_item(item: &HashMap<String, AttributeValue>) -> Option<Self> {
         let id = item.get("id")?.as_s().ok()?.to_string();
         let asset_id = item.get("asset_id")?.as_s().ok()?.to_string();
 
@@ -317,7 +327,7 @@ impl MaintenanceSchedule {
     /// # Returns
     ///
     /// HashMap representing DB item for MaintenanceSchedule instance
-    pub(crate) fn to_item(&self) -> HashMap<String, AttributeValue> {
+    fn to_item(&self) -> HashMap<String, AttributeValue> {
         let mut item = HashMap::new();
 
         item.insert("id".to_string(), AttributeValue::S(self.id.clone()));

@@ -30,7 +30,7 @@ impl Asset {
     }
 
     async fn current_status(&self) -> &str {
-        &self.current_status
+        self.current_status.to_str()
     }
 
     async fn location_id(&self) -> &str {

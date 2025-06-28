@@ -2,3 +2,8 @@
 /lib/data
 
 .env
+
+trust-policy.json
+lambda-policy.json
+
+aws-parameter-store-examples.md

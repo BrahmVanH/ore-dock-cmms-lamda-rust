@@ -17,13 +17,12 @@ pub async fn setup_local_client() -> Result<Client, AppError> {
         .region(region_provider)
         .load().await;
 
-
     // Load DB_URL from ENV
     let db_url = match env::var("DB_URL") {
         Ok(env) => env,
         Err(e) => {
             eprintln!("Failed to get DB_URL from env");
-            return Err(AppError::EnvError(e));
+            return Err(AppError::InternalServerError(e.to_string()));
         }
     };
 

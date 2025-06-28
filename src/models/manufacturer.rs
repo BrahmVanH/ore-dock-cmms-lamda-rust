@@ -5,7 +5,7 @@ use chrono::{ DateTime, Utc };
 use serde::{ Deserialize, Serialize };
 use tracing::info;
 
-use crate::{ error::AppError, models::address::Address };
+use crate::{ error::AppError, models::address::Address, repository::DynamoDbEntity };
 
 /// Represents a Manufacturer in the system
 ///
@@ -39,62 +39,13 @@ pub struct Manufacturer {
     pub updated_at: DateTime<Utc>,
 }
 
-/// Defines methods for Manufacturer
-impl Manufacturer {
-    /// Creates new Manufacturer instance
-    ///
-    /// # Arguments
-    ///
-    /// * `id` - Unique identifier
-    /// * `name` - Name of the manufacturer
-    /// * `phone` - Phone number
-    /// * `email` - Email address
-    /// * `website` - Optional website URL
-    /// * `notes` - Optional notes
-    /// * `address` - Physical address
-    /// * `support_contact` - Optional support contact
-    /// * `warranty_contact` - Optional warranty contact
-    /// * `active` - Whether manufacturer is active
-    ///
-    /// # Returns
-    ///
-    /// New Manufacturer instance
-    pub fn new(
-        id: String,
-        name: String,
-        phone: String,
-        email: String,
-        website: Option<String>,
-        notes: Option<String>,
-        address: Address,
-        support_contact: Option<String>,
-        warranty_contact: Option<String>,
-        active: bool
-    ) -> Result<Self, AppError> {
-        let now = Utc::now();
+impl DynamoDbEntity for Manufacturer {
+    fn table_name() -> &'static str {
+        "Manufacturers"
+    }
 
-        if name.trim().is_empty() {
-            return Err(AppError::ValidationError("Manufacturer name cannot be empty".to_string()));
-        }
-
-        if email.trim().is_empty() {
-            return Err(AppError::ValidationError("Email cannot be empty".to_string()));
-        }
-
-        Ok(Self {
-            id,
-            name,
-            phone,
-            email,
-            website,
-            notes,
-            address,
-            support_contact,
-            warranty_contact,
-            active,
-            created_at: now,
-            updated_at: now,
-        })
+    fn primary_key(&self) -> String {
+        self.id.clone()
     }
 
     /// Creates Manufacturer instance from DynamoDB item
@@ -106,7 +57,7 @@ impl Manufacturer {
     /// # Returns
     ///
     /// 'Some' Manufacturer if item fields match, 'None' otherwise
-    pub(crate) fn from_item(item: &HashMap<String, AttributeValue>) -> Option<Self> {
+    fn from_item(item: &HashMap<String, AttributeValue>) -> Option<Self> {
         info!("calling from_item with: {:?}", &item);
 
         let id = item.get("id")?.as_s().ok()?.to_string();
@@ -184,7 +135,7 @@ impl Manufacturer {
     /// # Returns
     ///
     /// HashMap representing DB item for Manufacturer instance
-    pub(crate) fn to_item(&self) -> HashMap<String, AttributeValue> {
+    fn to_item(&self) -> HashMap<String, AttributeValue> {
         let mut item = HashMap::new();
 
         item.insert("id".to_string(), AttributeValue::S(self.id.clone()));
@@ -217,5 +168,63 @@ impl Manufacturer {
         item.insert("updated_at".to_string(), AttributeValue::S(self.updated_at.to_string()));
 
         item
+    }
+}
+/// Defines methods for Manufacturer
+impl Manufacturer {
+    /// Creates new Manufacturer instance
+    ///
+    /// # Arguments
+    ///
+    /// * `id` - Unique identifier
+    /// * `name` - Name of the manufacturer
+    /// * `phone` - Phone number
+    /// * `email` - Email address
+    /// * `website` - Optional website URL
+    /// * `notes` - Optional notes
+    /// * `address` - Physical address
+    /// * `support_contact` - Optional support contact
+    /// * `warranty_contact` - Optional warranty contact
+    /// * `active` - Whether manufacturer is active
+    ///
+    /// # Returns
+    ///
+    /// New Manufacturer instance
+    pub fn new(
+        id: String,
+        name: String,
+        phone: String,
+        email: String,
+        website: Option<String>,
+        notes: Option<String>,
+        address: Address,
+        support_contact: Option<String>,
+        warranty_contact: Option<String>,
+        active: bool
+    ) -> Result<Self, AppError> {
+        let now = Utc::now();
+
+        if name.trim().is_empty() {
+            return Err(AppError::ValidationError("Manufacturer name cannot be empty".to_string()));
+        }
+
+        if email.trim().is_empty() {
+            return Err(AppError::ValidationError("Email cannot be empty".to_string()));
+        }
+
+        Ok(Self {
+            id,
+            name,
+            phone,
+            email,
+            website,
+            notes,
+            address,
+            support_contact,
+            warranty_contact,
+            active,
+            created_at: now,
+            updated_at: now,
+        })
     }
 }

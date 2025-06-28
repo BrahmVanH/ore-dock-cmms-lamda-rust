@@ -7,12 +7,15 @@ edition = "2024"
 argon2 = { version = "0.5.3", features = ["std"] }
 async-graphql = { version = "7.0.17", features = ["chrono"] }
 async-graphql-axum = "7.0.17"
+async-trait = "0.1.88"
 aws-config = { version = "1.8.0", features = ["behavior-version-latest"] }
+aws-credential-types = "1.2.3"
 aws-sdk-dynamodb = "1.80.0"
 axum = "0.8.4"
 axum-extra = "0.10.1"
 chrono = { version = "0.4.41", features = ["serde"] }
 dotenvy = "0.15.7"
+envy = "0.4.2"
 jsonwebtoken = "9.3.1"
 rand_core = { version = "0.9.3", features = ["std"] }
 regex = "1.11.1"

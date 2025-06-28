@@ -7,7 +7,7 @@ use serde::{ Deserialize, Serialize };
 use serde_json::Value as Json;
 use tracing::info;
 
-use crate::error::AppError;
+use crate::{ error::AppError, DynamoDbEntity };
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "snake_case")]
@@ -404,6 +404,163 @@ impl WorkOrder {
         })
     }
 
+    /// Checks if the work order is currently in progress
+    pub fn is_in_progress(&self) -> bool {
+        matches!(self.status, WorkOrderStatus::InProgress)
+    }
+
+    /// Checks if the work order is completed
+    pub fn is_completed(&self) -> bool {
+        matches!(self.status, WorkOrderStatus::Completed)
+    }
+
+    /// Checks if the work order is overdue
+    pub fn is_overdue(&self) -> bool {
+        if let Some(scheduled_end) = &self.scheduled_end {
+            Utc::now() > *scheduled_end && !self.is_completed()
+        } else {
+            false
+        }
+    }
+
+    /// Starts the work order
+    pub fn start_work(&mut self, technician_id: String) -> Result<(), AppError> {
+        if !matches!(self.status, WorkOrderStatus::Scheduled) {
+            return Err(
+                AppError::ValidationError("Only scheduled work orders can be started".to_string())
+            );
+        }
+
+        self.status = WorkOrderStatus::InProgress;
+        self.actual_start = Some(Utc::now());
+        self.assigned_technician_id = Some(technician_id);
+        self.updated_at = Utc::now();
+        Ok(())
+    }
+
+    /// Completes the work order
+    pub fn complete_work(
+        &mut self,
+        completion_notes: Option<String>,
+        quality_rating: Option<i32>
+    ) -> Result<(), AppError> {
+        if !matches!(self.status, WorkOrderStatus::InProgress) {
+            return Err(
+                AppError::ValidationError(
+                    "Only in-progress work orders can be completed".to_string()
+                )
+            );
+        }
+
+        // Validate quality rating
+        if let Some(rating) = quality_rating {
+            if rating < 1 || rating > 5 {
+                return Err(
+                    AppError::ValidationError("Quality rating must be between 1 and 5".to_string())
+                );
+            }
+        }
+
+        let now = Utc::now();
+        self.status = WorkOrderStatus::Completed;
+        self.actual_end = Some(now);
+        self.completion_notes = completion_notes;
+        self.quality_rating = quality_rating;
+
+        // Calculate actual duration if we have actual start time
+        if let Some(start) = &self.actual_start {
+            let duration = now - *start;
+            self.actual_duration_minutes = Some(duration.num_minutes() as i32);
+        }
+
+        self.updated_at = now;
+        Ok(())
+    }
+
+    /// Cancels the work order
+    pub fn cancel_work(&mut self, reason: String) -> Result<(), AppError> {
+        if matches!(self.status, WorkOrderStatus::Completed | WorkOrderStatus::Cancelled) {
+            return Err(
+                AppError::ValidationError(
+                    "Cannot cancel completed or already cancelled work order".to_string()
+                )
+            );
+        }
+
+        self.status = WorkOrderStatus::Cancelled;
+        self.failure_reason = Some(reason);
+        self.updated_at = Utc::now();
+        Ok(())
+    }
+
+    /// Puts the work order on hold
+    pub fn put_on_hold(&mut self, reason: String) -> Result<(), AppError> {
+        if !matches!(self.status, WorkOrderStatus::InProgress | WorkOrderStatus::Scheduled) {
+            return Err(
+                AppError::ValidationError(
+                    "Only scheduled or in-progress work orders can be put on hold".to_string()
+                )
+            );
+        }
+
+        self.status = WorkOrderStatus::OnHold;
+        self.failure_reason = Some(reason);
+        self.updated_at = Utc::now();
+        Ok(())
+    }
+
+    /// Resumes work from hold
+    pub fn resume_from_hold(&mut self) -> Result<(), AppError> {
+        if !matches!(self.status, WorkOrderStatus::OnHold) {
+            return Err(
+                AppError::ValidationError("Only work orders on hold can be resumed".to_string())
+            );
+        }
+
+        self.status = if self.actual_start.is_some() {
+            WorkOrderStatus::InProgress
+        } else {
+            WorkOrderStatus::Scheduled
+        };
+        self.failure_reason = None;
+        self.updated_at = Utc::now();
+        Ok(())
+    }
+
+    /// Calculates the total cost including labor and parts
+    pub fn calculate_total_cost(&self) -> Decimal {
+        if let Some(actual) = &self.actual_cost {
+            actual.clone()
+        } else {
+            self.estimated_cost.clone()
+        }
+    }
+
+    /// Adds a tag to the work order
+    pub fn add_tag(&mut self, tag: String) {
+        if !self.tags.contains(&tag) {
+            self.tags.push(tag);
+            self.updated_at = Utc::now();
+        }
+    }
+
+    /// Removes a tag from the work order
+    pub fn remove_tag(&mut self, tag: &str) {
+        if let Some(pos) = self.tags.iter().position(|x| x == tag) {
+            self.tags.remove(pos);
+            self.updated_at = Utc::now();
+        }
+    }
+}
+
+impl DynamoDbEntity for WorkOrder {
+    fn table_name() -> &'static str {
+        "WorkOrders"
+    }
+
+    fn primary_key(&self) -> String {
+        self.id.clone()
+    }
     /// Creates WorkOrder instance from DynamoDB item
     ///
     /// # Arguments
@@ -413,7 +570,7 @@ impl WorkOrder {
     /// # Returns
     ///
     /// 'Some' WorkOrder if item fields match, 'None' otherwise
-    pub(crate) fn from_item(item: &HashMap<String, AttributeValue>) -> Option<Self> {
+    fn from_item(item: &HashMap<String, AttributeValue>) -> Option<Self> {
         info!("calling from_item with: {:?}", &item);
 
         let id = item.get("id")?.as_s().ok()?.to_string();
@@ -682,7 +839,7 @@ impl WorkOrder {
     /// # Returns
     ///
     /// HashMap representing DB item for WorkOrder instance
-    pub(crate) fn to_item(&self) -> HashMap<String, AttributeValue> {
+    fn to_item(&self) -> HashMap<String, AttributeValue> {
         let mut item = HashMap::new();
 
         item.insert("id".to_string(), AttributeValue::S(self.id.clone()));
@@ -853,153 +1010,5 @@ impl WorkOrder {
         item.insert("updated_at".to_string(), AttributeValue::S(self.updated_at.to_string()));
 
         item
-    }
-
-    /// Checks if the work order is currently in progress
-    pub fn is_in_progress(&self) -> bool {
-        matches!(self.status, WorkOrderStatus::InProgress)
-    }
-
-    /// Checks if the work order is completed
-    pub fn is_completed(&self) -> bool {
-        matches!(self.status, WorkOrderStatus::Completed)
-    }
-
-    /// Checks if the work order is overdue
-    pub fn is_overdue(&self) -> bool {
-        if let Some(scheduled_end) = &self.scheduled_end {
-            Utc::now() > *scheduled_end && !self.is_completed()
-        } else {
-            false
-        }
-    }
-
-    /// Starts the work order
-    pub fn start_work(&mut self, technician_id: String) -> Result<(), AppError> {
-        if !matches!(self.status, WorkOrderStatus::Scheduled) {
-            return Err(
-                AppError::ValidationError("Only scheduled work orders can be started".to_string())
-            );
-        }
-
-        self.status = WorkOrderStatus::InProgress;
-        self.actual_start = Some(Utc::now());
-        self.assigned_technician_id = Some(technician_id);
-        self.updated_at = Utc::now();
-        Ok(())
-    }
-
-    /// Completes the work order
-    pub fn complete_work(
-        &mut self,
-        completion_notes: Option<String>,
-        quality_rating: Option<i32>
-    ) -> Result<(), AppError> {
-        if !matches!(self.status, WorkOrderStatus::InProgress) {
-            return Err(
-                AppError::ValidationError(
-                    "Only in-progress work orders can be completed".to_string()
-                )
-            );
-        }
-
-        // Validate quality rating
-        if let Some(rating) = quality_rating {
-            if rating < 1 || rating > 5 {
-                return Err(
-                    AppError::ValidationError("Quality rating must be between 1 and 5".to_string())
-                );
-            }
-        }
-
-        let now = Utc::now();
-        self.status = WorkOrderStatus::Completed;
-        self.actual_end = Some(now);
-        self.completion_notes = completion_notes;
-        self.quality_rating = quality_rating;
-
-        // Calculate actual duration if we have actual start time
-        if let Some(start) = &self.actual_start {
-            let duration = now - *start;
-            self.actual_duration_minutes = Some(duration.num_minutes() as i32);
-        }
-
-        self.updated_at = now;
-        Ok(())
-    }
-
-    /// Cancels the work order
-    pub fn cancel_work(&mut self, reason: String) -> Result<(), AppError> {
-        if matches!(self.status, WorkOrderStatus::Completed | WorkOrderStatus::Cancelled) {
-            return Err(
-                AppError::ValidationError(
-                    "Cannot cancel completed or already cancelled work order".to_string()
-                )
-            );
-        }
-
-        self.status = WorkOrderStatus::Cancelled;
-        self.failure_reason = Some(reason);
-        self.updated_at = Utc::now();
-        Ok(())
-    }
-
-    /// Puts the work order on hold
-    pub fn put_on_hold(&mut self, reason: String) -> Result<(), AppError> {
-        if !matches!(self.status, WorkOrderStatus::InProgress | WorkOrderStatus::Scheduled) {
-            return Err(
-                AppError::ValidationError(
-                    "Only scheduled or in-progress work orders can be put on hold".to_string()
-                )
-            );
-        }
-
-        self.status = WorkOrderStatus::OnHold;
-        self.failure_reason = Some(reason);
-        self.updated_at = Utc::now();
-        Ok(())
-    }
-
-    /// Resumes work from hold
-    pub fn resume_from_hold(&mut self) -> Result<(), AppError> {
-        if !matches!(self.status, WorkOrderStatus::OnHold) {
-            return Err(
-                AppError::ValidationError("Only work orders on hold can be resumed".to_string())
-            );
-        }
-
-        self.status = if self.actual_start.is_some() {
-            WorkOrderStatus::InProgress
-        } else {
-            WorkOrderStatus::Scheduled
-        };
-        self.failure_reason = None;
-        self.updated_at = Utc::now();
-        Ok(())
-    }
-
-    /// Calculates the total cost including labor and parts
-    pub fn calculate_total_cost(&self) -> Decimal {
-        if let Some(actual) = &self.actual_cost {
-            actual.clone()
-        } else {
-            self.estimated_cost.clone()
-        }
-    }
-
-    /// Adds a tag to the work order
-    pub fn add_tag(&mut self, tag: String) {
-        if !self.tags.contains(&tag) {
-            self.tags.push(tag);
-            self.updated_at = Utc::now();
-        }
-    }
-
-    /// Removes a tag from the work order
-    pub fn remove_tag(&mut self, tag: &str) {
-        if let Some(pos) = self.tags.iter().position(|x| x == tag) {
-            self.tags.remove(pos);
-            self.updated_at = Utc::now();
-        }
     }
 }
