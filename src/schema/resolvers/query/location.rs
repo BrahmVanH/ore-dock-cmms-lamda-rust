@@ -4,18 +4,20 @@ use tracing::warn;
 use crate::{
     error::AppError,
     models::location::Location,
-    schema::resolvers::query::QueryRoot,
     DbClient,
     Repository,
 };
 
+#[derive(Debug, Default)]
+pub(crate) struct Query;
+
 #[Object]
-impl QueryRoot {
+impl Query {
     /// Get location by ID
     async fn location_by_id(
         &self,
         ctx: &Context<'_>,
-        id: String,
+        id: String
     ) -> Result<Option<Location>, Error> {
         let db_client = ctx.data::<DbClient>().map_err(|e| {
             warn!("Failed to get db_client from context: {:?}", e);
@@ -26,9 +28,7 @@ impl QueryRoot {
 
         let repo = Repository::new(db_client.clone());
 
-        repo.get::<Location>(id)
-            .await
-            .map_err(|e| e.to_graphql_error())
+        repo.get::<Location>(id).await.map_err(|e| e.to_graphql_error())
     }
 
     /// Get all locations
@@ -36,7 +36,7 @@ impl QueryRoot {
         &self,
         ctx: &Context<'_>,
         limit: Option<i32>,
-        active_only: Option<bool>,
+        active_only: Option<bool>
     ) -> Result<Vec<Location>, Error> {
         let db_client = ctx.data::<DbClient>().map_err(|e| {
             warn!("Failed to get db_client from context: {:?}", e);
@@ -47,16 +47,19 @@ impl QueryRoot {
 
         let repo = Repository::new(db_client.clone());
 
-        let mut locations = repo
-            .list::<Location>(limit)
-            .await
-            .map_err(|e| e.to_graphql_error())?;
+        let mut locations = repo.list::<Location>(limit).await.map_err(|e| e.to_graphql_error())?;
 
         // Filter by active status if requested
         if let Some(true) = active_only {
-            locations = locations.into_iter().filter(|l| l.is_active).collect();
+            locations = locations
+                .into_iter()
+                .filter(|l| l.is_active)
+                .collect();
         } else if let Some(false) = active_only {
-            locations = locations.into_iter().filter(|l| !l.is_active).collect();
+            locations = locations
+                .into_iter()
+                .filter(|l| !l.is_active)
+                .collect();
         }
 
         Ok(locations)
@@ -67,7 +70,7 @@ impl QueryRoot {
         &self,
         ctx: &Context<'_>,
         location_type_id: String,
-        active_only: Option<bool>,
+        active_only: Option<bool>
     ) -> Result<Vec<Location>, Error> {
         let db_client = ctx.data::<DbClient>().map_err(|e| {
             warn!("Failed to get db_client from context: {:?}", e);
@@ -80,10 +83,7 @@ impl QueryRoot {
 
         // This would ideally use a GSI on location_type_id
         // For now, we'll scan and filter (not ideal for production)
-        let mut locations = repo
-            .list::<Location>(None)
-            .await
-            .map_err(|e| e.to_graphql_error())?;
+        let mut locations = repo.list::<Location>(None).await.map_err(|e| e.to_graphql_error())?;
 
         locations = locations
             .into_iter()
@@ -92,9 +92,15 @@ impl QueryRoot {
 
         // Filter by active status if requested
         if let Some(true) = active_only {
-            locations = locations.into_iter().filter(|l| l.is_active).collect();
+            locations = locations
+                .into_iter()
+                .filter(|l| l.is_active)
+                .collect();
         } else if let Some(false) = active_only {
-            locations = locations.into_iter().filter(|l| !l.is_active).collect();
+            locations = locations
+                .into_iter()
+                .filter(|l| !l.is_active)
+                .collect();
         }
 
         Ok(locations)
@@ -105,7 +111,7 @@ impl QueryRoot {
         &self,
         ctx: &Context<'_>,
         parent_id: String,
-        active_only: Option<bool>,
+        active_only: Option<bool>
     ) -> Result<Vec<Location>, Error> {
         let db_client = ctx.data::<DbClient>().map_err(|e| {
             warn!("Failed to get db_client from context: {:?}", e);
@@ -118,10 +124,7 @@ impl QueryRoot {
 
         // This would ideally use a GSI on parent_location_id
         // For now, we'll scan and filter (not ideal for production)
-        let mut locations = repo
-            .list::<Location>(None)
-            .await
-            .map_err(|e| e.to_graphql_error())?;
+        let mut locations = repo.list::<Location>(None).await.map_err(|e| e.to_graphql_error())?;
 
         locations = locations
             .into_iter()
@@ -130,9 +133,15 @@ impl QueryRoot {
 
         // Filter by active status if requested
         if let Some(true) = active_only {
-            locations = locations.into_iter().filter(|l| l.is_active).collect();
+            locations = locations
+                .into_iter()
+                .filter(|l| l.is_active)
+                .collect();
         } else if let Some(false) = active_only {
-            locations = locations.into_iter().filter(|l| !l.is_active).collect();
+            locations = locations
+                .into_iter()
+                .filter(|l| !l.is_active)
+                .collect();
         }
 
         Ok(locations)

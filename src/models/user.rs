@@ -53,9 +53,7 @@ impl UserStatus {
 #[serde(rename_all = "snake_case")]
 pub enum UserType {
     Employee,
-    Contractor,
-    Vendor,
-    Customer,
+    Admin,
     System,
     Service,
 }
@@ -64,9 +62,7 @@ impl UserType {
     pub(crate) fn to_str(&self) -> &str {
         match self {
             UserType::Employee => "employee",
-            UserType::Contractor => "contractor",
-            UserType::Vendor => "vendor",
-            UserType::Customer => "customer",
+            UserType::Admin => "admin",
             UserType::System => "system",
             UserType::Service => "service",
         }
@@ -79,9 +75,7 @@ impl UserType {
     pub(crate) fn from_string(s: &str) -> Result<UserType, AppError> {
         match s {
             "employee" => Ok(Self::Employee),
-            "contractor" => Ok(Self::Contractor),
-            "vendor" => Ok(Self::Vendor),
-            "customer" => Ok(Self::Customer),
+            "admin" => Ok(Self::Admin),
             "system" => Ok(Self::System),
             "service" => Ok(Self::Service),
             _ => Err(AppError::ValidationError("Invalid user type".to_string())),

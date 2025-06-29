@@ -9,8 +9,8 @@ impl Asset {
         &self.name
     }
 
-    async fn r#type_id(&self) -> &str {
-        &self.r#type_id
+    async fn asset_type_id(&self) -> &str {
+        &self.asset_type_id
     }
 
     async fn serial_number(&self) -> &str {

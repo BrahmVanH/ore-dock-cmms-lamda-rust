@@ -75,10 +75,7 @@ impl DynamoDbEntity for Manufacturer {
             .and_then(|v| v.as_s().ok())
             .map(|s| s.to_string());
 
-        let address = item
-            .get("address")
-            .and_then(|v| v.as_m().ok())
-            .and_then(|address_map| Address::from_item(address_map))?;
+        let address = item.get("address").and_then(|v| Address::from_item(v))?;
 
         let support_contact = item
             .get("support_contact")
@@ -152,8 +149,7 @@ impl DynamoDbEntity for Manufacturer {
         }
 
         // Add the nested address as a Map
-        let address_item = self.address.to_item();
-        item.insert("address".to_string(), AttributeValue::M(address_item));
+        item.insert("address".to_string(), self.address.to_item());
 
         if let Some(support) = &self.support_contact {
             item.insert("support_contact".to_string(), AttributeValue::S(support.clone()));

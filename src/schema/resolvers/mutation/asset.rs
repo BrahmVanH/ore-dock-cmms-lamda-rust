@@ -11,10 +11,10 @@ use crate::{
 };
 
 #[derive(Debug, Default)]
-pub(crate) struct AssetMutationRoot;
+pub(crate) struct Mutation;
 
 #[Object]
-impl AssetMutationRoot {
+impl Mutation {
     /// Create a new asset
     async fn create_asset(
         &self,
@@ -165,7 +165,7 @@ impl AssetMutationRoot {
             asset.name = name;
         }
         if let Some(type_id) = type_id {
-            asset.r#type_id = type_id;
+            asset.asset_type_id = type_id;
         }
         if let Some(serial_number) = serial_number {
             asset.serial_number = serial_number;

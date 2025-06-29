@@ -4,7 +4,7 @@ use aws_sdk_dynamodb::types::AttributeValue;
 use chrono::{ DateTime, Utc };
 use serde::{ Deserialize, Serialize };
 
-use crate::DynamoDbEntity;
+use crate::{ Address, DynamoDbEntity };
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct Location {
@@ -13,7 +13,7 @@ pub struct Location {
     pub description: String,
     pub location_type_id: String,
     pub parent_location_id: Option<String>,
-    pub address: Option<String>,
+    pub address: Address,
     pub coordinates: Option<String>, // Could be lat,lng or more complex
     pub is_active: bool,
     pub created_at: DateTime<Utc>,
@@ -27,7 +27,7 @@ impl Location {
         description: String,
         location_type_id: String,
         parent_location_id: Option<String>,
-        address: Option<String>,
+        address: Address,
         coordinates: Option<String>
     ) -> Self {
         let now = Utc::now();
@@ -86,10 +86,7 @@ impl DynamoDbEntity for Location {
             .and_then(|v| v.as_s().ok())
             .map(|s| s.to_string());
 
-        let address = item
-            .get("address")
-            .and_then(|v| v.as_s().ok())
-            .map(|s| s.to_string());
+        let address = item.get("address").and_then(|v| Address::from_item(v))?;
 
         let coordinates = item
             .get("coordinates")
@@ -121,7 +118,7 @@ impl DynamoDbEntity for Location {
             parent_location_id,
             address,
             coordinates,
-            is_active,
+            is_active: *is_active,
             created_at,
             updated_at,
         })
@@ -145,9 +142,7 @@ impl DynamoDbEntity for Location {
             item.insert("parent_location_id".to_string(), AttributeValue::S(parent_id.clone()));
         }
 
-        if let Some(ref addr) = self.address {
-            item.insert("address".to_string(), AttributeValue::S(addr.clone()));
-        }
+        item.insert("address".to_string(), self.address.to_item());
 
         if let Some(ref coords) = self.coordinates {
             item.insert("coordinates".to_string(), AttributeValue::S(coords.clone()));

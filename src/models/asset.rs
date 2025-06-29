@@ -116,7 +116,7 @@ impl AssetCurrentStatusOptions {
 ///
 /// * `id` - Unique identifier for the asset
 /// * `name` - Name of the asset
-/// * `r#type_id` - ID of the asset type
+/// * `asset_type_id` - ID of the asset type
 /// * `serial_number` - Serial number of the asset
 /// * `model_number` - Model number of the asset
 /// * `purchase_date` - Date when asset was purchased
@@ -138,7 +138,7 @@ impl AssetCurrentStatusOptions {
 pub struct Asset {
     pub id: String,
     pub name: String,
-    pub r#type_id: String,
+    pub asset_type_id: String,
     pub serial_number: String,
     pub model_number: String,
     pub purchase_date: DateTime<Utc>,
@@ -182,7 +182,7 @@ impl DynamoDbEntity for Asset {
 
         let id = item.get("id")?.as_s().ok()?.to_string();
         let name = item.get("name")?.as_s().ok()?.to_string();
-        let r#type_id = item.get("r#type_id")?.as_s().ok()?.to_string();
+        let asset_type_id = item.get("asset_type_id")?.as_s().ok()?.to_string();
         let serial_number = item.get("serial_number")?.as_s().ok()?.to_string();
         let model_number = item.get("model_number")?.as_s().ok()?.to_string();
         let location_id = item.get("location_id")?.as_s().ok()?.to_string();
@@ -276,7 +276,7 @@ impl DynamoDbEntity for Asset {
         let res = Some(Self {
             id,
             name,
-            r#type_id,
+            asset_type_id,
             serial_number,
             model_number,
             purchase_date,
@@ -315,7 +315,7 @@ impl DynamoDbEntity for Asset {
 
         item.insert("id".to_string(), AttributeValue::S(self.id.clone()));
         item.insert("name".to_string(), AttributeValue::S(self.name.clone()));
-        item.insert("r#type_id".to_string(), AttributeValue::S(self.r#type_id.clone()));
+        item.insert("asset_type_id".to_string(), AttributeValue::S(self.asset_type_id.clone()));
         item.insert("serial_number".to_string(), AttributeValue::S(self.serial_number.clone()));
         item.insert("model_number".to_string(), AttributeValue::S(self.model_number.clone()));
         item.insert("purchase_date".to_string(), AttributeValue::S(self.purchase_date.to_string()));
@@ -389,7 +389,7 @@ impl Asset {
     ///
     /// * `id` - Unique identifier
     /// * `name` - Name of the asset
-    /// * `r#type_id` - Asset type ID
+    /// * `asset_type_id` - Asset type ID
     /// * `serial_number` - Serial number
     /// * `model_number` - Model number
     /// * `purchase_date` - Purchase date
@@ -406,7 +406,7 @@ impl Asset {
     pub fn new(
         id: String,
         name: String,
-        r#type_id: String,
+        asset_type_id: String,
         serial_number: String,
         model_number: String,
         purchase_date: DateTime<Utc>,
@@ -425,7 +425,7 @@ impl Asset {
         Ok(Self {
             id,
             name,
-            r#type_id,
+            asset_type_id,
             serial_number,
             model_number,
             purchase_date,
@@ -643,7 +643,7 @@ mod tests {
 
         assert_eq!(asset.id, "asset-123");
         assert_eq!(asset.name, "Test Pump");
-        assert_eq!(asset.r#type_id, "type-456");
+        assert_eq!(asset.asset_type_id, "type-456");
         assert_eq!(asset.serial_number, "SN12345");
         assert_eq!(asset.model_number, "Model-ABC");
         assert_eq!(asset.location_id, "loc-789");
@@ -792,7 +792,7 @@ mod tests {
 
         assert_eq!(asset.id, cloned.id);
         assert_eq!(asset.name, cloned.name);
-        assert_eq!(asset.r#type_id, cloned.r#type_id);
+        assert_eq!(asset.asset_type_id, cloned.asset_type_id);
         assert_eq!(asset.serial_number, cloned.serial_number);
         assert_eq!(asset.model_number, cloned.model_number);
         assert_eq!(asset.purchase_date, cloned.purchase_date);

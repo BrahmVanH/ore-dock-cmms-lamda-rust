@@ -5,10 +5,10 @@ use uuid::Uuid;
 use crate::{ DbClient, models::location_type::LocationType, AppError, Repository };
 
 #[derive(Debug, Default)]
-pub(crate) struct LocationTypeMutationRoot;
+pub(crate) struct Mutation;
 
 #[Object]
-impl LocationTypeMutationRoot {
+impl Mutation {
     /// Create a new location type
     async fn create_location_type(
         &self,

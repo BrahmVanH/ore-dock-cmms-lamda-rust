@@ -1,19 +1,19 @@
 use async_graphql::*;
-use tracing::{info, warn};
+use tracing::{ info, warn };
 use uuid::Uuid;
 
 use crate::{
-    DbClient,
-    models::{location::Location, location_type::LocationType},
+    models::{ prelude::*, location::Location, location_type::LocationType },
     AppError,
+    DbClient,
     Repository,
 };
 
 #[derive(Debug, Default)]
-pub(crate) struct LocationMutationRoot;
+pub(crate) struct Mutation;
 
 #[Object]
-impl LocationMutationRoot {
+impl Mutation {
     /// Create a new location
     async fn create_location(
         &self,
@@ -22,8 +22,8 @@ impl LocationMutationRoot {
         description: String,
         location_type_id: String,
         parent_location_id: Option<String>,
-        address: Option<String>,
-        coordinates: Option<String>,
+        address: Address,
+        coordinates: Option<String>
     ) -> Result<Location, Error> {
         info!("Creating new location: {}", name);
 
@@ -38,22 +38,24 @@ impl LocationMutationRoot {
         let id = Uuid::new_v4().to_string();
 
         // Validate that location type exists
-        repo.get::<LocationType>(location_type_id.clone())
-            .await
+        repo
+            .get::<LocationType>(location_type_id.clone()).await
             .map_err(|e| e.to_graphql_error())?
             .ok_or_else(|| {
-                AppError::ValidationError(format!("Location type {} not found", location_type_id))
-                    .to_graphql_error()
+                AppError::ValidationError(
+                    format!("Location type {} not found", location_type_id)
+                ).to_graphql_error()
             })?;
 
         // Validate parent location exists if provided
         if let Some(ref parent_id) = parent_location_id {
-            repo.get::<Location>(parent_id.clone())
-                .await
+            repo
+                .get::<Location>(parent_id.clone()).await
                 .map_err(|e| e.to_graphql_error())?
                 .ok_or_else(|| {
-                    AppError::ValidationError(format!("Parent location {} not found", parent_id))
-                        .to_graphql_error()
+                    AppError::ValidationError(
+                        format!("Parent location {} not found", parent_id)
+                    ).to_graphql_error()
                 })?;
         }
 
@@ -64,16 +66,12 @@ impl LocationMutationRoot {
             location_type_id,
             parent_location_id,
             address,
-            coordinates,
+            coordinates
         );
 
-        location.validate().map_err(|e| {
-            AppError::ValidationError(e).to_graphql_error()
-        })?;
+        location.validate().map_err(|e| { AppError::ValidationError(e).to_graphql_error() })?;
 
-        repo.create(location)
-            .await
-            .map_err(|e| e.to_graphql_error())
+        repo.create(location).await.map_err(|e| e.to_graphql_error())
     }
 
     /// Update an existing location
@@ -85,32 +83,34 @@ impl LocationMutationRoot {
         description: Option<String>,
         location_type_id: Option<String>,
         parent_location_id: Option<String>,
-        address: Option<String>,
+        address: Option<Address>,
         coordinates: Option<String>,
-        is_active: Option<bool>,
+        is_active: Option<bool>
     ) -> Result<Location, Error> {
         info!("Updating location: {}", id);
 
-        let db_client = ctx.data::<DbClient>().map_err(|_| {
-            AppError::InternalServerError("Database client not available".to_string())
-        })?;
+        let db_client = ctx
+            .data::<DbClient>()
+            .map_err(|_| {
+                AppError::InternalServerError("Database client not available".to_string())
+            })?;
 
         let repo = Repository::new(db_client.clone());
 
         let mut location = repo
-            .get::<Location>(id.clone())
-            .await
+            .get::<Location>(id.clone()).await
             .map_err(|e| e.to_graphql_error())?
             .ok_or_else(|| AppError::NotFound(format!("Location {} not found", id)))?;
 
         // Validate new location type if provided
         if let Some(ref new_type_id) = location_type_id {
-            repo.get::<LocationType>(new_type_id.clone())
-                .await
+            repo
+                .get::<LocationType>(new_type_id.clone()).await
                 .map_err(|e| e.to_graphql_error())?
                 .ok_or_else(|| {
-                    AppError::ValidationError(format!("Location type {} not found", new_type_id))
-                        .to_graphql_error()
+                    AppError::ValidationError(
+                        format!("Location type {} not found", new_type_id)
+                    ).to_graphql_error()
                 })?;
         }
 
@@ -119,17 +119,20 @@ impl LocationMutationRoot {
             if !new_parent_id.is_empty() {
                 // Check that we're not creating a circular reference
                 if new_parent_id == &location.id {
-                    return Err(AppError::ValidationError(
-                        "Location cannot be its own parent".to_string()
-                    ).to_graphql_error());
+                    return Err(
+                        AppError::ValidationError(
+                            "Location cannot be its own parent".to_string()
+                        ).to_graphql_error()
+                    );
                 }
 
-                repo.get::<Location>(new_parent_id.clone())
-                    .await
+                repo
+                    .get::<Location>(new_parent_id.clone()).await
                     .map_err(|e| e.to_graphql_error())?
                     .ok_or_else(|| {
-                        AppError::ValidationError(format!("Parent location {} not found", new_parent_id))
-                            .to_graphql_error()
+                        AppError::ValidationError(
+                            format!("Parent location {} not found", new_parent_id)
+                        ).to_graphql_error()
                     })?;
             }
         }
@@ -148,7 +151,7 @@ impl LocationMutationRoot {
             location.parent_location_id = if parent_id.is_empty() { None } else { Some(parent_id) };
         }
         if let Some(address) = address {
-            location.address = if address.is_empty() { None } else { Some(address) };
+            location.address = address;
         }
         if let Some(coordinates) = coordinates {
             location.coordinates = if coordinates.is_empty() { None } else { Some(coordinates) };
@@ -167,15 +170,16 @@ impl LocationMutationRoot {
     async fn activate_location(&self, ctx: &Context<'_>, id: String) -> Result<Location, Error> {
         info!("Activating location: {}", id);
 
-        let db_client = ctx.data::<DbClient>().map_err(|_| {
-            AppError::InternalServerError("Database client not available".to_string())
-        })?;
+        let db_client = ctx
+            .data::<DbClient>()
+            .map_err(|_| {
+                AppError::InternalServerError("Database client not available".to_string())
+            })?;
 
         let repo = Repository::new(db_client.clone());
 
         let mut location = repo
-            .get::<Location>(id.clone())
-            .await
+            .get::<Location>(id.clone()).await
             .map_err(|e| e.to_graphql_error())?
             .ok_or_else(|| AppError::NotFound(format!("Location {} not found", id)))?;
 
@@ -189,15 +193,16 @@ impl LocationMutationRoot {
     async fn deactivate_location(&self, ctx: &Context<'_>, id: String) -> Result<Location, Error> {
         info!("Deactivating location: {}", id);
 
-        let db_client = ctx.data::<DbClient>().map_err(|_| {
-            AppError::InternalServerError("Database client not available".to_string())
-        })?;
+        let db_client = ctx
+            .data::<DbClient>()
+            .map_err(|_| {
+                AppError::InternalServerError("Database client not available".to_string())
+            })?;
 
         let repo = Repository::new(db_client.clone());
 
         let mut location = repo
-            .get::<Location>(id.clone())
-            .await
+            .get::<Location>(id.clone()).await
             .map_err(|e| e.to_graphql_error())?
             .ok_or_else(|| AppError::NotFound(format!("Location {} not found", id)))?;
 
@@ -216,46 +221,51 @@ impl LocationMutationRoot {
         &self,
         ctx: &Context<'_>,
         id: String,
-        new_parent_id: Option<String>,
+        new_parent_id: Option<String>
     ) -> Result<Location, Error> {
         info!("Moving location {} to parent {:?}", id, new_parent_id);
 
-        let db_client = ctx.data::<DbClient>().map_err(|_| {
-            AppError::InternalServerError("Database client not available".to_string())
-        })?;
+        let db_client = ctx
+            .data::<DbClient>()
+            .map_err(|_| {
+                AppError::InternalServerError("Database client not available".to_string())
+            })?;
 
         let repo = Repository::new(db_client.clone());
 
         let mut location = repo
-            .get::<Location>(id.clone())
-            .await
+            .get::<Location>(id.clone()).await
             .map_err(|e| e.to_graphql_error())?
             .ok_or_else(|| AppError::NotFound(format!("Location {} not found", id)))?;
 
         // Validate new parent if provided
         if let Some(ref parent_id) = new_parent_id {
             if parent_id == &location.id {
-                return Err(AppError::ValidationError(
-                    "Location cannot be its own parent".to_string()
-                ).to_graphql_error());
+                return Err(
+                    AppError::ValidationError(
+                        "Location cannot be its own parent".to_string()
+                    ).to_graphql_error()
+                );
             }
 
             let parent_location = repo
-                .get::<Location>(parent_id.clone())
-                .await
+                .get::<Location>(parent_id.clone()).await
                 .map_err(|e| e.to_graphql_error())?
                 .ok_or_else(|| {
-                    AppError::ValidationError(format!("Parent location {} not found", parent_id))
-                        .to_graphql_error()
+                    AppError::ValidationError(
+                        format!("Parent location {} not found", parent_id)
+                    ).to_graphql_error()
                 })?;
 
             // Additional validation: Check for circular references
             // This would require traversing the parent chain - simplified for now
             if let Some(ref grandparent_id) = parent_location.parent_location_id {
                 if grandparent_id == &location.id {
-                    return Err(AppError::ValidationError(
-                        "Cannot create circular parent relationship".to_string()
-                    ).to_graphql_error());
+                    return Err(
+                        AppError::ValidationError(
+                            "Cannot create circular parent relationship".to_string()
+                        ).to_graphql_error()
+                    );
                 }
             }
         }
@@ -270,25 +280,28 @@ impl LocationMutationRoot {
     async fn delete_location(&self, ctx: &Context<'_>, id: String) -> Result<bool, Error> {
         info!("Deleting location: {}", id);
 
-        let db_client = ctx.data::<DbClient>().map_err(|_| {
-            AppError::InternalServerError("Database client not available".to_string())
-        })?;
+        let db_client = ctx
+            .data::<DbClient>()
+            .map_err(|_| {
+                AppError::InternalServerError("Database client not available".to_string())
+            })?;
 
         let repo = Repository::new(db_client.clone());
 
         // Verify location exists
         let location = repo
-            .get::<Location>(id.clone())
-            .await
+            .get::<Location>(id.clone()).await
             .map_err(|e| e.to_graphql_error())?
             .ok_or_else(|| AppError::NotFound(format!("Location {} not found", id)))?;
 
         // Business rules: Check if location can be deleted
         // 1. Location must be inactive
         if location.is_active {
-            return Err(AppError::ValidationError(
-                "Cannot delete active location. Deactivate it first.".to_string()
-            ).to_graphql_error());
+            return Err(
+                AppError::ValidationError(
+                    "Cannot delete active location. Deactivate it first.".to_string()
+                ).to_graphql_error()
+            );
         }
 
         // 2. Check if location has child locations (would require a scan)

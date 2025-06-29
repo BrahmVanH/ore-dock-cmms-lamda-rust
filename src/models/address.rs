@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 
+use async_graphql::InputObject;
 use aws_sdk_dynamodb::types::AttributeValue;
 use regex::Regex;
 use serde::{ Deserialize, Serialize };
@@ -17,7 +18,7 @@ use crate::AppError;
 /// * `country` - country
 /// * `zip` - zip code
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize, InputObject)]
 pub struct Address {
     pub street: String,
     pub unit: Option<String>,
@@ -83,30 +84,34 @@ impl Address {
         Ok(())
     }
 
-    pub(crate) fn from_item(item: &HashMap<String, AttributeValue>) -> Option<Self> {
-        let street = item.get("street")?.as_s().ok()?.to_string();
-        let unit = item.get("unit").and_then(|v| {
-            match v {
-                AttributeValue::S(s) => Some(s.clone()),
-                AttributeValue::Null(_) => None,
-                _ => None,
-            }
-        });
-        let city = item.get("city")?.as_s().ok()?.to_string();
-        let state = item.get("state")?.as_s().ok()?.to_string();
-        let country = item.get("country")?.as_s().ok()?.to_string();
-        let zip = item.get("zip")?.as_s().ok()?.to_string();
+    pub(crate) fn from_item(av: &AttributeValue) -> Option<Self> {
+        if let AttributeValue::M(item) = av {
+            let street = item.get("street")?.as_s().ok()?.to_string();
+            let unit = item.get("unit").and_then(|v| {
+                match v {
+                    AttributeValue::S(s) => Some(s.clone()),
+                    AttributeValue::Null(_) => None,
+                    _ => None,
+                }
+            });
+            let city = item.get("city")?.as_s().ok()?.to_string();
+            let state = item.get("state")?.as_s().ok()?.to_string();
+            let country = item.get("country")?.as_s().ok()?.to_string();
+            let zip = item.get("zip")?.as_s().ok()?.to_string();
 
-        Some(Self {
-            street,
-            unit,
-            city,
-            state,
-            country,
-            zip,
-        })
+            Some(Self {
+                street,
+                unit,
+                city,
+                state,
+                country,
+                zip,
+            })
+        } else {
+            None
+        }
     }
-    pub(crate) fn to_item(&self) -> HashMap<String, AttributeValue> {
+    pub(crate) fn to_item(&self) -> AttributeValue {
         let mut item = HashMap::new();
 
         item.insert("street".to_string(), AttributeValue::S(self.street.clone()));
@@ -119,7 +124,7 @@ impl Address {
         item.insert("state".to_string(), AttributeValue::S(self.state.clone()));
         item.insert("country".to_string(), AttributeValue::S(self.country.clone()));
         item.insert("zip".to_string(), AttributeValue::S(self.zip.clone()));
-        item
+        AttributeValue::M(item)
     }
 }
 

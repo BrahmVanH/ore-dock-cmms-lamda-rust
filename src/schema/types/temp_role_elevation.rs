@@ -26,9 +26,6 @@ impl TempRoleElevation {
         self.justification.as_deref()
     }
 
-    async fn requested_by_user_id(&self) -> &str {
-        &self.requested_by_user_id
-    }
 
     async fn approved_by_user_id(&self) -> Option<&str> {
         self.approved_by_user_id.as_deref()

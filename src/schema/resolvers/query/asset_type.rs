@@ -1,16 +1,13 @@
 use async_graphql::*;
 use tracing::{ info, warn };
 
-use crate::{
-    error::AppError,
-    models::asset_type::AssetType,
-    schema::resolvers::query::QueryRoot,
-    DbClient,
-    Repository,
-};
+use crate::{ error::AppError, models::asset_type::AssetType, DbClient, Repository };
+
+#[derive(Debug, Default)]
+pub(crate) struct Query;
 
 #[Object]
-impl QueryRoot {
+impl Query {
     pub(crate) async fn get_asset_by_id(
         &self,
         ctx: &Context<'_>,

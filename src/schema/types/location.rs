@@ -11,7 +11,7 @@ impl Location {
     }
 
     async fn location_type(&self) -> &str {
-        self.r#type_id.as_str()
+        self.location_type_id.as_str()
     }
 
     async fn address(&self) -> &Address {
@@ -22,8 +22,8 @@ impl Location {
         self.parent_location_id.as_deref()
     }
 
-    async fn description(&self) -> Option<&str> {
-        self.description.as_deref()
+    async fn description(&self) -> &str {
+        &self.description
     }
 
     async fn created_at(&self) -> &DateTime<Utc> {

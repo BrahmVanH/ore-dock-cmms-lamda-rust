@@ -2,18 +2,13 @@ use async_graphql::*;
 use tracing::{ info, warn };
 use uuid::Uuid;
 
-use crate::{
-    DbClient,
-    models::asset_type::AssetType,
-    AppError,
-    Repository,
-};
+use crate::{ DbClient, models::asset_type::AssetType, AppError, Repository };
 
 #[derive(Debug, Default)]
-pub(crate)  struct AssetTypeMutationRoot;
+pub(crate) struct Mutation;
 
 #[Object]
-impl AssetTypeMutationRoot {
+impl Mutation {
     /// Create a new asset type
     async fn create_asset_type(
         &self,
