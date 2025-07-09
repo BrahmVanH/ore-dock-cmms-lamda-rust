@@ -8,9 +8,9 @@ argon2 = { version = "0.5.3", features = ["std"] }
 async-graphql = { version = "7.0.17", features = ["chrono"] }
 async-graphql-axum = "7.0.17"
 async-trait = "0.1.88"
-aws-config = { version = "1.8.0", features = ["behavior-version-latest"] }
+aws-config = { version = "1.8.1", features = ["behavior-version-latest"] }
 aws-credential-types = "1.2.3"
-aws-sdk-dynamodb = "1.80.0"
+aws-sdk-dynamodb = "1.82.0"
 axum = "0.8.4"
 axum-extra = "0.10.1"
 chrono = { version = "0.4.41", features = ["serde"] }
@@ -24,7 +24,7 @@ serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
 thiserror = "2.0.12"
 time = "0.3.41"
-tokio = { version = "1.45.1", features = ["full"] }
+tokio = { version = "1.46.1", features = ["full"] }
 tower = "0.5.2"
 tower-http = { version = "0.6.6", features = ["cors", "compression-full"] }
 tracing = "0.1.41"
