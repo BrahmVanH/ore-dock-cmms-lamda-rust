@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 
+use async_graphql::Enum;
 use aws_sdk_dynamodb::types::AttributeValue;
 use chrono::{ offset::LocalResult, DateTime, TimeZone, Utc };
 use rust_decimal::Decimal;
@@ -8,7 +9,7 @@ use tracing::info;
 
 use crate::{ error::AppError, repository::DynamoDbEntity };
 
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Enum, Copy, Clone, PartialEq, Eq, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub enum MaintenanceFrequencyOptions {
     OneTime,
@@ -63,7 +64,7 @@ impl MaintenanceFrequencyOptions {
     }
 }
 
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Enum, Copy, Clone, PartialEq, Eq, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub enum AssetCurrentStatusOptions {
     Operational,
@@ -227,7 +228,7 @@ impl Asset {
         })
     }
 
-     /// Calculates the next maintenance due date for this asset
+    /// Calculates the next maintenance due date for this asset
     ///
     /// # Returns
     ///
@@ -235,7 +236,7 @@ impl Asset {
     pub(crate) fn next_maintenance_due(&self) -> DateTime<Utc> {
         // If we have a specific maintenance schedule, we should use that
         // For now, calculate based on maintenance frequency and last maintenance
-        
+
         let base_date = if self.last_downtime_date == DateTime::<Utc>::UNIX_EPOCH {
             // If no previous maintenance recorded, use installation date
             self.installation_date

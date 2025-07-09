@@ -1,4 +1,7 @@
-use crate::models::prelude::*;
+use crate::models::{
+    asset::{ AssetCurrentStatusOptions, MaintenanceFrequencyOptions },
+    prelude::*,
+};
 #[Object]
 impl Asset {
     async fn id(&self) -> &str {
@@ -29,8 +32,8 @@ impl Asset {
         &self.installation_date
     }
 
-    async fn current_status(&self) -> &str {
-        self.current_status.to_str()
+    async fn current_status(&self) -> AssetCurrentStatusOptions {
+        self.current_status
     }
 
     async fn location_id(&self) -> &str {
@@ -41,8 +44,8 @@ impl Asset {
         &self.manufacturer_id
     }
 
-    async fn maintenance_frequency(&self) -> &str {
-        self.maintenance_frequency.to_str()
+    async fn maintenance_frequency(&self) -> MaintenanceFrequencyOptions {
+        self.maintenance_frequency
     }
 
     async fn interval_days(&self) -> i32 {
