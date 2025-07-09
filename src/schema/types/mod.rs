@@ -7,7 +7,7 @@ pub mod maintenance_schedule;
 pub mod manufacturer;
 pub mod notification_delivery_log;
 pub mod notification_template;
-pub mod notifiction;
+pub mod notification;
 pub mod permission_log;
 pub mod permission;
 pub mod role_hierarchy;

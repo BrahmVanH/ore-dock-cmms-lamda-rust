@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 
+use async_graphql::Enum;
 use aws_sdk_dynamodb::types::AttributeValue;
 use chrono::{ DateTime, Utc };
 use serde::{ Deserialize, Serialize };
@@ -8,7 +9,8 @@ use tracing::info;
 
 use crate::error::AppError;
 
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Enum, Copy, Clone, PartialEq, Eq, Debug, Deserialize, Serialize)]
+
 #[serde(rename_all = "snake_case")]
 pub enum VendorStatus {
     Active, // Currently active vendor
@@ -48,7 +50,7 @@ impl VendorStatus {
     }
 }
 
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Enum, Copy, Clone, PartialEq, Eq, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub enum VendorTier {
     Preferred, // Preferred vendor with best terms

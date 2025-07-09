@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use async_graphql::Object;
+use async_graphql::Enum;
 use aws_sdk_dynamodb::types::AttributeValue;
 use chrono::{ DateTime, Utc };
 use serde::{ Deserialize, Serialize };
@@ -8,8 +8,8 @@ use serde_json::Value as Json;
 use tracing::info;
 
 use crate::{ error::AppError, DynamoDbEntity };
+#[derive(Enum, Copy, Clone, PartialEq, Eq, Debug, Deserialize, Serialize)]
 
-#[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub enum UserStatus {
     Active,
@@ -49,7 +49,8 @@ impl UserStatus {
     }
 }
 
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Enum, Copy, Clone, PartialEq, Eq, Debug, Deserialize, Serialize)]
+
 #[serde(rename_all = "snake_case")]
 pub enum UserType {
     Employee,

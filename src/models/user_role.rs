@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use async_graphql::Object;
+use async_graphql::{Enum, Object};
 use aws_sdk_dynamodb::types::AttributeValue;
 use chrono::{ DateTime, Utc };
 use serde::{ Deserialize, Serialize };
@@ -8,7 +8,8 @@ use tracing::info;
 
 use crate::{ error::AppError, DynamoDbEntity };
 
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Enum, Copy, Clone, PartialEq, Eq, Debug, Deserialize, Serialize)]
+
 #[serde(rename_all = "snake_case")]
 pub enum RoleAssignmentStatus {
     Active, // Currently active assignment
@@ -45,7 +46,8 @@ impl RoleAssignmentStatus {
     }
 }
 
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Enum, Copy, Clone, PartialEq, Eq, Debug, Deserialize, Serialize)]
+
 #[serde(rename_all = "snake_case")]
 pub enum AssignmentSource {
     Manual, // Manually assigned by administrator

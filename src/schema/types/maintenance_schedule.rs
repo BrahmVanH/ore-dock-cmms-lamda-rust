@@ -1,6 +1,6 @@
 use crate::models::{
+    maintenance_schedule::{ CadenceUnit, MaintenanceCadence, MaintenanceSchedule },
     prelude::*,
-    maintenance_schedule::{ MaintenanceSchedule, MaintenanceCadence },
 };
 #[Object]
 impl MaintenanceSchedule {
@@ -55,8 +55,8 @@ impl MaintenanceCadence {
         self.interval
     }
 
-    async fn unit(&self) -> &str {
-        self.unit.to_str()
+    async fn unit(&self) -> CadenceUnit {
+        self.unit
     }
 
     async fn cadence_string(&self) -> String {

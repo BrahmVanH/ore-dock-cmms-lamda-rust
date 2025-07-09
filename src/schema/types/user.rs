@@ -1,4 +1,4 @@
-use crate::models::{ prelude::*, user::UserType };
+use crate::models::{ prelude::*, user::{ UserStatus, UserType } };
 
 #[Object]
 impl User {
@@ -26,12 +26,12 @@ impl User {
         self.display_name.as_deref()
     }
 
-    async fn user_type(&self) -> &str {
-        self.user_type.to_str()
+    async fn user_type(&self) -> UserType {
+        self.user_type
     }
 
-    async fn status(&self) -> &str {
-        self.status.to_str()
+    async fn status(&self) -> UserStatus {
+        self.status
     }
 
     async fn primary_role_id(&self) -> Option<&str> {

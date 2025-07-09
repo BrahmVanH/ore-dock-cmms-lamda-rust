@@ -1,4 +1,4 @@
-use crate::models::{ prelude::*, role_hierarchy::RoleHierarchy };
+use crate::models::{ prelude::*, role_hierarchy::{HierarchyType, RoleHierarchy} };
 #[Object]
 impl RoleHierarchy {
     async fn id(&self) -> &str {
@@ -13,8 +13,8 @@ impl RoleHierarchy {
         &self.child_role_id
     }
 
-    async fn hierarchy_type(&self) -> &str {
-        self.hierarchy_type.to_str()
+    async fn hierarchy_type(&self) -> HierarchyType {
+        self.hierarchy_type
     }
 
     async fn inherited_permissions(&self) -> bool {

@@ -1,4 +1,7 @@
-use crate::models::{ prelude::*, vendor_category::{ VendorCategory, CategoryStatus } };
+use crate::models::{
+    prelude::*,
+    vendor_category::{ CategoryStatus, CategoryType, VendorCategory },
+};
 
 #[Object]
 impl VendorCategory {
@@ -14,12 +17,12 @@ impl VendorCategory {
         self.description.as_deref()
     }
 
-    async fn category_type(&self) -> &str {
-        self.category_type.to_str()
+    async fn category_type(&self) -> CategoryType {
+        self.category_type
     }
 
-    async fn status(&self) -> &str {
-        self.status.to_str()
+    async fn status(&self) -> CategoryStatus {
+        self.status
     }
 
     async fn parent_category_id(&self) -> Option<&str> {

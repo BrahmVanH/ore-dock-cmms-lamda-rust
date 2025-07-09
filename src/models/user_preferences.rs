@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use async_graphql::Object;
+use async_graphql::{Enum, Object};
 use aws_sdk_dynamodb::types::AttributeValue;
 use chrono::{ DateTime, Timelike, Utc };
 use serde::{ Deserialize, Serialize };
@@ -9,7 +9,7 @@ use tracing::info;
 
 use crate::error::AppError;
 
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Enum, Copy, Clone, PartialEq, Eq, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub enum ThemeOptions {
     Light,
@@ -43,7 +43,7 @@ impl ThemeOptions {
     }
 }
 
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Enum, Copy, Clone, PartialEq, Eq, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub enum LanguageOptions {
     English,
@@ -86,7 +86,8 @@ impl LanguageOptions {
     }
 }
 
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Enum, Copy, Clone, PartialEq, Eq, Debug, Deserialize, Serialize)]
+
 #[serde(rename_all = "snake_case")]
 pub enum TimezoneFormat {
     TwelveHour, // 12-hour format with AM/PM

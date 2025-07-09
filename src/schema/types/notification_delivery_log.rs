@@ -1,4 +1,8 @@
-use crate::models::{ prelude::*, notification_delivery_log::NotificationDeliveryLog };
+use crate::models::{
+    notification::NotificationChannels,
+    notification_delivery_log::{ DeliveryStatus, NotificationDeliveryLog },
+    prelude::*,
+};
 #[Object]
 impl NotificationDeliveryLog {
     async fn id(&self) -> &str {
@@ -9,12 +13,12 @@ impl NotificationDeliveryLog {
         &self.notification_id
     }
 
-    async fn channel(&self) -> &str {
-        self.channel.to_str()
+    async fn channel(&self) -> NotificationChannels {
+        self.channel
     }
 
-    async fn delivery_status(&self) -> &str {
-        self.delivery_status.to_str()
+    async fn delivery_status(&self) -> DeliveryStatus {
+        self.delivery_status
     }
 
     async fn attempted_at(&self) -> &DateTime<Utc> {

@@ -1,13 +1,15 @@
 use std::collections::HashMap;
 
+use async_graphql::Enum;
 use aws_sdk_dynamodb::types::AttributeValue;
 use chrono::{ DateTime, Utc, NaiveTime };
 use serde::{ Deserialize, Serialize };
 use tracing::info;
 
-use crate::{ error::AppError, models::{ notification::{ NotificationChannels, SeverityLevel } } };
+use crate::{ error::AppError, models::notification::{ NotificationChannels, SeverityLevel } };
 
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Enum, Copy, Clone, PartialEq, Eq, Debug, Deserialize, Serialize)]
+
 #[serde(rename_all = "snake_case")]
 pub enum PreferenceScope {
     Global, // Apply to all notifications

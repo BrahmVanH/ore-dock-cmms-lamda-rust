@@ -1,5 +1,6 @@
 use crate::models::{
-    notification_template::{ NotificationTemplate, TemplateVariable },
+    notification::{NotificationChannels, SeverityLevel},
+    notification_template::{ NotificationTemplate, NotificationType, TemplateVariable },
     prelude::*,
 };
 #[Object]
@@ -12,8 +13,8 @@ impl NotificationTemplate {
         &self.name
     }
 
-    async fn notification_type(&self) -> &str {
-        self.notification_type.to_str()
+    async fn notification_type(&self) -> NotificationType {
+        self.notification_type
     }
 
     async fn subject_template(&self) -> &str {
@@ -24,14 +25,14 @@ impl NotificationTemplate {
         &self.message_template
     }
 
-    async fn default_severity(&self) -> &str {
-        self.default_severity.to_str()
+    async fn default_severity(&self) -> SeverityLevel {
+        self.default_severity
     }
 
-    async fn supported_channels(&self) -> Vec<String> {
+    async fn supported_channels(&self) -> Vec<NotificationChannels> {
         self.supported_channels
             .iter()
-            .map(|c| c.to_str().to_string())
+            .map(|c| c.clone())
             .collect()
     }
 

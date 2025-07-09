@@ -1,4 +1,4 @@
-use crate::models::{ prelude::*, vendor::VendorTier };
+use crate::models::{ prelude::*, vendor::{ VendorStatus, VendorTier } };
 
 #[Object]
 impl Vendor {
@@ -22,12 +22,12 @@ impl Vendor {
         &self.vendor_category_id
     }
 
-    async fn status(&self) -> &str {
-        self.status.to_str()
+    async fn status(&self) -> VendorStatus {
+        self.status
     }
 
-    async fn tier(&self) -> &str {
-        self.tier.to_str()
+    async fn tier(&self) -> VendorTier {
+        self.tier
     }
 
     async fn phone_number(&self) -> &str {

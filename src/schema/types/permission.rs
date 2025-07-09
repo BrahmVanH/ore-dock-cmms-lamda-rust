@@ -1,4 +1,4 @@
-use crate::models::{ prelude::*, permission::Permission };
+use crate::models::{ permission::{Permission, PermissionScope}, permission_log::{PermissionAction, ResourceType}, prelude::* };
 #[Object]
 impl Permission {
     async fn id(&self) -> &str {
@@ -9,19 +9,19 @@ impl Permission {
         &self.role_id
     }
 
-    async fn resource_type(&self) -> &str {
-        self.resource_type.to_str()
+    async fn resource_type(&self) -> ResourceType {
+        self.resource_type
     }
 
-    async fn actions(&self) -> Vec<String> {
+    async fn actions(&self) -> Vec<PermissionAction> {
         self.actions
             .iter()
-            .map(|a| a.to_str().to_string())
+            .map(|a| a.clone())
             .collect()
     }
 
-    async fn scope(&self) -> &str {
-        self.scope.to_str()
+    async fn scope(&self) -> PermissionScope {
+        self.scope
     }
 
     async fn conditions(&self) -> Option<String> {

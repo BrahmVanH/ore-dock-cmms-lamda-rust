@@ -1,4 +1,7 @@
-use crate::models::{ prelude::*, temp_role_elevation::TempRoleElevation };
+use crate::models::{
+    prelude::*,
+    temp_role_elevation::{ ElevationPriority, ElevationStatus, TempRoleElevation },
+};
 
 #[Object]
 impl TempRoleElevation {
@@ -26,7 +29,6 @@ impl TempRoleElevation {
         self.justification.as_deref()
     }
 
-
     async fn approved_by_user_id(&self) -> Option<&str> {
         self.approved_by_user_id.as_deref()
     }
@@ -47,12 +49,12 @@ impl TempRoleElevation {
         self.actual_end_time.as_ref()
     }
 
-    async fn status(&self) -> &str {
-        self.status.to_str()
+    async fn status(&self) -> ElevationStatus {
+        self.status
     }
 
-    async fn priority(&self) -> &str {
-        self.priority.to_str()
+    async fn priority(&self) -> ElevationPriority {
+        self.priority
     }
 
     async fn auto_revoke(&self) -> bool {

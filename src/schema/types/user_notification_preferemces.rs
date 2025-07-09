@@ -1,7 +1,7 @@
 use crate::models::{
     notification::{ NotificationChannels, SeverityLevel },
     prelude::*,
-    user_notification_preferences::UserNotificationPreferences,
+    user_notification_preferences::{ PreferenceScope, UserNotificationPreferences },
 };
 #[Object]
 impl UserNotificationPreferences {
@@ -13,8 +13,8 @@ impl UserNotificationPreferences {
         &self.user_id
     }
 
-    async fn scope(&self) -> &str {
-        self.scope.to_str()
+    async fn scope(&self) -> PreferenceScope {
+        self.scope
     }
 
     async fn scope_value(&self) -> Option<&str> {
@@ -25,17 +25,17 @@ impl UserNotificationPreferences {
         self.enabled
     }
 
-    async fn preferred_channels(&self) -> Vec<String> {
+    async fn preferred_channels(&self) -> Vec<NotificationChannels> {
         self.preferred_channels
             .iter()
-            .map(|c| c.to_str().to_string())
+            .map(|c| c.clone())
             .collect()
     }
 
-    async fn blocked_channels(&self) -> Vec<String> {
+    async fn blocked_channels(&self) -> Vec<NotificationChannels> {
         self.blocked_channels
             .iter()
-            .map(|c| c.to_str().to_string())
+            .map(|c| c.clone())
             .collect()
     }
 
@@ -55,8 +55,8 @@ impl UserNotificationPreferences {
         self.quiet_hours_timezone.as_deref()
     }
 
-    async fn min_severity_level(&self) -> Option<String> {
-        self.min_severity_level.as_ref().map(|s| s.to_str().to_string())
+    async fn min_severity_level(&self) -> Option<SeverityLevel> {
+        self.min_severity_level.as_ref().map(|s| s.clone())
     }
 
     async fn frequency_limit(&self) -> i32 {

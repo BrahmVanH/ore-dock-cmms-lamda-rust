@@ -1,4 +1,4 @@
-use crate::models::{ prelude::*, user_role::UserRole };
+use crate::models::{ prelude::*, user_role::{ AssignmentSource, RoleAssignmentStatus, UserRole } };
 #[Object]
 impl UserRole {
     async fn id(&self) -> &str {
@@ -13,12 +13,12 @@ impl UserRole {
         &self.role_id
     }
 
-    async fn assignment_source(&self) -> &str {
-        self.assignment_source.to_str()
+    async fn assignment_source(&self) -> AssignmentSource {
+        self.assignment_source
     }
 
-    async fn status(&self) -> &str {
-        self.status.to_str()
+    async fn status(&self) -> RoleAssignmentStatus {
+        self.status
     }
 
     async fn is_primary_role(&self) -> bool {

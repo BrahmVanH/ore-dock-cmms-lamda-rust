@@ -1,4 +1,7 @@
-use crate::models::{ prelude::*, permission_log::PermissionLog };
+use crate::models::{
+    permission_log::{ PermissionAction, PermissionLog, PermissionStatus, ResourceType },
+    prelude::*,
+};
 #[Object]
 impl PermissionLog {
     async fn id(&self) -> &str {
@@ -9,20 +12,20 @@ impl PermissionLog {
         &self.user_id
     }
 
-    async fn resource_type(&self) -> &str {
-        self.resource_type.to_str()
+    async fn resource_type(&self) -> ResourceType {
+        self.resource_type
     }
 
     async fn resource_id(&self) -> &str {
         &self.resource_id
     }
 
-    async fn action(&self) -> &str {
-        self.action.to_str()
+    async fn action(&self) -> PermissionAction {
+        self.action
     }
 
-    async fn status(&self) -> &str {
-        self.status.to_str()
+    async fn status(&self) -> PermissionStatus {
+        self.status
     }
 
     async fn attempted_at(&self) -> &DateTime<Utc> {

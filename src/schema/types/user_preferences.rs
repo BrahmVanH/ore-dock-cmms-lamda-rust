@@ -1,6 +1,9 @@
 use chrono::Timelike;
 
-use crate::models::{ prelude::*, user_preferences::{ UserPreferences, ThemeOptions } };
+use crate::models::{
+    prelude::*,
+    user_preferences::{ LanguageOptions, ThemeOptions, TimezoneFormat, UserPreferences },
+};
 
 #[Object]
 impl UserPreferences {
@@ -12,20 +15,20 @@ impl UserPreferences {
         &self.user_id
     }
 
-    async fn language(&self) -> &str {
-        self.language.to_str()
+    async fn language(&self) -> LanguageOptions {
+        self.language
     }
 
-    async fn theme(&self) -> &str {
-        self.theme.to_str()
+    async fn theme(&self) -> ThemeOptions {
+        self.theme
     }
 
     async fn timezone(&self) -> &str {
         &self.timezone
     }
 
-    async fn time_format(&self) -> &str {
-        self.time_format.to_str()
+    async fn time_format(&self) -> TimezoneFormat {
+        self.time_format
     }
 
     async fn date_format(&self) -> &str {
