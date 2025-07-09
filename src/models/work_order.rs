@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 
+use async_graphql::Enum;
 use aws_sdk_dynamodb::types::AttributeValue;
 use chrono::{ DateTime, Utc };
 use rust_decimal::Decimal;
@@ -8,7 +9,7 @@ use tracing::info;
 
 use crate::{ error::AppError, DynamoDbEntity };
 
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Enum, Copy, Clone, PartialEq, Eq, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub enum WorkOrderSeverity {
     Critical,
@@ -60,7 +61,7 @@ impl WorkOrderSeverity {
     }
 }
 
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Enum, Copy, Clone, PartialEq, Eq, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub enum WorkOrderDifficulty {
     Normal,
@@ -112,7 +113,7 @@ impl WorkOrderDifficulty {
     }
 }
 
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Enum, Copy, Clone, PartialEq, Eq, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub enum WorkOrderCost {
     One,
@@ -164,7 +165,7 @@ impl WorkOrderCost {
     }
 }
 
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Enum, Copy, Clone, PartialEq, Eq, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub enum WorkOrderStatus {
     Draft,
@@ -216,7 +217,7 @@ impl WorkOrderStatus {
     }
 }
 
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Enum, Copy, Clone, PartialEq, Eq, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub enum WorkOrderPriority {
     Low,
@@ -253,7 +254,7 @@ impl WorkOrderPriority {
     }
 }
 
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Enum, Copy, Clone, PartialEq, Eq, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub enum WorkOrderType {
     Preventive,

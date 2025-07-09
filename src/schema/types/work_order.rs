@@ -2,7 +2,15 @@
 
 use async_graphql::*;
 use chrono::{ DateTime, Utc };
-use crate::models::work_order::WorkOrder;
+use crate::models::work_order::{
+    WorkOrder,
+    WorkOrderCost,
+    WorkOrderDifficulty,
+    WorkOrderPriority,
+    WorkOrderSeverity,
+    WorkOrderStatus,
+    WorkOrderType,
+};
 
 /// GraphQL Object implementation for WorkOrder.
 #[Object]
@@ -38,23 +46,23 @@ impl WorkOrder {
     }
 
     /// Work order type as string representation.
-    async fn work_order_type(&self) -> &str {
-        self.work_order_type.to_str()
+    async fn work_order_type(&self) -> WorkOrderType {
+        self.work_order_type
     }
 
     /// Current status as string representation.
-    async fn status(&self) -> &str {
-        self.status.to_str()
+    async fn status(&self) -> WorkOrderStatus {
+        self.status
     }
 
     /// Priority level as string representation.
-    async fn priority(&self) -> &str {
-        self.priority.to_str()
+    async fn priority(&self) -> WorkOrderPriority {
+        self.priority
     }
 
     /// Severity level as string representation.
-    async fn severity(&self) -> &str {
-        self.severity.to_str()
+    async fn severity(&self) -> WorkOrderSeverity {
+        self.severity
     }
 
     /// Severity description.
@@ -68,8 +76,8 @@ impl WorkOrder {
     }
 
     /// Difficulty level as string representation.
-    async fn difficulty(&self) -> &str {
-        self.difficulty.to_str()
+    async fn difficulty(&self) -> WorkOrderDifficulty {
+        self.difficulty
     }
 
     /// Difficulty description.
@@ -98,8 +106,8 @@ impl WorkOrder {
     }
 
     /// Estimated cost level as string representation.
-    async fn estimated_cost(&self) -> &str {
-        self.estimated_cost.to_str()
+    async fn estimated_cost(&self) -> WorkOrderCost {
+        self.estimated_cost
     }
 
     /// Estimated cost description.
