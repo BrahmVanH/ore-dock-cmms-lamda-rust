@@ -27,6 +27,11 @@ impl WorkOrder {
         &self.description
     }
 
+    /// Work order notes.
+    async fn notes(&self) -> Option<&str> {
+        self.notes.as_deref()
+    }
+
     /// Target asset ID.
     async fn asset_id(&self) -> &str {
         &self.asset_id
@@ -120,6 +125,11 @@ impl WorkOrder {
     /// Notes provided upon work order completion.
     async fn completion_notes(&self) -> Option<&str> {
         self.completion_notes.as_deref()
+    }
+
+    /// Date of completion.
+    async fn completed_date(&self) -> Option<DateTime<Utc>> {
+        self.completed_date.clone()
     }
 
     /// User who created this work order.

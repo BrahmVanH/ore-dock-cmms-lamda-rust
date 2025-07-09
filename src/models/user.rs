@@ -7,7 +7,7 @@ use serde::{ Deserialize, Serialize };
 use serde_json::Value as Json;
 use tracing::info;
 
-use crate::error::AppError;
+use crate::{ error::AppError, DynamoDbEntity };
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "snake_case")]
@@ -300,6 +300,122 @@ impl User {
         })
     }
 
+    /// Gets the user's full name
+    pub fn full_name(&self) -> String {
+        format!("{} {}", self.first_name, self.last_name)
+    }
+
+    /// Gets the user's display name or falls back to full name
+    pub fn effective_display_name(&self) -> String {
+        self.display_name.clone().unwrap_or_else(|| self.full_name())
+    }
+
+    /// Checks if the user account is currently active
+    pub fn is_active(&self) -> bool {
+        matches!(self.status, UserStatus::Active) && !self.is_account_locked()
+    }
+
+    /// Checks if the user account is locked
+    pub fn is_account_locked(&self) -> bool {
+        if let Some(locked_until) = &self.account_locked_until {
+            Utc::now() < *locked_until
+        } else {
+            false
+        }
+    }
+
+    /// Checks if the user is terminated
+    pub fn is_terminated(&self) -> bool {
+        matches!(self.status, UserStatus::Terminated) || self.termination_date.is_some()
+    }
+
+    /// Records a successful login
+    pub fn record_login(&mut self) {
+        self.last_login_at = Some(Utc::now());
+        self.failed_login_attempts = 0;
+        self.account_locked_until = None;
+        self.updated_at = Utc::now();
+    }
+
+    /// Records a failed login attempt
+    fn record_failed_login(&mut self, max_attempts: i32, lockout_duration_minutes: i64) {
+        self.failed_login_attempts += 1;
+
+        if self.failed_login_attempts >= max_attempts {
+            let lockout_duration = chrono::Duration::minutes(lockout_duration_minutes);
+            self.account_locked_until = Some(Utc::now() + lockout_duration);
+        }
+
+        self.updated_at = Utc::now();
+    }
+
+    /// Unlocks the user account
+    fn unlock_account(&mut self) {
+        self.failed_login_attempts = 0;
+        self.account_locked_until = None;
+        self.updated_at = Utc::now();
+    }
+
+    /// Suspends the user account
+    fn suspend(&mut self, reason: Option<String>) -> Result<(), AppError> {
+        if matches!(self.status, UserStatus::Terminated) {
+            return Err(AppError::ValidationError("Cannot suspend terminated user".to_string()));
+        }
+
+        self.status = UserStatus::Suspended;
+        if let Some(reason_text) = reason {
+            // Add suspension reason to notes
+            let current_notes = self.notes.clone().unwrap_or_default();
+            self.notes = Some(format!("{}; SUSPENDED: {}", current_notes, reason_text));
+        }
+        self.updated_at = Utc::now();
+        Ok(())
+    }
+
+    /// Reactivates a suspended user account
+    fn reactivate(&mut self) -> Result<(), AppError> {
+        if !matches!(self.status, UserStatus::Suspended | UserStatus::Inactive) {
+            return Err(
+                AppError::ValidationError(
+                    "Only suspended or inactive users can be reactivated".to_string()
+                )
+            );
+        }
+
+        self.status = UserStatus::Active;
+        self.failed_login_attempts = 0;
+        self.account_locked_until = None;
+        self.updated_at = Utc::now();
+        Ok(())
+    }
+
+    /// Terminates the user account
+    fn terminate(&mut self, termination_date: Option<DateTime<Utc>>) -> Result<(), AppError> {
+        if matches!(self.status, UserStatus::Terminated) {
+            return Err(AppError::ValidationError("User is already terminated".to_string()));
+        }
+
+        self.status = UserStatus::Terminated;
+        self.termination_date = termination_date.or_else(|| Some(Utc::now()));
+        self.updated_at = Utc::now();
+        Ok(())
+    }
+
+    /// Updates the user's password change timestamp
+    fn record_password_change(&mut self) {
+        self.password_changed_at = Some(Utc::now());
+        self.updated_at = Utc::now();
+    }
+}
+
+impl DynamoDbEntity for User {
+    fn table_name() -> &'static str {
+        "Users"
+    }
+
+    fn primary_key(&self) -> String {
+        self.id.clone()
+    }
     /// Creates User instance from DynamoDB item
     ///
     /// # Arguments
@@ -309,7 +425,7 @@ impl User {
     /// # Returns
     ///
     /// 'Some' User if item fields match, 'None' otherwise
-    pub(crate) fn from_item(item: &HashMap<String, AttributeValue>) -> Option<Self> {
+    fn from_item(item: &HashMap<String, AttributeValue>) -> Option<Self> {
         info!("calling from_item with: {:?}", &item);
 
         let id = item.get("id")?.as_s().ok()?.to_string();
@@ -517,7 +633,7 @@ impl User {
     /// # Returns
     ///
     /// HashMap representing DB item for User instance
-    pub(crate) fn to_item(&self) -> HashMap<String, AttributeValue> {
+    fn to_item(&self) -> HashMap<String, AttributeValue> {
         let mut item = HashMap::new();
 
         item.insert("id".to_string(), AttributeValue::S(self.id.clone()));
@@ -649,112 +765,5 @@ impl User {
         item.insert("updated_at".to_string(), AttributeValue::S(self.updated_at.to_string()));
 
         item
-    }
-
-    /// Gets the user's full name
-    pub fn full_name(&self) -> String {
-        format!("{} {}", self.first_name, self.last_name)
-    }
-
-    /// Gets the user's display name or falls back to full name
-    pub fn effective_display_name(&self) -> String {
-        self.display_name.clone().unwrap_or_else(|| self.full_name())
-    }
-
-    /// Checks if the user account is currently active
-    pub fn is_active(&self) -> bool {
-        matches!(self.status, UserStatus::Active) && !self.is_account_locked()
-    }
-
-    /// Checks if the user account is locked
-    pub fn is_account_locked(&self) -> bool {
-        if let Some(locked_until) = &self.account_locked_until {
-            Utc::now() < *locked_until
-        } else {
-            false
-        }
-    }
-
-    /// Checks if the user is terminated
-    pub fn is_terminated(&self) -> bool {
-        matches!(self.status, UserStatus::Terminated) || self.termination_date.is_some()
-    }
-
-    /// Records a successful login
-    pub fn record_login(&mut self) {
-        self.last_login_at = Some(Utc::now());
-        self.failed_login_attempts = 0;
-        self.account_locked_until = None;
-        self.updated_at = Utc::now();
-    }
-
-    /// Records a failed login attempt
-    fn record_failed_login(&mut self, max_attempts: i32, lockout_duration_minutes: i64) {
-        self.failed_login_attempts += 1;
-
-        if self.failed_login_attempts >= max_attempts {
-            let lockout_duration = chrono::Duration::minutes(lockout_duration_minutes);
-            self.account_locked_until = Some(Utc::now() + lockout_duration);
-        }
-
-        self.updated_at = Utc::now();
-    }
-
-    /// Unlocks the user account
-    fn unlock_account(&mut self) {
-        self.failed_login_attempts = 0;
-        self.account_locked_until = None;
-        self.updated_at = Utc::now();
-    }
-
-    /// Suspends the user account
-    fn suspend(&mut self, reason: Option<String>) -> Result<(), AppError> {
-        if matches!(self.status, UserStatus::Terminated) {
-            return Err(AppError::ValidationError("Cannot suspend terminated user".to_string()));
-        }
-
-        self.status = UserStatus::Suspended;
-        if let Some(reason_text) = reason {
-            // Add suspension reason to notes
-            let current_notes = self.notes.clone().unwrap_or_default();
-            self.notes = Some(format!("{}; SUSPENDED: {}", current_notes, reason_text));
-        }
-        self.updated_at = Utc::now();
-        Ok(())
-    }
-
-    /// Reactivates a suspended user account
-    fn reactivate(&mut self) -> Result<(), AppError> {
-        if !matches!(self.status, UserStatus::Suspended | UserStatus::Inactive) {
-            return Err(
-                AppError::ValidationError(
-                    "Only suspended or inactive users can be reactivated".to_string()
-                )
-            );
-        }
-
-        self.status = UserStatus::Active;
-        self.failed_login_attempts = 0;
-        self.account_locked_until = None;
-        self.updated_at = Utc::now();
-        Ok(())
-    }
-
-    /// Terminates the user account
-    fn terminate(&mut self, termination_date: Option<DateTime<Utc>>) -> Result<(), AppError> {
-        if matches!(self.status, UserStatus::Terminated) {
-            return Err(AppError::ValidationError("User is already terminated".to_string()));
-        }
-
-        self.status = UserStatus::Terminated;
-        self.termination_date = termination_date.or_else(|| Some(Utc::now()));
-        self.updated_at = Utc::now();
-        Ok(())
-    }
-
-    /// Updates the user's password change timestamp
-    fn record_password_change(&mut self) {
-        self.password_changed_at = Some(Utc::now());
-        self.updated_at = Utc::now();
     }
 }

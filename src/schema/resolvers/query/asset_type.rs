@@ -4,10 +4,10 @@ use tracing::{ info, warn };
 use crate::{ error::AppError, models::asset_type::AssetType, DbClient, Repository };
 
 #[derive(Debug, Default)]
-pub(crate) struct Query;
+pub(crate) struct AssetTypeQuery;
 
 #[Object]
-impl Query {
+impl AssetTypeQuery {
     pub(crate) async fn get_asset_by_id(
         &self,
         ctx: &Context<'_>,

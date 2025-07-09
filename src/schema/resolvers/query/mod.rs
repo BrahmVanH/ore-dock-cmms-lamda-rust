@@ -4,6 +4,25 @@ mod asset_type;
 mod asset;
 mod location;
 mod location_type;
+mod user;
+mod user_role;
+mod role;
+mod permission;
+mod work_order;
+mod manufacturer;
+mod maintenance_schedule;
 
 #[derive(Debug, Default, MergedObject)]
-pub struct QueryRoot(asset_type::Query, asset::Query, location::Query, location_type::Query);
+pub struct QueryRoot(
+    asset_type::AssetTypeQuery,
+    asset::AssetQuery,
+    location::LocationQuery,
+    location_type::LocationTypeQuery,
+    user::UserQuery,
+    user_role::UserRoleQuery,
+    role::RoleQuery,
+    permission::PermissionQuery,
+    work_order::WorkOrderQuery,
+    manufacturer::ManufacturerQuery,
+    maintenance_schedule::MaintenanceScheduleQuery,
+);

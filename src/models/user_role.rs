@@ -6,7 +6,7 @@ use chrono::{ DateTime, Utc };
 use serde::{ Deserialize, Serialize };
 use tracing::info;
 
-use crate::error::AppError;
+use crate::{ error::AppError, DynamoDbEntity };
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "snake_case")]
@@ -204,6 +204,125 @@ impl UserRole {
         })
     }
 
+    /// Checks if the role assignment is currently active and effective
+    pub(crate) fn is_effective(&self) -> bool {
+        let now = Utc::now();
+
+        // Must be active status
+        if !matches!(self.status, RoleAssignmentStatus::Active) {
+            return false;
+        }
+
+        // Must be past effective_from time
+        if now < self.effective_from {
+            return false;
+        }
+
+        // Must not be expired
+        if let Some(expires_at) = &self.expires_at {
+            if now > *expires_at {
+                return false;
+            }
+        }
+
+        // Must not be revoked
+        if self.revoked_at.is_some() {
+            return false;
+        }
+
+        true
+    }
+
+    /// Checks if the role assignment has expired
+    fn is_expired(&self) -> bool {
+        if let Some(expires_at) = &self.expires_at { Utc::now() > *expires_at } else { false }
+    }
+
+    /// Updates the last used timestamp
+    pub fn mark_as_used(&mut self) {
+        self.last_used_at = Some(Utc::now());
+        self.updated_at = Utc::now();
+    }
+
+    /// Revokes the role assignment
+    fn revoke(
+        &mut self,
+        revoked_by_user_id: String,
+        reason: Option<String>
+    ) -> Result<(), AppError> {
+        if matches!(self.status, RoleAssignmentStatus::Revoked) {
+            return Err(AppError::ValidationError("Role assignment is already revoked".to_string()));
+        }
+
+        self.status = RoleAssignmentStatus::Revoked;
+        self.revoked_at = Some(Utc::now());
+        self.revoked_by_user_id = Some(revoked_by_user_id);
+        self.revocation_reason = reason;
+        self.updated_at = Utc::now();
+        Ok(())
+    }
+
+    /// Suspends the role assignment temporarily
+    fn suspend(
+        &mut self,
+        suspended_by_user_id: String,
+        reason: Option<String>
+    ) -> Result<(), AppError> {
+        if !matches!(self.status, RoleAssignmentStatus::Active) {
+            return Err(
+                AppError::ValidationError(
+                    "Only active role assignments can be suspended".to_string()
+                )
+            );
+        }
+
+        self.status = RoleAssignmentStatus::Suspended;
+        self.revoked_by_user_id = Some(suspended_by_user_id);
+        self.revocation_reason = reason;
+        self.updated_at = Utc::now();
+        Ok(())
+    }
+
+    /// Reactivates a suspended role assignment
+    fn reactivate(&mut self) -> Result<(), AppError> {
+        if !matches!(self.status, RoleAssignmentStatus::Suspended) {
+            return Err(
+                AppError::ValidationError(
+                    "Only suspended role assignments can be reactivated".to_string()
+                )
+            );
+        }
+
+        self.status = RoleAssignmentStatus::Active;
+        self.revoked_by_user_id = None;
+        self.revocation_reason = None;
+        self.updated_at = Utc::now();
+        Ok(())
+    }
+
+    /// Extends the expiration date of the role assignment
+    fn extend_expiration(&mut self, new_expiration: DateTime<Utc>) -> Result<(), AppError> {
+        if new_expiration <= Utc::now() {
+            return Err(
+                AppError::ValidationError("New expiration must be in the future".to_string())
+            );
+        }
+
+        self.expires_at = Some(new_expiration);
+        self.updated_at = Utc::now();
+        Ok(())
+    }
+}
+
+impl DynamoDbEntity for UserRole {
+    fn table_name() -> &'static str {
+        "UserRoles"
+    }
+
+    fn primary_key(&self) -> String {
+        self.id.clone()
+    }
+
     /// Creates UserRole instance from DynamoDB item
     ///
     /// # Arguments
@@ -213,7 +332,7 @@ impl UserRole {
     /// # Returns
     ///
     /// 'Some' UserRole if item fields match, 'None' otherwise
-    pub(crate) fn from_item(item: &HashMap<String, AttributeValue>) -> Option<Self> {
+    fn from_item(item: &HashMap<String, AttributeValue>) -> Option<Self> {
         info!("calling from_item with: {:?}", &item);
 
         let id = item.get("id")?.as_s().ok()?.to_string();
@@ -339,7 +458,7 @@ impl UserRole {
     /// # Returns
     ///
     /// HashMap representing DB item for UserRole instance
-    pub(crate) fn to_item(&self) -> HashMap<String, AttributeValue> {
+    fn to_item(&self) -> HashMap<String, AttributeValue> {
         let mut item = HashMap::new();
 
         item.insert("id".to_string(), AttributeValue::S(self.id.clone()));
@@ -401,114 +520,5 @@ impl UserRole {
         item.insert("updated_at".to_string(), AttributeValue::S(self.updated_at.to_string()));
 
         item
-    }
-
-    /// Checks if the role assignment is currently active and effective
-    pub(crate) fn is_effective(&self) -> bool {
-        let now = Utc::now();
-
-        // Must be active status
-        if !matches!(self.status, RoleAssignmentStatus::Active) {
-            return false;
-        }
-
-        // Must be past effective_from time
-        if now < self.effective_from {
-            return false;
-        }
-
-        // Must not be expired
-        if let Some(expires_at) = &self.expires_at {
-            if now > *expires_at {
-                return false;
-            }
-        }
-
-        // Must not be revoked
-        if self.revoked_at.is_some() {
-            return false;
-        }
-
-        true
-    }
-
-    /// Checks if the role assignment has expired
-    fn is_expired(&self) -> bool {
-        if let Some(expires_at) = &self.expires_at { Utc::now() > *expires_at } else { false }
-    }
-
-    /// Updates the last used timestamp
-    pub fn mark_as_used(&mut self) {
-        self.last_used_at = Some(Utc::now());
-        self.updated_at = Utc::now();
-    }
-
-    /// Revokes the role assignment
-    fn revoke(
-        &mut self,
-        revoked_by_user_id: String,
-        reason: Option<String>
-    ) -> Result<(), AppError> {
-        if matches!(self.status, RoleAssignmentStatus::Revoked) {
-            return Err(AppError::ValidationError("Role assignment is already revoked".to_string()));
-        }
-
-        self.status = RoleAssignmentStatus::Revoked;
-        self.revoked_at = Some(Utc::now());
-        self.revoked_by_user_id = Some(revoked_by_user_id);
-        self.revocation_reason = reason;
-        self.updated_at = Utc::now();
-        Ok(())
-    }
-
-    /// Suspends the role assignment temporarily
-    fn suspend(
-        &mut self,
-        suspended_by_user_id: String,
-        reason: Option<String>
-    ) -> Result<(), AppError> {
-        if !matches!(self.status, RoleAssignmentStatus::Active) {
-            return Err(
-                AppError::ValidationError(
-                    "Only active role assignments can be suspended".to_string()
-                )
-            );
-        }
-
-        self.status = RoleAssignmentStatus::Suspended;
-        self.revoked_by_user_id = Some(suspended_by_user_id);
-        self.revocation_reason = reason;
-        self.updated_at = Utc::now();
-        Ok(())
-    }
-
-    /// Reactivates a suspended role assignment
-    fn reactivate(&mut self) -> Result<(), AppError> {
-        if !matches!(self.status, RoleAssignmentStatus::Suspended) {
-            return Err(
-                AppError::ValidationError(
-                    "Only suspended role assignments can be reactivated".to_string()
-                )
-            );
-        }
-
-        self.status = RoleAssignmentStatus::Active;
-        self.revoked_by_user_id = None;
-        self.revocation_reason = None;
-        self.updated_at = Utc::now();
-        Ok(())
-    }
-
-    /// Extends the expiration date of the role assignment
-    fn extend_expiration(&mut self, new_expiration: DateTime<Utc>) -> Result<(), AppError> {
-        if new_expiration <= Utc::now() {
-            return Err(
-                AppError::ValidationError("New expiration must be in the future".to_string())
-            );
-        }
-
-        self.expires_at = Some(new_expiration);
-        self.updated_at = Utc::now();
-        Ok(())
     }
 }

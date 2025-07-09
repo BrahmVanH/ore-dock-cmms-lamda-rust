@@ -4,18 +4,15 @@ use tracing::warn;
 
 use crate::{
     error::AppError,
-    models::{
-        asset::{ Asset, AssetCurrentStatusOptions },
-        work_order::WorkOrder,
-    },
+    models::{ asset::{ Asset, AssetCurrentStatusOptions }, work_order::WorkOrder },
     DbClient,
     Repository,
 };
 #[derive(Debug, Default)]
-pub(crate) struct Query;
+pub(crate) struct AssetQuery;
 
 #[Object]
-impl Query {
+impl AssetQuery {
     /// Get asset by ID
     async fn asset_by_id(&self, ctx: &Context<'_>, id: String) -> Result<Option<Asset>, Error> {
         let db_client = ctx.data::<DbClient>().map_err(|e| {
@@ -313,11 +310,8 @@ impl Query {
         assets = assets
             .into_iter()
             .filter(|asset| {
-                if let Some(next_maintenance) = asset.next_maintenance_due {
-                    next_maintenance <= cutoff_date
-                } else {
-                    false
-                }
+                let next_maintenance = asset.next_maintenance_due();
+                next_maintenance <= cutoff_date
             })
             .collect();
 
@@ -352,11 +346,8 @@ impl Query {
         assets = assets
             .into_iter()
             .filter(|asset| {
-                if let Some(next_maintenance) = asset.next_maintenance_due {
-                    next_maintenance < now
-                } else {
-                    false
-                }
+                let next_maintenance = asset.next_maintenance_due();
+                next_maintenance < now
             })
             .collect();
 

@@ -5,7 +5,7 @@ use chrono::{ DateTime, Utc };
 use serde::{ Deserialize, Serialize };
 use tracing::info;
 
-use crate::error::AppError;
+use crate::{ error::AppError, DynamoDbEntity };
 
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
 #[serde(rename_all = "snake_case")]
@@ -144,6 +144,47 @@ impl Role {
         })
     }
 
+    /// Checks if the role has expired
+    pub(crate) fn is_expired(&self) -> bool {
+        if let Some(expires_at) = &self.expires_at { Utc::now() > *expires_at } else { false }
+    }
+
+    /// Checks if the role is currently usable
+    pub(crate) fn is_usable(&self) -> bool {
+        self.active && !self.is_expired()
+    }
+
+    /// Adds a permission to this role
+    pub(crate) fn add_permission(&mut self, permission_id: String) {
+        if !self.permission_ids.contains(&permission_id) {
+            self.permission_ids.push(permission_id);
+            self.updated_at = Utc::now();
+        }
+    }
+
+    /// Removes a permission from this role
+    pub(crate) fn remove_permission(&mut self, permission_id: &str) {
+        if let Some(pos) = self.permission_ids.iter().position(|x| x == permission_id) {
+            self.permission_ids.remove(pos);
+            self.updated_at = Utc::now();
+        }
+    }
+
+    /// Checks if this role has a specific permission
+    pub(crate) fn has_permission(&self, permission_id: &str) -> bool {
+        self.permission_ids.contains(&permission_id.to_string())
+    }
+}
+
+impl DynamoDbEntity for Role {
+    fn table_name() -> &'static str {
+        "Roles"
+    }
+
+    fn primary_key(&self) -> String {
+        self.id.clone()
+    }
+
     /// Creates Role instance from DynamoDB item
     ///
     /// # Arguments
@@ -153,7 +194,7 @@ impl Role {
     /// # Returns
     ///
     /// 'Some' Role if item fields match, 'None' otherwise
-    pub(crate) fn from_item(item: &HashMap<String, AttributeValue>) -> Option<Self> {
+    fn from_item(item: &HashMap<String, AttributeValue>) -> Option<Self> {
         info!("calling from_item with: {:?}", &item);
 
         let id = item.get("id")?.as_s().ok()?.to_string();
@@ -258,7 +299,7 @@ impl Role {
     /// # Returns
     ///
     /// HashMap representing DB item for Role instance
-    pub(crate) fn to_item(&self) -> HashMap<String, AttributeValue> {
+    fn to_item(&self) -> HashMap<String, AttributeValue> {
         let mut item = HashMap::new();
 
         item.insert("id".to_string(), AttributeValue::S(self.id.clone()));
@@ -305,36 +346,5 @@ impl Role {
         item.insert("updated_at".to_string(), AttributeValue::S(self.updated_at.to_string()));
 
         item
-    }
-
-    /// Checks if the role has expired
-    fn is_expired(&self) -> bool {
-        if let Some(expires_at) = &self.expires_at { Utc::now() > *expires_at } else { false }
-    }
-
-    /// Checks if the role is currently usable
-    fn is_usable(&self) -> bool {
-        self.active && !self.is_expired()
-    }
-
-    /// Adds a permission to this role
-    fn add_permission(&mut self, permission_id: String) {
-        if !self.permission_ids.contains(&permission_id) {
-            self.permission_ids.push(permission_id);
-            self.updated_at = Utc::now();
-        }
-    }
-
-    /// Removes a permission from this role
-    fn remove_permission(&mut self, permission_id: &str) {
-        if let Some(pos) = self.permission_ids.iter().position(|x| x == permission_id) {
-            self.permission_ids.remove(pos);
-            self.updated_at = Utc::now();
-        }
-    }
-
-    /// Checks if this role has a specific permission
-    fn has_permission(&self, permission_id: &str) -> bool {
-        self.permission_ids.contains(&permission_id.to_string())
     }
 }

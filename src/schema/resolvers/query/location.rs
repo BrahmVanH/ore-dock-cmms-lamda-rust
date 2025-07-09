@@ -9,10 +9,10 @@ use crate::{
 };
 
 #[derive(Debug, Default)]
-pub(crate) struct Query;
+pub(crate) struct LocationQuery;
 
 #[Object]
-impl Query {
+impl LocationQuery {
     /// Get location by ID
     async fn location_by_id(
         &self,

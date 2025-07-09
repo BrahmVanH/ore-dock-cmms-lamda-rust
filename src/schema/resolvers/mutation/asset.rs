@@ -11,10 +11,10 @@ use crate::{
 };
 
 #[derive(Debug, Default)]
-pub(crate) struct Mutation;
+pub(crate) struct AssetMutation;
 
 #[Object]
-impl Mutation {
+impl AssetMutation {
     /// Create a new asset
     async fn create_asset(
         &self,

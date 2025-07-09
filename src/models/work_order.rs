@@ -314,12 +314,14 @@ pub struct WorkOrder {
     pub asset_id: String,
     pub work_order_type: WorkOrderType,
     pub status: WorkOrderStatus,
+    pub notes: Option<String>,
     pub priority: WorkOrderPriority,
     pub severity: WorkOrderSeverity,
     pub difficulty: WorkOrderDifficulty,
     pub assigned_technician_id: Option<String>,
     pub estimated_duration_minutes: i32,
     pub actual_duration_minutes: Option<i32>,
+    pub completed_date: Option<DateTime<Utc>>,
     pub estimated_cost: WorkOrderCost,
     pub actual_cost: Option<Decimal>,
     pub labor_hours: Option<f64>,
@@ -335,6 +337,7 @@ impl WorkOrder {
         work_order_number: String,
         title: String,
         description: String,
+        notes: Option<String>,
         asset_id: String,
         work_order_type: String,
         priority: String,
@@ -384,6 +387,7 @@ impl WorkOrder {
             title,
             description,
             asset_id,
+            notes,
             work_order_type: work_order_type_enum,
             status: WorkOrderStatus::Draft,
             priority: priority_enum,
@@ -394,6 +398,7 @@ impl WorkOrder {
             actual_duration_minutes: None,
             estimated_cost,
             actual_cost: None,
+            completed_date: None,
             labor_hours: None,
             completion_notes: None,
             created_by,
@@ -423,10 +428,7 @@ impl WorkOrder {
         Ok(())
     }
 
-    pub fn complete_work(
-        &mut self,
-        completion_notes: Option<String>,
-    ) -> Result<(), AppError> {
+    pub fn complete_work(&mut self, completion_notes: Option<String>) -> Result<(), AppError> {
         if !matches!(self.status, WorkOrderStatus::InProgress) {
             return Err(
                 AppError::ValidationError(
@@ -435,11 +437,11 @@ impl WorkOrder {
             );
         }
 
-
         let now = Utc::now();
         self.status = WorkOrderStatus::Completed;
         self.completion_notes = completion_notes;
         self.updated_at = now;
+        self.completed_date = Some(now);
         Ok(())
     }
 
@@ -451,10 +453,12 @@ impl WorkOrder {
                 )
             );
         }
+        let now = Utc::now();
 
         self.status = WorkOrderStatus::Cancelled;
         self.completion_notes = Some(reason);
-        self.updated_at = Utc::now();
+        self.updated_at = now;
+        self.completed_date = Some(now);
         Ok(())
     }
 
@@ -522,6 +526,12 @@ impl DynamoDbEntity for WorkOrder {
         let work_order_number = item.get("work_order_number")?.as_s().ok()?.to_string();
         let title = item.get("title")?.as_s().ok()?.to_string();
         let description = item.get("description")?.as_s().ok()?.to_string();
+
+        let notes = item
+            .get("completion_notes")
+            .and_then(|v| v.as_s().ok())
+            .map(|s| s.to_string());
+
         let asset_id = item.get("asset_id")?.as_s().ok()?.to_string();
 
         let work_order_type_str = item.get("work_order_type")?.as_s().ok()?;
@@ -550,6 +560,11 @@ impl DynamoDbEntity for WorkOrder {
             .and_then(|s| s.parse::<i32>().ok())
             .unwrap_or(60);
 
+        let completed_date = item
+            .get("completed_date")
+            .and_then(|v| v.as_s().ok())
+            .and_then(|s| s.parse::<DateTime<Utc>>().ok());
+
         let actual_duration_minutes = item
             .get("actual_duration_minutes")
             .and_then(|v| v.as_n().ok())
@@ -573,7 +588,6 @@ impl DynamoDbEntity for WorkOrder {
             .and_then(|v| v.as_s().ok())
             .map(|s| s.to_string());
 
-
         let created_by = item.get("created_by")?.as_s().ok()?.to_string();
 
         let created_at = item
@@ -593,6 +607,7 @@ impl DynamoDbEntity for WorkOrder {
             work_order_number,
             title,
             description,
+            notes,
             asset_id,
             work_order_type,
             status,
@@ -602,6 +617,7 @@ impl DynamoDbEntity for WorkOrder {
             assigned_technician_id,
             estimated_duration_minutes,
             actual_duration_minutes,
+            completed_date,
             estimated_cost,
             actual_cost,
             labor_hours,
@@ -622,6 +638,9 @@ impl DynamoDbEntity for WorkOrder {
         );
         item.insert("title".to_string(), AttributeValue::S(self.title.clone()));
         item.insert("description".to_string(), AttributeValue::S(self.description.clone()));
+        if let Some(notes) = &self.notes {
+            item.insert("notes".to_string(), AttributeValue::S(notes.clone()));
+        }
         item.insert("asset_id".to_string(), AttributeValue::S(self.asset_id.clone()));
         item.insert(
             "work_order_type".to_string(),
@@ -651,6 +670,13 @@ impl DynamoDbEntity for WorkOrder {
             );
         }
 
+        if let Some(completed_date) = &self.completed_date {
+            item.insert(
+                "completed_date".to_string(),
+                AttributeValue::S(completed_date.to_string())
+            );
+        }
+
         item.insert(
             "estimated_cost".to_string(),
             AttributeValue::S(self.estimated_cost.to_string())
@@ -667,7 +693,6 @@ impl DynamoDbEntity for WorkOrder {
         if let Some(notes) = &self.completion_notes {
             item.insert("completion_notes".to_string(), AttributeValue::S(notes.clone()));
         }
-
 
         item.insert("created_by".to_string(), AttributeValue::S(self.created_by.clone()));
         item.insert("created_at".to_string(), AttributeValue::S(self.created_at.to_string()));

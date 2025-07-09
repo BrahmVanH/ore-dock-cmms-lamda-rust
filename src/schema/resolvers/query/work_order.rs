@@ -1,5 +1,4 @@
 use async_graphql::*;
-use chrono::{ DateTime, Utc };
 use tracing::warn;
 
 use crate::{
@@ -12,13 +11,15 @@ use crate::{
         WorkOrderSeverity,
         WorkOrderDifficulty,
     },
-    schema::resolvers::query::QueryRoot,
     DbClient,
     Repository,
 };
 
+#[derive(Default, Debug)]
+pub(crate) struct WorkOrderQuery;
+
 #[Object]
-impl QueryRoot {
+impl WorkOrderQuery {
     /// Get work order by ID
     async fn work_order_by_id(
         &self,

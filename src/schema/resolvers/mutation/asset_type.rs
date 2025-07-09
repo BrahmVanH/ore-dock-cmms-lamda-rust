@@ -5,10 +5,10 @@ use uuid::Uuid;
 use crate::{ DbClient, models::asset_type::AssetType, AppError, Repository };
 
 #[derive(Debug, Default)]
-pub(crate) struct Mutation;
+pub(crate) struct AssetTypeMutation;
 
 #[Object]
-impl Mutation {
+impl AssetTypeMutation {
     /// Create a new asset type
     async fn create_asset_type(
         &self,

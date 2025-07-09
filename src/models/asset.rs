@@ -159,6 +159,116 @@ pub struct Asset {
     pub updated_at: DateTime<Utc>,
 }
 
+impl Asset {
+    /// Creates new Asset instance
+    ///
+    /// # Arguments
+    ///
+    /// * `id` - Unique identifier
+    /// * `name` - Name of the asset
+    /// * `asset_type_id` - Asset type ID
+    /// * `serial_number` - Serial number
+    /// * `model_number` - Model number
+    /// * `purchase_date` - Purchase date
+    /// * `installation_date` - Installation date
+    /// * `location_id` - Location ID
+    /// * `manufacturer_id` - Manufacturer ID
+    /// * `maintenance_frequency` - Maintenance frequency as string
+    /// * `warranty_start_date` - Optional warranty start
+    /// * `warranty_end_date` - Optional warranty end
+    ///
+    /// # Returns
+    ///
+    /// New Asset instance
+    pub fn new(
+        id: String,
+        name: String,
+        asset_type_id: String,
+        serial_number: String,
+        model_number: String,
+        purchase_date: DateTime<Utc>,
+        installation_date: DateTime<Utc>,
+        location_id: String,
+        manufacturer_id: String,
+        maintenance_frequency: String,
+        warranty_start_date: Option<DateTime<Utc>>,
+        warranty_end_date: Option<DateTime<Utc>>
+    ) -> Result<Self, AppError> {
+        let now = Utc::now();
+
+        let maint_freq = MaintenanceFrequencyOptions::from_string(&maintenance_frequency)?;
+        let maint_freq_days = MaintenanceFrequencyOptions::to_days(&maint_freq)?;
+        let curr_status = AssetCurrentStatusOptions::Operational;
+        Ok(Self {
+            id,
+            name,
+            asset_type_id,
+            serial_number,
+            model_number,
+            purchase_date,
+            installation_date,
+            current_status: curr_status,
+            location_id,
+            manufacturer_id,
+            maintenance_frequency: maint_freq,
+            maintenance_schedule_id: None,
+            interval_days: maint_freq_days,
+            documentation_keys: Vec::new(),
+            work_order_ids: Vec::new(),
+            warranty_start_date,
+            warranty_end_date,
+            total_downtime_hours: Decimal::new(0, 0),
+            last_downtime_date: match Utc.timestamp_opt(0, 0) {
+                LocalResult::Single(d) => d,
+                _ => DateTime::<Utc>::UNIX_EPOCH,
+            },
+            created_at: now,
+            updated_at: now,
+        })
+    }
+
+     /// Calculates the next maintenance due date for this asset
+    ///
+    /// # Returns
+    ///
+    /// DateTime<Utc> representing when the next maintenance is due
+    pub(crate) fn next_maintenance_due(&self) -> DateTime<Utc> {
+        // If we have a specific maintenance schedule, we should use that
+        // For now, calculate based on maintenance frequency and last maintenance
+        
+        let base_date = if self.last_downtime_date == DateTime::<Utc>::UNIX_EPOCH {
+            // If no previous maintenance recorded, use installation date
+            self.installation_date
+        } else {
+            // Use the last downtime/maintenance date
+            self.last_downtime_date
+        };
+
+        // Add the maintenance interval to the base date
+        base_date + chrono::Duration::days(self.interval_days as i64)
+    }
+
+    /// Checks if maintenance is overdue
+    ///
+    /// # Returns
+    ///
+    /// true if maintenance is overdue, false otherwise
+    pub(crate) fn is_maintenance_overdue(&self) -> bool {
+        self.next_maintenance_due() < Utc::now()
+    }
+
+    /// Gets days until next maintenance (negative if overdue)
+    ///
+    /// # Returns
+    ///
+    /// Number of days until maintenance (negative if overdue)
+    pub(crate) fn days_until_maintenance(&self) -> i64 {
+        let next_due = self.next_maintenance_due();
+        let now = Utc::now();
+        (next_due - now).num_days()
+    }
+}
+
 impl DynamoDbEntity for Asset {
     fn table_name() -> &'static str {
         "Assets"
@@ -382,74 +492,6 @@ impl DynamoDbEntity for Asset {
         item
     }
 }
-impl Asset {
-    /// Creates new Asset instance
-    ///
-    /// # Arguments
-    ///
-    /// * `id` - Unique identifier
-    /// * `name` - Name of the asset
-    /// * `asset_type_id` - Asset type ID
-    /// * `serial_number` - Serial number
-    /// * `model_number` - Model number
-    /// * `purchase_date` - Purchase date
-    /// * `installation_date` - Installation date
-    /// * `location_id` - Location ID
-    /// * `manufacturer_id` - Manufacturer ID
-    /// * `maintenance_frequency` - Maintenance frequency as string
-    /// * `warranty_start_date` - Optional warranty start
-    /// * `warranty_end_date` - Optional warranty end
-    ///
-    /// # Returns
-    ///
-    /// New Asset instance
-    pub fn new(
-        id: String,
-        name: String,
-        asset_type_id: String,
-        serial_number: String,
-        model_number: String,
-        purchase_date: DateTime<Utc>,
-        installation_date: DateTime<Utc>,
-        location_id: String,
-        manufacturer_id: String,
-        maintenance_frequency: String,
-        warranty_start_date: Option<DateTime<Utc>>,
-        warranty_end_date: Option<DateTime<Utc>>
-    ) -> Result<Self, AppError> {
-        let now = Utc::now();
-
-        let maint_freq = MaintenanceFrequencyOptions::from_string(&maintenance_frequency)?;
-        let maint_freq_days = MaintenanceFrequencyOptions::to_days(&maint_freq)?;
-        let curr_status = AssetCurrentStatusOptions::Operational;
-        Ok(Self {
-            id,
-            name,
-            asset_type_id,
-            serial_number,
-            model_number,
-            purchase_date,
-            installation_date,
-            current_status: curr_status,
-            location_id,
-            manufacturer_id,
-            maintenance_frequency: maint_freq,
-            maintenance_schedule_id: None,
-            interval_days: maint_freq_days,
-            documentation_keys: Vec::new(),
-            work_order_ids: Vec::new(),
-            warranty_start_date,
-            warranty_end_date,
-            total_downtime_hours: Decimal::new(0, 0),
-            last_downtime_date: match Utc.timestamp_opt(0, 0) {
-                LocalResult::Single(d) => d,
-                _ => DateTime::<Utc>::UNIX_EPOCH,
-            },
-            created_at: now,
-            updated_at: now,
-        })
-    }
-}
 
 #[cfg(test)]
 mod tests {
@@ -648,7 +690,7 @@ mod tests {
         assert_eq!(asset.model_number, "Model-ABC");
         assert_eq!(asset.location_id, "loc-789");
         assert_eq!(asset.manufacturer_id, "mfg-101");
-        assert_eq!(asset.current_status, "operational");
+        assert_eq!(asset.current_status.to_str(), "operational");
         assert!(matches!(asset.maintenance_frequency, MaintenanceFrequencyOptions::Monthly));
         assert_eq!(asset.interval_days, 30);
         assert_eq!(asset.documentation_keys.len(), 0);
@@ -671,7 +713,7 @@ mod tests {
 
         assert_eq!(asset.id, "asset-minimal");
         assert_eq!(asset.name, "Minimal Asset");
-        assert_eq!(asset.current_status, "operational");
+        assert_eq!(asset.current_status.to_str(), "operational");
         assert!(matches!(asset.maintenance_frequency, MaintenanceFrequencyOptions::AsNeeded));
         assert_eq!(asset.interval_days, 0);
         assert_eq!(asset.warranty_start_date, None);
@@ -698,7 +740,6 @@ mod tests {
             "mfg-custom".to_string(),
             "monthly".to_string(),
             Some(custom_downtime),
-            None,
             None
         ).unwrap();
 
@@ -722,8 +763,7 @@ mod tests {
             "mfg-warranty".to_string(),
             "annually".to_string(),
             None,
-            Some(warranty_start),
-            Some(warranty_end)
+            Some(warranty_start)
         ).unwrap();
 
         assert_eq!(asset.warranty_start_date, Some(warranty_start));
@@ -745,7 +785,6 @@ mod tests {
             "mfg-invalid".to_string(),
             "invalid-frequency".to_string(),
             None,
-            None,
             None
         );
 
@@ -765,7 +804,7 @@ mod tests {
         assert_eq!(asset.total_downtime_hours, Decimal::new(0, 0));
 
         // Verify default status
-        assert_eq!(asset.current_status, "operational");
+        assert_eq!(asset.current_status.to_str(), "operational");
 
         // Verify Unix epoch default for last_downtime_date
         let unix_epoch = Utc.timestamp_opt(0, 0).single().unwrap();

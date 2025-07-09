@@ -3,24 +3,21 @@ use tracing::warn;
 
 use crate::{
     error::AppError,
-    models::{
-        location_type::LocationType,
-        location::Location,
-    },
+    models::{ location_type::LocationType, location::Location },
     DbClient,
     Repository,
 };
 
 #[derive(Debug, Default)]
-pub(crate) struct Query;
+pub(crate) struct LocationTypeQuery;
 
 #[Object]
-impl Query {
+impl LocationTypeQuery {
     /// Get location type by ID
     async fn location_type_by_id(
         &self,
         ctx: &Context<'_>,
-        id: String,
+        id: String
     ) -> Result<Option<LocationType>, Error> {
         let db_client = ctx.data::<DbClient>().map_err(|e| {
             warn!("Failed to get db_client from context: {:?}", e);
@@ -31,16 +28,14 @@ impl Query {
 
         let repo = Repository::new(db_client.clone());
 
-        repo.get::<LocationType>(id)
-            .await
-            .map_err(|e| e.to_graphql_error())
+        repo.get::<LocationType>(id).await.map_err(|e| e.to_graphql_error())
     }
 
     /// Get all location types
     async fn location_types(
         &self,
         ctx: &Context<'_>,
-        limit: Option<i32>,
+        limit: Option<i32>
     ) -> Result<Vec<LocationType>, Error> {
         let db_client = ctx.data::<DbClient>().map_err(|e| {
             warn!("Failed to get db_client from context: {:?}", e);
@@ -51,9 +46,7 @@ impl Query {
 
         let repo = Repository::new(db_client.clone());
 
-        repo.list::<LocationType>(limit)
-            .await
-            .map_err(|e| e.to_graphql_error())
+        repo.list::<LocationType>(limit).await.map_err(|e| e.to_graphql_error())
     }
 
     /// Search location types by name
@@ -62,7 +55,7 @@ impl Query {
         ctx: &Context<'_>,
         name: String,
         exact_match: Option<bool>,
-        limit: Option<i32>,
+        limit: Option<i32>
     ) -> Result<Vec<LocationType>, Error> {
         let db_client = ctx.data::<DbClient>().map_err(|e| {
             warn!("Failed to get db_client from context: {:?}", e);
@@ -74,13 +67,12 @@ impl Query {
         let repo = Repository::new(db_client.clone());
 
         let location_types = repo
-            .list::<LocationType>(None)
-            .await
+            .list::<LocationType>(None).await
             .map_err(|e| e.to_graphql_error())?;
 
         let exact_match = exact_match.unwrap_or(false);
 
-        let mut filtered_types = if exact_match {
+        let mut filtered_types: Vec<LocationType> = if exact_match {
             location_types
                 .into_iter()
                 .filter(|lt| lt.name.to_lowercase() == name.to_lowercase())
@@ -105,7 +97,7 @@ impl Query {
         &self,
         ctx: &Context<'_>,
         description_search: String,
-        limit: Option<i32>,
+        limit: Option<i32>
     ) -> Result<Vec<LocationType>, Error> {
         let db_client = ctx.data::<DbClient>().map_err(|e| {
             warn!("Failed to get db_client from context: {:?}", e);
@@ -117,16 +109,13 @@ impl Query {
         let repo = Repository::new(db_client.clone());
 
         let location_types = repo
-            .list::<LocationType>(None)
-            .await
+            .list::<LocationType>(None).await
             .map_err(|e| e.to_graphql_error())?;
 
         let mut filtered_types: Vec<LocationType> = location_types
             .into_iter()
             .filter(|lt| {
-                lt.description
-                    .to_lowercase()
-                    .contains(&description_search.to_lowercase())
+                lt.description.to_lowercase().contains(&description_search.to_lowercase())
             })
             .collect();
 
@@ -144,7 +133,7 @@ impl Query {
         ctx: &Context<'_>,
         location_type_id: String,
         active_only: Option<bool>,
-        limit: Option<i32>,
+        limit: Option<i32>
     ) -> Result<Vec<Location>, Error> {
         let db_client = ctx.data::<DbClient>().map_err(|e| {
             warn!("Failed to get db_client from context: {:?}", e);
@@ -157,19 +146,16 @@ impl Query {
 
         // Verify location type exists
         let _location_type = repo
-            .get::<LocationType>(location_type_id.clone())
-            .await
+            .get::<LocationType>(location_type_id.clone()).await
             .map_err(|e| e.to_graphql_error())?
             .ok_or_else(|| {
-                AppError::NotFound(format!("Location type {} not found", location_type_id))
-                    .to_graphql_error()
+                AppError::NotFound(
+                    format!("Location type {} not found", location_type_id)
+                ).to_graphql_error()
             })?;
 
         // Get all locations and filter by location_type_id
-        let mut locations = repo
-            .list::<Location>(None)
-            .await
-            .map_err(|e| e.to_graphql_error())?;
+        let mut locations = repo.list::<Location>(None).await.map_err(|e| e.to_graphql_error())?;
 
         locations = locations
             .into_iter()
@@ -201,7 +187,7 @@ impl Query {
     async fn location_type_usage_stats(
         &self,
         ctx: &Context<'_>,
-        location_type_id: String,
+        location_type_id: String
     ) -> Result<LocationTypeUsageStats, Error> {
         let db_client = ctx.data::<DbClient>().map_err(|e| {
             warn!("Failed to get db_client from context: {:?}", e);
@@ -214,19 +200,16 @@ impl Query {
 
         // Verify location type exists
         let location_type = repo
-            .get::<LocationType>(location_type_id.clone())
-            .await
+            .get::<LocationType>(location_type_id.clone()).await
             .map_err(|e| e.to_graphql_error())?
             .ok_or_else(|| {
-                AppError::NotFound(format!("Location type {} not found", location_type_id))
-                    .to_graphql_error()
+                AppError::NotFound(
+                    format!("Location type {} not found", location_type_id)
+                ).to_graphql_error()
             })?;
 
         // Get all locations for this type
-        let locations = repo
-            .list::<Location>(None)
-            .await
-            .map_err(|e| e.to_graphql_error())?;
+        let locations = repo.list::<Location>(None).await.map_err(|e| e.to_graphql_error())?;
 
         let type_locations: Vec<Location> = locations
             .into_iter()
@@ -234,7 +217,10 @@ impl Query {
             .collect();
 
         let total_locations = type_locations.len() as i32;
-        let active_locations = type_locations.iter().filter(|l| l.is_active).count() as i32;
+        let active_locations = type_locations
+            .iter()
+            .filter(|l| l.is_active)
+            .count() as i32;
         let inactive_locations = total_locations - active_locations;
 
         Ok(LocationTypeUsageStats {
@@ -249,7 +235,7 @@ impl Query {
     async fn location_types_with_usage(
         &self,
         ctx: &Context<'_>,
-        limit: Option<i32>,
+        limit: Option<i32>
     ) -> Result<Vec<LocationTypeWithUsage>, Error> {
         let db_client = ctx.data::<DbClient>().map_err(|e| {
             warn!("Failed to get db_client from context: {:?}", e);
@@ -261,14 +247,10 @@ impl Query {
         let repo = Repository::new(db_client.clone());
 
         let mut location_types = repo
-            .list::<LocationType>(limit)
-            .await
+            .list::<LocationType>(limit).await
             .map_err(|e| e.to_graphql_error())?;
 
-        let all_locations = repo
-            .list::<Location>(None)
-            .await
-            .map_err(|e| e.to_graphql_error())?;
+        let all_locations = repo.list::<Location>(None).await.map_err(|e| e.to_graphql_error())?;
 
         let mut result = Vec::new();
 
@@ -279,7 +261,10 @@ impl Query {
                 .collect();
 
             let total_count = type_locations.len() as i32;
-            let active_count = type_locations.iter().filter(|l| l.is_active).count() as i32;
+            let active_count = type_locations
+                .iter()
+                .filter(|l| l.is_active)
+                .count() as i32;
 
             result.push(LocationTypeWithUsage {
                 location_type,
@@ -295,7 +280,7 @@ impl Query {
     async fn unused_location_types(
         &self,
         ctx: &Context<'_>,
-        limit: Option<i32>,
+        limit: Option<i32>
     ) -> Result<Vec<LocationType>, Error> {
         let db_client = ctx.data::<DbClient>().map_err(|e| {
             warn!("Failed to get db_client from context: {:?}", e);
@@ -307,14 +292,10 @@ impl Query {
         let repo = Repository::new(db_client.clone());
 
         let location_types = repo
-            .list::<LocationType>(None)
-            .await
+            .list::<LocationType>(None).await
             .map_err(|e| e.to_graphql_error())?;
 
-        let all_locations = repo
-            .list::<Location>(None)
-            .await
-            .map_err(|e| e.to_graphql_error())?;
+        let all_locations = repo.list::<Location>(None).await.map_err(|e| e.to_graphql_error())?;
 
         // Get location type IDs that are in use
         let used_type_ids: std::collections::HashSet<String> = all_locations
@@ -367,7 +348,7 @@ impl LocationTypeUsageStats {
         if self.total_locations == 0 {
             0.0
         } else {
-            (self.active_locations as f64 / self.total_locations as f64) * 100.0
+            ((self.active_locations as f64) / (self.total_locations as f64)) * 100.0
         }
     }
 }

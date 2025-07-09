@@ -6,7 +6,11 @@ use serde::{ Deserialize, Serialize };
 use serde_json::Value as Json;
 use tracing::info;
 
-use crate::{ error::AppError, models::permission_log::{ PermissionAction, ResourceType } };
+use crate::{
+    error::AppError,
+    models::permission_log::{ PermissionAction, ResourceType },
+    DynamoDbEntity,
+};
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "snake_case")]
@@ -149,6 +153,36 @@ impl Permission {
         })
     }
 
+    /// Checks if this permission allows a specific action
+    pub(crate) fn allows_action(&self, action: &PermissionAction) -> bool {
+        self.active && self.actions.contains(action) && !self.is_expired()
+    }
+
+    /// Checks if the permission has expired
+    pub(crate) fn is_expired(&self) -> bool {
+        if let Some(expires_at) = &self.expires_at { Utc::now() > *expires_at } else { false }
+    }
+
+    /// Checks if permission applies to a specific resource
+    pub(crate) fn applies_to_resource(&self, resource_type: &ResourceType, resource_id: &str) -> bool {
+        if &self.resource_type != resource_type {
+            return false;
+        }
+
+        // TODO: Implement resource filter logic based on conditions and resource_filters
+        // For now, return true if the resource type matches
+        true
+    }
+}
+
+impl DynamoDbEntity for Permission {
+    fn table_name() -> &'static str {
+        "Permissions"
+    }
+
+    fn primary_key(&self) -> String {
+        self.id.clone()
+    }
     /// Creates Permission instance from DynamoDB item
     ///
     /// # Arguments
@@ -158,7 +192,7 @@ impl Permission {
     /// # Returns
     ///
     /// 'Some' Permission if item fields match, 'None' otherwise
-    pub(crate) fn from_item(item: &HashMap<String, AttributeValue>) -> Option<Self> {
+    fn from_item(item: &HashMap<String, AttributeValue>) -> Option<Self> {
         info!("calling from_item with: {:?}", &item);
 
         let id = item.get("id")?.as_s().ok()?.to_string();
@@ -248,7 +282,7 @@ impl Permission {
     /// # Returns
     ///
     /// HashMap representing DB item for Permission instance
-    pub(crate) fn to_item(&self) -> HashMap<String, AttributeValue> {
+    fn to_item(&self) -> HashMap<String, AttributeValue> {
         let mut item = HashMap::new();
 
         item.insert("id".to_string(), AttributeValue::S(self.id.clone()));
@@ -292,26 +326,5 @@ impl Permission {
         item.insert("updated_at".to_string(), AttributeValue::S(self.updated_at.to_string()));
 
         item
-    }
-
-    /// Checks if this permission allows a specific action
-    fn allows_action(&self, action: &PermissionAction) -> bool {
-        self.active && self.actions.contains(action) && !self.is_expired()
-    }
-
-    /// Checks if the permission has expired
-    fn is_expired(&self) -> bool {
-        if let Some(expires_at) = &self.expires_at { Utc::now() > *expires_at } else { false }
-    }
-
-    /// Checks if permission applies to a specific resource
-    fn applies_to_resource(&self, resource_type: &ResourceType, resource_id: &str) -> bool {
-        if &self.resource_type != resource_type {
-            return false;
-        }
-
-        // TODO: Implement resource filter logic based on conditions and resource_filters
-        // For now, return true if the resource type matches
-        true
     }
 }

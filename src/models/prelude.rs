@@ -8,6 +8,6 @@ pub use super::user::User;
 pub use super::vendor::Vendor;
 pub use super::work_order::WorkOrder;
 
-pub use async_graphql::{ Context, Object, Error };
+pub use async_graphql::{ Context, Object, Error, InputObject };
 pub use chrono::{ DateTime, Utc };
-pub use aws_sdk_dynamodb::types::AttributeValue ;
+pub use aws_sdk_dynamodb::types::AttributeValue;

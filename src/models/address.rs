@@ -18,7 +18,7 @@ use crate::AppError;
 /// * `country` - country
 /// * `zip` - zip code
 
-#[derive(Clone, Debug, Serialize, Deserialize, InputObject)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Address {
     pub street: String,
     pub unit: Option<String>,
@@ -26,6 +26,42 @@ pub struct Address {
     pub state: String,
     pub country: String,
     pub zip: String,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize, InputObject)]
+pub struct AddressInput {
+    pub street: String,
+    pub unit: Option<String>,
+    pub city: String,
+    pub state: String,
+    pub country: String,
+    pub zip: String,
+}
+
+impl From<AddressInput> for Address {
+    fn from(input: AddressInput) -> Self {
+        Self {
+            street: input.street,
+            unit: input.unit,
+            city: input.city,
+            state: input.state,
+            country: input.country,
+            zip: input.zip,
+        }
+    }
+}
+
+impl From<Address> for AddressInput {
+    fn from(address: Address) -> Self {
+        Self {
+            street: address.street,
+            unit: address.unit,
+            city: address.city,
+            state: address.state,
+            country: address.country,
+            zip: address.zip,
+        }
+    }
 }
 
 impl Address {

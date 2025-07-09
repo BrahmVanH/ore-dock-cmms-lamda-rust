@@ -5,7 +5,7 @@ use chrono::{ DateTime, Utc };
 use serde::{ Deserialize, Serialize };
 use tracing::info;
 
-use crate::{ error::AppError, models::notification::NotificationChannels };
+use crate::{ error::AppError, models::notification::NotificationChannels, DynamoDbEntity };
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "snake_case")]
@@ -127,6 +127,16 @@ impl NotificationDeliveryLog {
             updated_at: now,
         })
     }
+}
+
+impl DynamoDbEntity for NotificationDeliveryLog {
+    fn table_name() -> &'static str {
+        "NotificationDeliveryLogs"
+    }
+
+    fn primary_key(&self) -> String {
+        self.id.clone()
+    }
 
     /// Creates NotificationDeliveryLog instance from DynamoDB item
     ///
@@ -137,7 +147,7 @@ impl NotificationDeliveryLog {
     /// # Returns
     ///
     /// 'Some' NotificationDeliveryLog if item fields match, 'None' otherwise
-    pub(crate) fn from_item(item: &HashMap<String, AttributeValue>) -> Option<Self> {
+    fn from_item(item: &HashMap<String, AttributeValue>) -> Option<Self> {
         info!("calling from_item with: {:?}", &item);
 
         let id = item.get("id")?.as_s().ok()?.to_string();
@@ -219,7 +229,7 @@ impl NotificationDeliveryLog {
     /// # Returns
     ///
     /// HashMap representing DB item for NotificationDeliveryLog instance
-    pub(crate) fn to_item(&self) -> HashMap<String, AttributeValue> {
+    fn to_item(&self) -> HashMap<String, AttributeValue> {
         let mut item = HashMap::new();
 
         item.insert("id".to_string(), AttributeValue::S(self.id.clone()));

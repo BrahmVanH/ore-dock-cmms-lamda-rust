@@ -3,17 +3,17 @@ use tracing::{ info, warn };
 use uuid::Uuid;
 
 use crate::{
-    models::{ prelude::*, location::Location, location_type::LocationType },
+    models::{ address::AddressInput, location::Location, location_type::LocationType, prelude::* },
     AppError,
     DbClient,
     Repository,
 };
 
 #[derive(Debug, Default)]
-pub(crate) struct Mutation;
+pub(crate) struct LocationMutation;
 
 #[Object]
-impl Mutation {
+impl LocationMutation {
     /// Create a new location
     async fn create_location(
         &self,
@@ -22,7 +22,7 @@ impl Mutation {
         description: String,
         location_type_id: String,
         parent_location_id: Option<String>,
-        address: Address,
+        address: AddressInput,
         coordinates: Option<String>
     ) -> Result<Location, Error> {
         info!("Creating new location: {}", name);
@@ -65,7 +65,7 @@ impl Mutation {
             description,
             location_type_id,
             parent_location_id,
-            address,
+            Address::from(address),
             coordinates
         );
 
@@ -83,7 +83,7 @@ impl Mutation {
         description: Option<String>,
         location_type_id: Option<String>,
         parent_location_id: Option<String>,
-        address: Option<Address>,
+        address: Option<AddressInput>,
         coordinates: Option<String>,
         is_active: Option<bool>
     ) -> Result<Location, Error> {
@@ -151,7 +151,7 @@ impl Mutation {
             location.parent_location_id = if parent_id.is_empty() { None } else { Some(parent_id) };
         }
         if let Some(address) = address {
-            location.address = address;
+            location.address = Address::from(address);
         }
         if let Some(coordinates) = coordinates {
             location.coordinates = if coordinates.is_empty() { None } else { Some(coordinates) };

@@ -11,7 +11,6 @@ use crate::{
             WorkOrder,
             WorkOrderStatus,
             WorkOrderPriority,
-            WorkOrderType,
             WorkOrderSeverity,
             WorkOrderDifficulty,
             WorkOrderCost,
@@ -23,10 +22,10 @@ use crate::{
 };
 
 #[derive(Debug, Default)]
-pub struct WorkOrderMutationRoot;
+pub struct WorkOrderMutation;
 
 #[Object]
-impl WorkOrderMutationRoot {
+impl WorkOrderMutation {
     /// Create a new work order
     async fn create_work_order(
         &self,
@@ -36,6 +35,7 @@ impl WorkOrderMutationRoot {
         description: String,
         asset_id: String,
         work_order_type: String,
+        notes: Option<String>,
         priority: String,
         severity: String,
         difficulty: String,
@@ -84,6 +84,7 @@ impl WorkOrderMutationRoot {
             work_order_number,
             title,
             description,
+            notes,
             asset_id,
             work_order_type,
             priority,
@@ -104,7 +105,9 @@ impl WorkOrderMutationRoot {
         ctx: &Context<'_>,
         id: String,
         work_order_number: Option<String>,
+        completed_date: Option<DateTime<Utc>>,
         title: Option<String>,
+        notes: Option<String>,
         description: Option<String>,
         priority: Option<String>,
         severity: Option<String>,
@@ -147,6 +150,9 @@ impl WorkOrderMutationRoot {
         if let Some(description) = description {
             work_order.description = description;
         }
+
+        work_order.notes = notes;
+        
         if let Some(priority_str) = priority {
             work_order.priority = WorkOrderPriority::from_string(&priority_str).map_err(|e|
                 e.to_graphql_error()
@@ -162,6 +168,7 @@ impl WorkOrderMutationRoot {
                 e.to_graphql_error()
             )?;
         }
+
         if let Some(tech_id) = assigned_technician_id {
             work_order.assigned_technician_id = if tech_id.is_empty() {
                 None
@@ -176,6 +183,9 @@ impl WorkOrderMutationRoot {
             work_order.estimated_cost = WorkOrderCost::from_string(&cost_str).map_err(|e|
                 e.to_graphql_error()
             )?;
+        }
+        if let Some(completed_date) = completed_date {
+            work_order.completed_date = Some(completed_date);
         }
         work_order.updated_at = Utc::now();
 
@@ -284,9 +294,7 @@ impl WorkOrderMutationRoot {
             work_order.labor_hours = Some(hours);
         }
 
-        work_order
-            .complete_work(completion_notes)
-            .map_err(|e| e.to_graphql_error())?;
+        work_order.complete_work(completion_notes).map_err(|e| e.to_graphql_error())?;
 
         repo.update(work_order).await.map_err(|e| e.to_graphql_error())
     }
