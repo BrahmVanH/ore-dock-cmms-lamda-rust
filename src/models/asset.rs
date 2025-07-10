@@ -64,7 +64,7 @@ impl MaintenanceFrequencyOptions {
     }
 }
 
-#[derive(Enum, Copy, Clone, PartialEq, Eq, Debug, Deserialize, Serialize)]
+#[derive(Enum, Copy, Clone, PartialEq, Eq, Debug, Deserialize, Serialize, Hash)]
 #[serde(rename_all = "snake_case")]
 pub enum AssetCurrentStatusOptions {
     Operational,

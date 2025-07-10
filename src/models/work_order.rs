@@ -73,10 +73,10 @@ pub enum WorkOrderDifficulty {
 impl WorkOrderDifficulty {
     pub fn to_str(&self) -> &str {
         match self {
-            WorkOrderDifficulty::Normal => "Normal",
-            WorkOrderDifficulty::Extended => "Extended",
-            WorkOrderDifficulty::Advanced => "Advanced",
-            WorkOrderDifficulty::HireOut => "HireOut",
+            WorkOrderDifficulty::Normal => "normal",
+            WorkOrderDifficulty::Extended => "extended",
+            WorkOrderDifficulty::Advanced => "advanced",
+            WorkOrderDifficulty::HireOut => "hireOut",
         }
     }
 
@@ -86,10 +86,10 @@ impl WorkOrderDifficulty {
 
     pub fn from_string(s: &str) -> Result<WorkOrderDifficulty, AppError> {
         match s {
-            "Normal" => Ok(Self::Normal),
-            "Extended" => Ok(Self::Extended),
-            "Advanced" => Ok(Self::Advanced),
-            "HireOut" => Ok(Self::HireOut),
+            "normal" => Ok(Self::Normal),
+            "extended" => Ok(Self::Extended),
+            "advanced" => Ok(Self::Advanced),
+            "hireOut" => Ok(Self::HireOut),
             _ => Err(AppError::ValidationError("Invalid work order difficulty".to_string())),
         }
     }
@@ -125,10 +125,10 @@ pub enum WorkOrderCost {
 impl WorkOrderCost {
     pub fn to_str(&self) -> &str {
         match self {
-            WorkOrderCost::One => "One",
-            WorkOrderCost::Two => "Two",
-            WorkOrderCost::Three => "Three",
-            WorkOrderCost::Four => "Four",
+            WorkOrderCost::One => "one",
+            WorkOrderCost::Two => "two",
+            WorkOrderCost::Three => "three",
+            WorkOrderCost::Four => "four",
         }
     }
 
@@ -138,10 +138,10 @@ impl WorkOrderCost {
 
     pub fn from_string(s: &str) -> Result<WorkOrderCost, AppError> {
         match s {
-            "One" => Ok(Self::One),
-            "Two" => Ok(Self::Two),
-            "Three" => Ok(Self::Three),
-            "Four" => Ok(Self::Four),
+            "one" => Ok(Self::One),
+            "two" => Ok(Self::Two),
+            "three" => Ok(Self::Three),
+            "four" => Ok(Self::Four),
             _ => Err(AppError::ValidationError("Invalid work order cost".to_string())),
         }
     }
@@ -165,7 +165,7 @@ impl WorkOrderCost {
     }
 }
 
-#[derive(Enum, Copy, Clone, PartialEq, Eq, Debug, Deserialize, Serialize)]
+#[derive(Enum, Copy, Clone, PartialEq, Eq, Debug, Deserialize, Serialize, Hash)]
 #[serde(rename_all = "snake_case")]
 pub enum WorkOrderStatus {
     Draft,
@@ -217,7 +217,7 @@ impl WorkOrderStatus {
     }
 }
 
-#[derive(Enum, Copy, Clone, PartialEq, Eq, Debug, Deserialize, Serialize)]
+#[derive(Enum, Copy, Clone, PartialEq, Eq, Debug, Deserialize, Serialize, Hash)]
 #[serde(rename_all = "snake_case")]
 pub enum WorkOrderPriority {
     Low,

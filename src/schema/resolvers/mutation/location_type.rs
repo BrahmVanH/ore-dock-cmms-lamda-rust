@@ -27,7 +27,11 @@ impl LocationTypeMutation {
 
         let id = Uuid::new_v4().to_string();
 
+        info!("new location_type id: {:?}", &id);
+
         let location_type = LocationType::new(id, name, description);
+        
+        info!("new location_type : {:?}", &location_type);
 
         location_type.validate().map_err(|e| { AppError::ValidationError(e).to_graphql_error() })?;
 

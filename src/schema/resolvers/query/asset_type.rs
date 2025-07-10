@@ -8,7 +8,7 @@ pub(crate) struct AssetTypeQuery;
 
 #[Object]
 impl AssetTypeQuery {
-    pub(crate) async fn get_asset_by_id(
+    pub(crate) async fn asset_type_by_id(
         &self,
         ctx: &Context<'_>,
         id: String
@@ -29,7 +29,7 @@ impl AssetTypeQuery {
 
         Ok(asset_type)
     }
-    pub(crate) async fn get_all(&self, ctx: &Context<'_>) -> Result<Vec<AssetType>, Error> {
+    pub(crate) async fn asset_types(&self, ctx: &Context<'_>) -> Result<Vec<AssetType>, Error> {
         let table_name = "AssetTypes";
         let db_client = ctx.data::<DbClient>().map_err(|e| {
             warn!("Failed to get db_client from context: {:?}", e);

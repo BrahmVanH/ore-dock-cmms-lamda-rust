@@ -11,6 +11,7 @@ mod permission;
 mod work_order;
 mod manufacturer;
 mod maintenance_schedule;
+mod dashboard;
 
 #[derive(Debug, Default, MergedObject)]
 pub struct QueryRoot(
@@ -25,4 +26,5 @@ pub struct QueryRoot(
     work_order::WorkOrderQuery,
     manufacturer::ManufacturerQuery,
     maintenance_schedule::MaintenanceScheduleQuery,
+    dashboard::DashboardQuery,
 );

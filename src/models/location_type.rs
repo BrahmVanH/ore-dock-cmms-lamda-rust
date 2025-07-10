@@ -39,7 +39,7 @@ impl LocationType {
 
 impl DynamoDbEntity for LocationType {
     fn table_name() -> &'static str {
-        "LocationType"
+        "LocationTypes"
     }
 
     fn primary_key(&self) -> String {
