@@ -1,15 +1,16 @@
 //! GraphQL schema implementation for WorkOrder entity.
 
-use async_graphql::*;
-use chrono::{ DateTime, Utc };
-use crate::models::work_order::{
-    WorkOrder,
-    WorkOrderCost,
-    WorkOrderDifficulty,
-    WorkOrderPriority,
-    WorkOrderSeverity,
-    WorkOrderStatus,
-    WorkOrderType,
+use crate::models::{
+    prelude::*,
+    work_order::{
+        WorkOrder,
+        WorkOrderCost,
+        WorkOrderDifficulty,
+        WorkOrderPriority,
+        WorkOrderSeverity,
+        WorkOrderStatus,
+        WorkOrderType,
+    },
 };
 
 /// GraphQL Object implementation for WorkOrder.
