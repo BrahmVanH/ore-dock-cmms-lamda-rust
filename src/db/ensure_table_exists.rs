@@ -55,6 +55,7 @@ pub async fn ensure_all_tables_exist(client: &Client) -> Result<(), AppError> {
     asset_tables::create_manufacturers_table(&tables, client).await?;
     asset_tables::create_maintenance_schedules_table(&tables, client).await?;
     asset_tables::create_work_orders_table(&tables, client).await?;
+    asset_tables::create_maintenance_requests_table(&tables, client).await?;
 
     // Create notification system tables
     println!("Creating notification system tables...");
