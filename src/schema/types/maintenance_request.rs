@@ -21,8 +21,8 @@ impl MaintenanceRequest {
     }
 
     /// Detailed work description.
-    async fn work_order_created(&self) -> String {
-        self.work_order_created.to_string()
+    async fn work_order_ids(&self) -> &Vec<String> {
+        &self.work_order_ids
     }
 
     /// Work order notes.

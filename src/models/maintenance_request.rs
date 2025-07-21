@@ -7,7 +7,7 @@ submitted_by: String,
 manager_on_site: String,
 
 created_at: String,
-work_order_created: Boolean,
+work_order_ids: Vec<String>,
 status: MaintenanceRequestStatusOptions
 read_by_id: String
 description: String,
@@ -90,8 +90,8 @@ pub struct MaintenanceRequest {
     pub id: String,
     pub submitted_by: String,
     pub manager_on_site: String,
-    pub work_order_created: bool,
     pub status: MaintenanceRequestStatus,
+    pub work_order_ids: Vec<String>,
     pub read_by_id: Option<String>,
     pub description: String,
     pub reported_location: String,
@@ -139,7 +139,7 @@ impl MaintenanceRequest {
             );
         }
 
-        let work_order_created = false;
+        let work_order_ids: Vec<String> = Vec::new();
         let status = MaintenanceRequestStatus::Submitted;
         let read_by_id = None;
         let created_at = now;
@@ -149,7 +149,7 @@ impl MaintenanceRequest {
             id,
             submitted_by,
             manager_on_site,
-            work_order_created,
+            work_order_ids,
             status,
             read_by_id,
             description,
@@ -171,6 +171,10 @@ impl MaintenanceRequest {
 
     pub fn is_archived(&self) -> bool {
         matches!(self.status, MaintenanceRequestStatus::Archived)
+    }
+
+    pub fn has_work_orders(&self) -> bool {
+        !self.work_order_ids.is_empty()
     }
 
     pub fn archive(&mut self) -> Result<(), AppError> {
@@ -214,7 +218,17 @@ impl DynamoDbEntity for MaintenanceRequest {
         let id = item.get("id")?.as_s().ok()?.to_string();
         let submitted_by = item.get("submitted_by")?.as_s().ok()?.to_string();
         let manager_on_site = item.get("manager_on_site")?.as_s().ok()?.to_string();
-        let work_order_created = item.get("work_order_created")?.as_bool().ok()?;
+
+        let work_order_ids = item
+            .get("work_order_ids")
+            .and_then(|v| v.as_ss().ok())
+            .map(|ids|
+                ids
+                    .iter()
+                    .map(|s| s.to_string())
+                    .collect()
+            )
+            .unwrap_or_default();
 
         let status_str = item.get("status")?.as_s().ok()?;
 
@@ -255,7 +269,7 @@ impl DynamoDbEntity for MaintenanceRequest {
             id,
             submitted_by,
             manager_on_site,
-            work_order_created: *work_order_created,
+            work_order_ids,
             status,
             read_by_id,
             description,
@@ -274,10 +288,12 @@ impl DynamoDbEntity for MaintenanceRequest {
         item.insert("submitted_by".to_string(), AttributeValue::S(self.submitted_by.clone()));
         item.insert("manager_on_site".to_string(), AttributeValue::S(self.manager_on_site.clone()));
 
-        item.insert(
-            "work_order_created".to_string(),
-            AttributeValue::Bool(self.work_order_created.clone())
-        );
+        if !self.work_order_ids.is_empty() {
+            item.insert(
+                "work_order_ids".to_string(),
+                AttributeValue::Ss(self.work_order_ids.clone())
+            );
+        }
         item.insert("status".to_string(), AttributeValue::S(self.status.to_str().to_string()));
 
         if let Some(read_by_id) = &self.read_by_id {
