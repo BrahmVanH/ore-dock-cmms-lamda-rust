@@ -53,6 +53,7 @@ pub enum MaintenanceRequestStatus {
     Submitted,
     Read,
     Accepted,
+    Resolved,
     Denied,
     Archived,
 }
@@ -64,6 +65,7 @@ impl MaintenanceRequestStatus {
             MaintenanceRequestStatus::Submitted => "submitted",
             MaintenanceRequestStatus::Read => "read",
             MaintenanceRequestStatus::Accepted => "accepted",
+            MaintenanceRequestStatus::Resolved => "resolved",
             MaintenanceRequestStatus::Denied => "denied",
             MaintenanceRequestStatus::Archived => "archived",
         }
@@ -78,6 +80,7 @@ impl MaintenanceRequestStatus {
             "submitted" => Ok(Self::Submitted),
             "read" => Ok(Self::Read),
             "accepted" => Ok(Self::Accepted),
+            "resolved" => Ok(Self::Resolved),
             "denied" => Ok(Self::Denied),
             "archived" => Ok(Self::Archived),
             _ => Err(AppError::ValidationError("Invalid maintenance request status".to_string())),
@@ -161,8 +164,16 @@ impl MaintenanceRequest {
         });
     }
 
+    pub fn is_unread(&self) -> bool {
+        matches!(self.status, MaintenanceRequestStatus::Submitted)
+    }
+
     pub fn is_accepted(&self) -> bool {
         matches!(self.status, MaintenanceRequestStatus::Accepted)
+    }
+
+    pub fn is_resolved(&self) -> bool {
+        matches!(self.status, MaintenanceRequestStatus::Resolved)
     }
 
     pub fn is_denied(&self) -> bool {
@@ -175,6 +186,19 @@ impl MaintenanceRequest {
 
     pub fn has_work_orders(&self) -> bool {
         !self.work_order_ids.is_empty()
+    }
+
+    pub fn resolve(&mut self) -> Result<(), AppError> {
+        if !matches!(self.status, MaintenanceRequestStatus::Read) {
+            return Err(
+                AppError::ValidationError(
+                    "Only read maintenance requests can be resolved".to_string()
+                )
+            );
+        }
+        self.status = MaintenanceRequestStatus::Resolved;
+        self.updated_at = Utc::now();
+        Ok(())
     }
 
     pub fn archive(&mut self) -> Result<(), AppError> {
