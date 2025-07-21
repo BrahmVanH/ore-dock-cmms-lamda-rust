@@ -61,11 +61,11 @@ pub enum MaintenanceRequestStatus {
 impl MaintenanceRequestStatus {
     pub fn to_str(&self) -> &str {
         match self {
-            MaintenanceRequestStatus::Submitted => "Submitted",
-            MaintenanceRequestStatus::Read => "Read",
-            MaintenanceRequestStatus::Accepted => "Accepted",
-            MaintenanceRequestStatus::Denied => "Denied",
-            MaintenanceRequestStatus::Archived => "Archived",
+            MaintenanceRequestStatus::Submitted => "submitted",
+            MaintenanceRequestStatus::Read => "read",
+            MaintenanceRequestStatus::Accepted => "accepted",
+            MaintenanceRequestStatus::Denied => "denied",
+            MaintenanceRequestStatus::Archived => "archived",
         }
     }
 
@@ -75,11 +75,11 @@ impl MaintenanceRequestStatus {
 
     pub fn from_string(s: &str) -> Result<MaintenanceRequestStatus, AppError> {
         match s {
-            "Submitted" => Ok(Self::Submitted),
-            "Read" => Ok(Self::Read),
-            "Accepted" => Ok(Self::Accepted),
-            "Denied" => Ok(Self::Denied),
-            "Archived" => Ok(Self::Archived),
+            "submitted" => Ok(Self::Submitted),
+            "read" => Ok(Self::Read),
+            "accepted" => Ok(Self::Accepted),
+            "denied" => Ok(Self::Denied),
+            "archived" => Ok(Self::Archived),
             _ => Err(AppError::ValidationError("Invalid maintenance request status".to_string())),
         }
     }
