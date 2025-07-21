@@ -21,3 +21,4 @@ pub mod vendor_category;
 pub mod vendor;
 pub mod work_order;
 pub mod dashboard;
+pub mod maintenance_request;
