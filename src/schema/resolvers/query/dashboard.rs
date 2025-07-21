@@ -5,6 +5,7 @@ use crate::{
     error::AppError,
     models::{
         asset::AssetCurrentStatusOptions,
+        maintenance_request::MaintenanceRequest,
         maintenance_schedule::MaintenanceSchedule,
         prelude::*,
         work_order::{ WorkOrderPriority, WorkOrderStatus },
@@ -41,6 +42,9 @@ impl DashboardQuery {
         let repo = Repository::new(db_client.clone());
 
         let assets = repo.list::<Asset>(None).await.map_err(|e| e.to_graphql_error())?;
+        let maintenance_requests = repo
+            .list::<MaintenanceRequest>(None).await
+            .map_err(|e| e.to_graphql_error())?;
         let work_orders = repo.list::<WorkOrder>(None).await.map_err(|e| e.to_graphql_error())?;
         let maintenance_schedules = repo
             .list::<MaintenanceSchedule>(None).await
@@ -54,6 +58,12 @@ impl DashboardQuery {
             assets
         };
 
+        let filtered_maintenance_requests = if let Some(_filter) = &filter {
+            // Future: apply filters here
+            maintenance_requests
+        } else {
+            maintenance_requests
+        };
         let filtered_work_orders = if let Some(_filter) = &filter {
             // Future: apply filters here
             work_orders
@@ -74,6 +84,11 @@ impl DashboardQuery {
         let active_work_orders = filtered_work_orders
             .iter()
             .filter(|wo| !wo.is_completed())
+            .count() as i32;
+
+        let unread_maintenance_requests = filtered_maintenance_requests
+            .iter()
+            .filter(|mr| mr.is_unread())
             .count() as i32;
 
         let now = Utc::now();
@@ -182,6 +197,7 @@ impl DashboardQuery {
             active_work_orders,
             overdue_maintenances,
             upcoming_maintenances,
+            unread_maintenance_requests,
             assets_by_status,
             work_orders_by_priority,
             work_orders_by_status,
