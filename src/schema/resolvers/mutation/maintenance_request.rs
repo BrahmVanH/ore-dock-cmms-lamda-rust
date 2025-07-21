@@ -1,5 +1,6 @@
 use async_graphql::*;
 use tracing::warn;
+use uuid::Uuid;
 
 use crate::{
     error::AppError,
@@ -62,7 +63,7 @@ impl MaintenanceRequestMutation {
     async fn create_maintenance_request(
         &self,
         ctx: &Context<'_>,
-        input: CreateMaintenanceRequestInput,
+        input: CreateMaintenanceRequestInput
     ) -> Result<MaintenanceRequest, Error> {
         let db_client = ctx.data::<DbClient>().map_err(|e| {
             warn!("Failed to get db_client from context: {:?}", e);
@@ -74,7 +75,7 @@ impl MaintenanceRequestMutation {
         let repo = Repository::new(db_client.clone());
 
         // Generate a unique ID for the maintenance request
-        let id = format!("mr-{}", uuid::Uuid::new_v4());
+        let id = format!("mr-{}", Uuid::new_v4());
 
         let maintenance_request = MaintenanceRequest::new(
             id,
@@ -83,7 +84,7 @@ impl MaintenanceRequestMutation {
             input.description,
             input.reported_location,
             input.troubleshooting_performed,
-            input.severity,
+            input.severity
         ).map_err(|e| e.to_graphql_error())?;
 
         repo.create(maintenance_request.clone()).await.map_err(|e| e.to_graphql_error())?;
@@ -95,7 +96,7 @@ impl MaintenanceRequestMutation {
     async fn update_maintenance_request(
         &self,
         ctx: &Context<'_>,
-        input: UpdateMaintenanceRequestInput,
+        input: UpdateMaintenanceRequestInput
     ) -> Result<MaintenanceRequest, Error> {
         let db_client = ctx.data::<DbClient>().map_err(|e| {
             warn!("Failed to get db_client from context: {:?}", e);
@@ -111,47 +112,63 @@ impl MaintenanceRequestMutation {
             .get::<MaintenanceRequest>(input.id.clone()).await
             .map_err(|e| e.to_graphql_error())?
             .ok_or_else(|| {
-                AppError::NotFound(format!("Maintenance request with id {} not found", input.id))
-                    .to_graphql_error()
+                AppError::NotFound(
+                    format!("Maintenance request with id {} not found", input.id)
+                ).to_graphql_error()
             })?;
 
         // Update fields if provided
         if let Some(submitted_by) = input.submitted_by {
             if submitted_by.trim().is_empty() {
-                return Err(AppError::ValidationError("submitted_by cannot be empty".to_string())
-                    .to_graphql_error());
+                return Err(
+                    AppError::ValidationError(
+                        "submitted_by cannot be empty".to_string()
+                    ).to_graphql_error()
+                );
             }
             maintenance_request.submitted_by = submitted_by;
         }
 
         if let Some(manager_on_site) = input.manager_on_site {
             if manager_on_site.trim().is_empty() {
-                return Err(AppError::ValidationError("manager_on_site cannot be empty".to_string())
-                    .to_graphql_error());
+                return Err(
+                    AppError::ValidationError(
+                        "manager_on_site cannot be empty".to_string()
+                    ).to_graphql_error()
+                );
             }
             maintenance_request.manager_on_site = manager_on_site;
         }
 
         if let Some(description) = input.description {
             if description.trim().is_empty() {
-                return Err(AppError::ValidationError("description cannot be empty".to_string())
-                    .to_graphql_error());
+                return Err(
+                    AppError::ValidationError(
+                        "description cannot be empty".to_string()
+                    ).to_graphql_error()
+                );
             }
             maintenance_request.description = description;
         }
 
         if let Some(reported_location) = input.reported_location {
             if reported_location.trim().is_empty() {
-                return Err(AppError::ValidationError("reported_location cannot be empty".to_string())
-                    .to_graphql_error());
+                return Err(
+                    AppError::ValidationError(
+                        "reported_location cannot be empty".to_string()
+                    ).to_graphql_error()
+                );
             }
             maintenance_request.reported_location = reported_location;
         }
 
         if let Some(troubleshooting_performed) = input.troubleshooting_performed {
             if troubleshooting_performed.trim().is_empty() {
-                return Err(AppError::ValidationError("troubleshooting_performed cannot be empty".to_string())
-                    .to_graphql_error());
+                return Err(
+                    AppError::ValidationError(
+                        "troubleshooting_performed cannot be empty".to_string()
+                    ).to_graphql_error()
+                );
             }
             maintenance_request.troubleshooting_performed = troubleshooting_performed;
         }
@@ -180,7 +197,7 @@ impl MaintenanceRequestMutation {
     async fn update_maintenance_request_status(
         &self,
         ctx: &Context<'_>,
-        input: UpdateMaintenanceRequestStatusInput,
+        input: UpdateMaintenanceRequestStatusInput
     ) -> Result<MaintenanceRequest, Error> {
         let db_client = ctx.data::<DbClient>().map_err(|e| {
             warn!("Failed to get db_client from context: {:?}", e);
@@ -196,8 +213,9 @@ impl MaintenanceRequestMutation {
             .get::<MaintenanceRequest>(input.id.clone()).await
             .map_err(|e| e.to_graphql_error())?
             .ok_or_else(|| {
-                AppError::NotFound(format!("Maintenance request with id {} not found", input.id))
-                    .to_graphql_error()
+                AppError::NotFound(
+                    format!("Maintenance request with id {} not found", input.id)
+                ).to_graphql_error()
             })?;
 
         // Update status
@@ -223,7 +241,7 @@ impl MaintenanceRequestMutation {
         &self,
         ctx: &Context<'_>,
         id: String,
-        read_by_id: String,
+        read_by_id: String
     ) -> Result<MaintenanceRequest, Error> {
         let db_client = ctx.data::<DbClient>().map_err(|e| {
             warn!("Failed to get db_client from context: {:?}", e);
@@ -239,8 +257,9 @@ impl MaintenanceRequestMutation {
             .get::<MaintenanceRequest>(id.clone()).await
             .map_err(|e| e.to_graphql_error())?
             .ok_or_else(|| {
-                AppError::NotFound(format!("Maintenance request with id {} not found", id))
-                    .to_graphql_error()
+                AppError::NotFound(
+                    format!("Maintenance request with id {} not found", id)
+                ).to_graphql_error()
             })?;
 
         // Use the model's method to mark as read
@@ -258,7 +277,7 @@ impl MaintenanceRequestMutation {
     async fn archive_maintenance_request(
         &self,
         ctx: &Context<'_>,
-        id: String,
+        id: String
     ) -> Result<MaintenanceRequest, Error> {
         let db_client = ctx.data::<DbClient>().map_err(|e| {
             warn!("Failed to get db_client from context: {:?}", e);
@@ -274,8 +293,9 @@ impl MaintenanceRequestMutation {
             .get::<MaintenanceRequest>(id.clone()).await
             .map_err(|e| e.to_graphql_error())?
             .ok_or_else(|| {
-                AppError::NotFound(format!("Maintenance request with id {} not found", id))
-                    .to_graphql_error()
+                AppError::NotFound(
+                    format!("Maintenance request with id {} not found", id)
+                ).to_graphql_error()
             })?;
 
         // Use the model's method to archive
@@ -290,7 +310,7 @@ impl MaintenanceRequestMutation {
     async fn add_work_order_to_maintenance_request(
         &self,
         ctx: &Context<'_>,
-        input: AddWorkOrderToRequestInput,
+        input: AddWorkOrderToRequestInput
     ) -> Result<MaintenanceRequest, Error> {
         let db_client = ctx.data::<DbClient>().map_err(|e| {
             warn!("Failed to get db_client from context: {:?}", e);
@@ -306,10 +326,12 @@ impl MaintenanceRequestMutation {
             .get::<MaintenanceRequest>(input.maintenance_request_id.clone()).await
             .map_err(|e| e.to_graphql_error())?
             .ok_or_else(|| {
-                AppError::NotFound(format!(
-                    "Maintenance request with id {} not found", 
-                    input.maintenance_request_id
-                )).to_graphql_error()
+                AppError::NotFound(
+                    format!(
+                        "Maintenance request with id {} not found",
+                        input.maintenance_request_id
+                    )
+                ).to_graphql_error()
             })?;
 
         // Check if work order ID is already in the list
@@ -318,9 +340,11 @@ impl MaintenanceRequestMutation {
         }
 
         // If this is the first work order being added and status is submitted/read, mark as accepted
-        if maintenance_request.work_order_ids.len() == 1 && 
-           (maintenance_request.status == MaintenanceRequestStatus::Submitted || 
-            maintenance_request.status == MaintenanceRequestStatus::Read) {
+        if
+            maintenance_request.work_order_ids.len() == 1 &&
+            (maintenance_request.status == MaintenanceRequestStatus::Submitted ||
+                maintenance_request.status == MaintenanceRequestStatus::Read)
+        {
             maintenance_request.status = MaintenanceRequestStatus::Accepted;
         }
 
@@ -336,7 +360,7 @@ impl MaintenanceRequestMutation {
     async fn remove_work_order_from_maintenance_request(
         &self,
         ctx: &Context<'_>,
-        input: RemoveWorkOrderFromRequestInput,
+        input: RemoveWorkOrderFromRequestInput
     ) -> Result<MaintenanceRequest, Error> {
         let db_client = ctx.data::<DbClient>().map_err(|e| {
             warn!("Failed to get db_client from context: {:?}", e);
@@ -352,10 +376,12 @@ impl MaintenanceRequestMutation {
             .get::<MaintenanceRequest>(input.maintenance_request_id.clone()).await
             .map_err(|e| e.to_graphql_error())?
             .ok_or_else(|| {
-                AppError::NotFound(format!(
-                    "Maintenance request with id {} not found", 
-                    input.maintenance_request_id
-                )).to_graphql_error()
+                AppError::NotFound(
+                    format!(
+                        "Maintenance request with id {} not found",
+                        input.maintenance_request_id
+                    )
+                ).to_graphql_error()
             })?;
 
         // Remove the work order ID from the list
@@ -373,7 +399,7 @@ impl MaintenanceRequestMutation {
     async fn delete_maintenance_request(
         &self,
         ctx: &Context<'_>,
-        id: String,
+        id: String
     ) -> Result<bool, Error> {
         let db_client = ctx.data::<DbClient>().map_err(|e| {
             warn!("Failed to get db_client from context: {:?}", e);
@@ -389,16 +415,21 @@ impl MaintenanceRequestMutation {
             .get::<MaintenanceRequest>(id.clone()).await
             .map_err(|e| e.to_graphql_error())?
             .ok_or_else(|| {
-                AppError::NotFound(format!("Maintenance request with id {} not found", id))
-                    .to_graphql_error()
+                AppError::NotFound(
+                    format!("Maintenance request with id {} not found", id)
+                ).to_graphql_error()
             })?;
 
         // Only allow deletion of requests that haven't been accepted or have work orders
-        if maintenance_request.status == MaintenanceRequestStatus::Accepted && 
-           !maintenance_request.work_order_ids.is_empty() {
-            return Err(AppError::ValidationError(
-                "Cannot delete maintenance request that has been accepted and has associated work orders".to_string()
-            ).to_graphql_error());
+        if
+            maintenance_request.status == MaintenanceRequestStatus::Accepted &&
+            !maintenance_request.work_order_ids.is_empty()
+        {
+            return Err(
+                AppError::ValidationError(
+                    "Cannot delete maintenance request that has been accepted and has associated work orders".to_string()
+                ).to_graphql_error()
+            );
         }
 
         repo.delete::<MaintenanceRequest>(id).await.map_err(|e| e.to_graphql_error())?;
@@ -410,7 +441,7 @@ impl MaintenanceRequestMutation {
     async fn accept_maintenance_request(
         &self,
         ctx: &Context<'_>,
-        id: String,
+        id: String
     ) -> Result<MaintenanceRequest, Error> {
         let db_client = ctx.data::<DbClient>().map_err(|e| {
             warn!("Failed to get db_client from context: {:?}", e);
@@ -426,15 +457,18 @@ impl MaintenanceRequestMutation {
             .get::<MaintenanceRequest>(id.clone()).await
             .map_err(|e| e.to_graphql_error())?
             .ok_or_else(|| {
-                AppError::NotFound(format!("Maintenance request with id {} not found", id))
-                    .to_graphql_error()
+                AppError::NotFound(
+                    format!("Maintenance request with id {} not found", id)
+                ).to_graphql_error()
             })?;
 
         // Only allow accepting requests that are in Read status
         if maintenance_request.status != MaintenanceRequestStatus::Read {
-            return Err(AppError::ValidationError(
-                "Only read maintenance requests can be accepted".to_string()
-            ).to_graphql_error());
+            return Err(
+                AppError::ValidationError(
+                    "Only read maintenance requests can be accepted".to_string()
+                ).to_graphql_error()
+            );
         }
 
         maintenance_request.status = MaintenanceRequestStatus::Accepted;
@@ -449,7 +483,7 @@ impl MaintenanceRequestMutation {
     async fn deny_maintenance_request(
         &self,
         ctx: &Context<'_>,
-        id: String,
+        id: String
     ) -> Result<MaintenanceRequest, Error> {
         let db_client = ctx.data::<DbClient>().map_err(|e| {
             warn!("Failed to get db_client from context: {:?}", e);
@@ -465,15 +499,18 @@ impl MaintenanceRequestMutation {
             .get::<MaintenanceRequest>(id.clone()).await
             .map_err(|e| e.to_graphql_error())?
             .ok_or_else(|| {
-                AppError::NotFound(format!("Maintenance request with id {} not found", id))
-                    .to_graphql_error()
+                AppError::NotFound(
+                    format!("Maintenance request with id {} not found", id)
+                ).to_graphql_error()
             })?;
 
         // Only allow denying requests that are in Read status
         if maintenance_request.status != MaintenanceRequestStatus::Read {
-            return Err(AppError::ValidationError(
-                "Only read maintenance requests can be denied".to_string()
-            ).to_graphql_error());
+            return Err(
+                AppError::ValidationError(
+                    "Only read maintenance requests can be denied".to_string()
+                ).to_graphql_error()
+            );
         }
 
         maintenance_request.status = MaintenanceRequestStatus::Denied;
