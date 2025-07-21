@@ -5,20 +5,11 @@ use tracing::{ info, warn };
 use uuid::Uuid;
 
 use crate::{
-    DbClient,
     models::{
-        work_order::{
-            WorkOrder,
-            WorkOrderStatus,
-            WorkOrderPriority,
-            WorkOrderSeverity,
-            WorkOrderDifficulty,
-            WorkOrderCost,
-        },
-        asset::Asset,
-    },
-    AppError,
-    Repository,
+        asset::Asset, maintenance_request::{MaintenanceRequest, MaintenanceRequestStatus}, work_order::{
+            WorkOrder, WorkOrderCost, WorkOrderDifficulty, WorkOrderPriority, WorkOrderSeverity, WorkOrderStatus
+        }
+    }, AppError, DbClient, Repository
 };
 
 #[derive(Debug, Default)]
@@ -171,7 +162,6 @@ impl WorkOrderMutation {
         repo.create(work_order).await.map_err(|e| e.to_graphql_error())
     }
 
-    
     /// Update an existing work order
     async fn update_work_order(
         &self,
@@ -225,7 +215,7 @@ impl WorkOrderMutation {
         }
 
         work_order.notes = notes;
-        
+
         if let Some(priority_str) = priority {
             work_order.priority = WorkOrderPriority::from_string(&priority_str).map_err(|e|
                 e.to_graphql_error()
@@ -505,6 +495,40 @@ impl WorkOrderMutation {
             return Err(
                 AppError::ValidationError(
                     "Cannot delete work order that is in progress".to_string()
+                ).to_graphql_error()
+            );
+        }
+        // Check for maintenance requests that reference this work order and are not resolved
+        let maintenance_requests = repo
+            .list::<MaintenanceRequest>(None).await
+            .map_err(|e| e.to_graphql_error())?;
+
+        let blocking_requests: Vec<&MaintenanceRequest> = maintenance_requests
+            .iter()
+            .filter(|req| {
+                // Check if this maintenance request references our work order
+                req.work_order_ids.contains(&id) &&
+                    // And is not in a resolved state (archived or denied are considered resolved)
+                    !matches!(
+                        req.status,
+                        MaintenanceRequestStatus::Archived | MaintenanceRequestStatus::Denied
+                    )
+            })
+            .collect();
+
+        if !blocking_requests.is_empty() {
+            let request_ids: Vec<String> = blocking_requests
+                .iter()
+                .map(|req| req.id.clone())
+                .collect();
+
+            return Err(
+                AppError::ValidationError(
+                    format!(
+                        "Cannot delete work order {} - it is referenced by unresolved maintenance requests: {}",
+                        id,
+                        request_ids.join(", ")
+                    )
                 ).to_graphql_error()
             );
         }
