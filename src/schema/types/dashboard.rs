@@ -22,7 +22,6 @@ pub struct DashboardStatistics {
     pub active_work_orders: i32,
     pub overdue_maintenances: i32,
     pub upcoming_maintenances: i32,
-    pub unread_maintenance_requests: i32,
     pub assets_by_status: AssetsByStatus,
     pub work_orders_by_priority: WorkOrdersByPriority,
     pub work_orders_by_status: WorkOrdersByStatus,
@@ -51,9 +50,6 @@ impl DashboardStatistics {
 
     async fn upcoming_maintenances(&self) -> i32 {
         self.upcoming_maintenances
-    }
-    async fn unread_maintenance_requests(&self) -> i32 {
-        self.unread_maintenance_requests
     }
 
     async fn assets_by_status(&self) -> &AssetsByStatus {

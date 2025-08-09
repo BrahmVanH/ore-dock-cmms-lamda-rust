@@ -5,11 +5,20 @@ use tracing::{ info, warn };
 use uuid::Uuid;
 
 use crate::{
+    DbClient,
     models::{
-        asset::Asset, maintenance_request::{MaintenanceRequest, MaintenanceRequestStatus}, work_order::{
-            WorkOrder, WorkOrderCost, WorkOrderDifficulty, WorkOrderPriority, WorkOrderSeverity, WorkOrderStatus
-        }
-    }, AppError, DbClient, Repository
+        work_order::{
+            WorkOrder,
+            WorkOrderStatus,
+            WorkOrderPriority,
+            WorkOrderSeverity,
+            WorkOrderDifficulty,
+            WorkOrderCost,
+        },
+        asset::Asset,
+    },
+    AppError,
+    Repository,
 };
 
 #[derive(Debug, Default)]
@@ -19,78 +28,6 @@ pub struct WorkOrderMutation;
 impl WorkOrderMutation {
     /// Create a new work order
     async fn create_work_order(
-        &self,
-        ctx: &Context<'_>,
-        work_order_number: String,
-        title: String,
-        description: String,
-        asset_id: String,
-        work_order_type: String,
-        notes: Option<String>,
-        priority: String,
-        severity: String,
-        difficulty: String,
-        assigned_technician_id: Option<String>,
-        estimated_duration_minutes: i32,
-        estimated_cost: String,
-        created_by: String
-    ) -> Result<WorkOrder, Error> {
-        info!("Creating new work order: {}", title);
-
-        let db_client = ctx.data::<DbClient>().map_err(|e| {
-            warn!("Failed to get db_client from context: {:?}", e);
-            AppError::InternalServerError(
-                "Failed to access application db_client".to_string()
-            ).to_graphql_error()
-        })?;
-
-        let repo = Repository::new(db_client.clone());
-        let id = Uuid::new_v4().to_string();
-
-        // Validate that asset exists
-        let _asset = repo
-            .get::<Asset>(asset_id.clone()).await
-            .map_err(|e| e.to_graphql_error())?
-            .ok_or_else(|| {
-                AppError::ValidationError(
-                    format!("Asset {} not found", asset_id)
-                ).to_graphql_error()
-            })?;
-
-        // Parse severity and difficulty enums
-        let severity_enum = WorkOrderSeverity::from_string(&severity).map_err(|e|
-            e.to_graphql_error()
-        )?;
-        let difficulty_enum = WorkOrderDifficulty::from_string(&difficulty).map_err(|e|
-            e.to_graphql_error()
-        )?;
-
-        // Parse estimated cost enum
-        let estimated_cost_enum = WorkOrderCost::from_string(&estimated_cost).map_err(|e|
-            e.to_graphql_error()
-        )?;
-
-        let work_order = WorkOrder::new(
-            id,
-            work_order_number,
-            title,
-            description,
-            notes,
-            asset_id,
-            work_order_type,
-            priority,
-            severity_enum,
-            difficulty_enum,
-            assigned_technician_id,
-            estimated_duration_minutes,
-            estimated_cost_enum,
-            created_by
-        ).map_err(|e| e.to_graphql_error())?;
-
-        repo.create(work_order).await.map_err(|e| e.to_graphql_error())
-    }
-
-    async fn create_work_order_from_maintenance_request(
         &self,
         ctx: &Context<'_>,
         work_order_number: String,
@@ -215,7 +152,7 @@ impl WorkOrderMutation {
         }
 
         work_order.notes = notes;
-
+        
         if let Some(priority_str) = priority {
             work_order.priority = WorkOrderPriority::from_string(&priority_str).map_err(|e|
                 e.to_graphql_error()
@@ -495,40 +432,6 @@ impl WorkOrderMutation {
             return Err(
                 AppError::ValidationError(
                     "Cannot delete work order that is in progress".to_string()
-                ).to_graphql_error()
-            );
-        }
-        // Check for maintenance requests that reference this work order and are not resolved
-        let maintenance_requests = repo
-            .list::<MaintenanceRequest>(None).await
-            .map_err(|e| e.to_graphql_error())?;
-
-        let blocking_requests: Vec<&MaintenanceRequest> = maintenance_requests
-            .iter()
-            .filter(|req| {
-                // Check if this maintenance request references our work order
-                req.work_order_ids.contains(&id) &&
-                    // And is not in a resolved state (archived or denied are considered resolved)
-                    !matches!(
-                        req.status,
-                        MaintenanceRequestStatus::Archived | MaintenanceRequestStatus::Denied
-                    )
-            })
-            .collect();
-
-        if !blocking_requests.is_empty() {
-            let request_ids: Vec<String> = blocking_requests
-                .iter()
-                .map(|req| req.id.clone())
-                .collect();
-
-            return Err(
-                AppError::ValidationError(
-                    format!(
-                        "Cannot delete work order {} - it is referenced by unresolved maintenance requests: {}",
-                        id,
-                        request_ids.join(", ")
-                    )
                 ).to_graphql_error()
             );
         }

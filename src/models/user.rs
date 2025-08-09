@@ -82,6 +82,16 @@ impl UserType {
             _ => Err(AppError::ValidationError("Invalid user type".to_string())),
         }
     }
+
+    pub(crate) fn description(&self) -> &str {
+        match self {
+            UserType::Employee => "Regular employee with standard access to the CMMS system",
+            UserType::Admin =>
+                "Administrator with full system access and user management privileges",
+            UserType::System => "System account used for automated processes and integrations",
+            UserType::Service => "Service account for external applications and API access",
+        }
+    }
 }
 
 /// Represents a User in the system
