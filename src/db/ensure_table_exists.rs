@@ -80,6 +80,7 @@ pub async fn ensure_all_tables_exist(client: &Client) -> Result<(), AppError> {
     // Create miscellaneous tables
     println!("Creating miscellaneous system tables...");
     misc_tables::create_user_preferences_table(&tables, client).await?;
+    misc_tables::create_task_tables(&tables, client).await?;
 
     println!("All tables created successfully!");
     Ok(())
