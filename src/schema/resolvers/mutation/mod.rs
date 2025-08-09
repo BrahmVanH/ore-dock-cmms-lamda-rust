@@ -16,7 +16,6 @@ mod user_role;
 mod user_notification_preferences;
 mod notification_template;
 mod permission;
-mod maintenance_request;
 
 #[derive(Debug, Default, MergedObject)]
 pub struct MutationRoot(
@@ -35,7 +34,6 @@ pub struct MutationRoot(
     // vendor_mutation_root: vendor::VendorMutationRoot,
     // vendor_category_mutation_root: vendor_category::VendorCategoryMutationRoot,
     user_role::UserRoleMutation,
-    maintenance_request::MaintenanceRequestMutation,
     // user_notification_preferences_mutation_root: user_notification_preferences::UserNotificationPreferencesMutationRoot,
     // notification_template_mutation_root: notification_template::NotificationTemplateMutationRoot,
 );
