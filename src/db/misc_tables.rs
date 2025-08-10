@@ -114,10 +114,7 @@ pub async fn create_task_tables(
     println!("Tasks table created: {:?}", response);
     Ok(())
 }
-//! Miscellaneous system tables.
-//!
-//! This module contains table definitions for user preferences and other
-//! miscellaneous system functionality.
+
 
 use aws_sdk_dynamodb::{
     Client,

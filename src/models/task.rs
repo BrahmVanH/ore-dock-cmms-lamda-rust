@@ -64,33 +64,39 @@ impl Task {
         task_type: String,
         private: bool,
         assigned_to: Option<String>
-    ) -> Result<Self, String> {
+    ) -> Result<Self, AppError> {
         let now = Utc::now();
         if task_number.trim().is_empty() {
-            return Err("Task number cannot be empty".to_string());
+            return Err(AppError::ValidationError("Task number cannot be empty".to_string()));
         }
         if title.trim().is_empty() {
-            return Err("Title cannot be empty".to_string());
+            return Err(AppError::ValidationError("Title cannot be empty".to_string()));
         }
         if description.trim().is_empty() {
-            return Err("Description cannot be empty".to_string());
+            return Err(AppError::ValidationError("Description cannot be empty".to_string()));
         }
 
         if task_type == TaskType::WorkOrder.to_string() && work_order_id.is_none() {
-            return Err("If task is of type work order, work_order_id is required".to_string());
+            return Err(
+                AppError::ValidationError(
+                    "If task is of type work order, work_order_id is required".to_string()
+                )
+            );
         }
 
         if task_type != TaskType::WorkOrder.to_string() && work_order_id.is_some() {
             return Err(
-                "If task is not of type work order, work_order_id must be empty".to_string()
+                AppError::ValidationError(
+                    "If task is not of type work order, work_order_id must be empty".to_string()
+                )
             );
         }
 
         if task_type.trim().is_empty() {
-            return Err("Task type cannot be empty".to_string());
+            return Err(AppError::ValidationError("Task type cannot be empty".to_string()));
         }
 
-        let task_type_enum = TaskType::from_string(&task_type).ok()?;
+        let task_type_enum = TaskType::from_string(&task_type)?;
 
         Ok(Self {
             id,

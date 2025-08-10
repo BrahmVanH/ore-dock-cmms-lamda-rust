@@ -1,11 +1,7 @@
-use async_graphql::*;
-use chrono::{ DateTime, Utc };
-use tracing::{ info, warn };
-use uuid::Uuid;
-
 use crate::{
     DbClient,
     models::{
+        prelude::*,
         maintenance_schedule::{ MaintenanceSchedule, MaintenanceCadence, CadenceUnit },
         asset::Asset,
         user::User,

@@ -1,8 +1,4 @@
-use async_graphql::*;
-use tracing::{ info, warn };
-use uuid::Uuid;
-
-use crate::{ DbClient, models::location_type::LocationType, AppError, Repository };
+use crate::{ DbClient, models::{ prelude::*, location_type::LocationType }, AppError, Repository };
 
 #[derive(Debug, Default)]
 pub(crate) struct LocationTypeMutation;
@@ -30,7 +26,7 @@ impl LocationTypeMutation {
         info!("new location_type id: {:?}", &id);
 
         let location_type = LocationType::new(id, name, description);
-        
+
         info!("new location_type : {:?}", &location_type);
 
         location_type.validate().map_err(|e| { AppError::ValidationError(e).to_graphql_error() })?;
