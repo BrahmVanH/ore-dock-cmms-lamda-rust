@@ -22,3 +22,4 @@ pub mod vendor;
 pub mod vendor_category;
 pub mod work_order;
 pub mod task;
+pub mod maintenance_request;

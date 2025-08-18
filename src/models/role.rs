@@ -309,10 +309,7 @@ impl DynamoDbEntity for Role {
             item.insert("description".to_string(), AttributeValue::S(desc.clone()));
         }
 
-        item.insert(
-            "role_type".to_string(),
-            AttributeValue::S(self.role_type.to_str().to_string())
-        );
+        item.insert("role_type".to_string(), AttributeValue::S(self.role_type.to_string()));
         item.insert("is_system_role".to_string(), AttributeValue::Bool(self.is_system_role));
 
         // Store permission IDs as string set

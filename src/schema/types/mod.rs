@@ -22,3 +22,4 @@ pub mod vendor;
 pub mod work_order;
 pub mod dashboard;
 pub mod task;
+pub mod maintenance_request;

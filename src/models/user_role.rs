@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use async_graphql::{Enum, Object};
+use async_graphql::{ Enum, Object };
 use aws_sdk_dynamodb::types::AttributeValue;
 use chrono::{ DateTime, Utc };
 use serde::{ Deserialize, Serialize };
@@ -468,9 +468,9 @@ impl DynamoDbEntity for UserRole {
         item.insert("role_id".to_string(), AttributeValue::S(self.role_id.clone()));
         item.insert(
             "assignment_source".to_string(),
-            AttributeValue::S(self.assignment_source.to_str().to_string())
+            AttributeValue::S(self.assignment_source.to_string())
         );
-        item.insert("status".to_string(), AttributeValue::S(self.status.to_str().to_string()));
+        item.insert("status".to_string(), AttributeValue::S(self.status.to_string()));
         item.insert("is_primary_role".to_string(), AttributeValue::Bool(self.is_primary_role));
         item.insert("assigned_at".to_string(), AttributeValue::S(self.assigned_at.to_string()));
 

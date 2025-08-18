@@ -10,7 +10,8 @@ impl AssetTypeMutation {
         &self,
         ctx: &Context<'_>,
         name: String,
-        description: String
+        description: String,
+        category: String
     ) -> Result<AssetType, Error> {
         info!("Creating new asset_type: {}", name);
 
@@ -23,7 +24,7 @@ impl AssetTypeMutation {
 
         let id = Uuid::new_v4().to_string();
 
-        let asset_type = AssetType::new(id, name, description);
+        let asset_type = AssetType::new(id, name, description, category).map_err(|e| e.to_graphql_error())?;
 
         asset_type.validate().map_err(|e| { AppError::ValidationError(e).to_graphql_error() })?;
         Repository::new(db_client.clone())

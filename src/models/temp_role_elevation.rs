@@ -424,8 +424,8 @@ impl TempRoleElevation {
             item.insert("actual_end_time".to_string(), AttributeValue::S(actual_end.to_string()));
         }
 
-        item.insert("status".to_string(), AttributeValue::S(self.status.to_str().to_string()));
-        item.insert("priority".to_string(), AttributeValue::S(self.priority.to_str().to_string()));
+        item.insert("status".to_string(), AttributeValue::S(self.status.to_string()));
+        item.insert("priority".to_string(), AttributeValue::S(self.priority.to_string()));
         item.insert("auto_revoke".to_string(), AttributeValue::Bool(self.auto_revoke));
         item.insert("notification_sent".to_string(), AttributeValue::Bool(self.notification_sent));
         item.insert("approval_required".to_string(), AttributeValue::Bool(self.approval_required));

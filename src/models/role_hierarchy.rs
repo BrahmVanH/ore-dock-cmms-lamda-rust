@@ -270,7 +270,7 @@ impl RoleHierarchy {
         item.insert("child_role_id".to_string(), AttributeValue::S(self.child_role_id.clone()));
         item.insert(
             "hierarchy_type".to_string(),
-            AttributeValue::S(self.hierarchy_type.to_str().to_string())
+            AttributeValue::S(self.hierarchy_type.to_string())
         );
         item.insert(
             "inherited_permissions".to_string(),

@@ -393,8 +393,8 @@ impl DynamoDbEntity for Notification {
             }
         }
 
-        item.insert("severity".to_string(), AttributeValue::S(self.severity.to_str().to_string()));
-        item.insert("status".to_string(), AttributeValue::S(self.status.to_str().to_string()));
+        item.insert("severity".to_string(), AttributeValue::S(self.severity.to_string()));
+        item.insert("status".to_string(), AttributeValue::S(self.status.to_string()));
         item.insert("scheduled_at".to_string(), AttributeValue::S(self.scheduled_at.to_string()));
 
         if let Some(sent) = &self.sent_at {
@@ -405,7 +405,7 @@ impl DynamoDbEntity for Notification {
         if !self.delivered_channels.is_empty() {
             let delivered_strings: Vec<String> = self.delivered_channels
                 .iter()
-                .map(|c| c.to_str().to_string())
+                .map(|c| c.to_string())
                 .collect();
             item.insert("delivered_channels".to_string(), AttributeValue::Ss(delivered_strings));
         }
@@ -414,7 +414,7 @@ impl DynamoDbEntity for Notification {
         if !self.failed_channels.is_empty() {
             let failed_strings: Vec<String> = self.failed_channels
                 .iter()
-                .map(|c| c.to_str().to_string())
+                .map(|c| c.to_string())
                 .collect();
             item.insert("failed_channels".to_string(), AttributeValue::Ss(failed_strings));
         }

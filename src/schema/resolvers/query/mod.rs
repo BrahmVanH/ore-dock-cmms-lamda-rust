@@ -13,6 +13,7 @@ mod manufacturer;
 mod maintenance_schedule;
 mod dashboard;
 mod task;
+mod maintenance_request;
 
 #[derive(Debug, Default, MergedObject)]
 pub struct QueryRoot(
@@ -29,4 +30,5 @@ pub struct QueryRoot(
     maintenance_schedule::MaintenanceScheduleQuery,
     dashboard::DashboardQuery,
     task::TaskQuery,
+    maintenance_request::MaintenanceRequestQuery,
 );

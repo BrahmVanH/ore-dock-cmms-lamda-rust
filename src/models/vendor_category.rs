@@ -23,7 +23,7 @@ pub enum CategoryType {
 }
 
 impl CategoryType {
-    pub fn to_str(&self) -> &str {
+    pub(crate) fn to_str(&self) -> &str {
         match self {
             CategoryType::Service => "service",
             CategoryType::Supplier => "supplier",
@@ -37,11 +37,11 @@ impl CategoryType {
         }
     }
 
-    pub fn to_string(&self) -> String {
+    pub(crate) fn to_string(&self) -> String {
         self.to_str().to_string()
     }
 
-    pub fn from_string(s: &str) -> Result<CategoryType, AppError> {
+    pub(crate) fn from_string(s: &str) -> Result<CategoryType, AppError> {
         match s {
             "service" => Ok(Self::Service),
             "supplier" => Ok(Self::Supplier),
@@ -67,7 +67,7 @@ pub enum CategoryStatus {
 }
 
 impl CategoryStatus {
-    pub fn to_str(&self) -> &str {
+    pub(crate) fn to_str(&self) -> &str {
         match self {
             CategoryStatus::Active => "active",
             CategoryStatus::Inactive => "inactive",
@@ -76,11 +76,11 @@ impl CategoryStatus {
         }
     }
 
-    pub fn to_string(&self) -> String {
+    pub(crate) fn to_string(&self) -> String {
         self.to_str().to_string()
     }
 
-    pub fn from_string(s: &str) -> Result<CategoryStatus, AppError> {
+    pub(crate) fn from_string(s: &str) -> Result<CategoryStatus, AppError> {
         match s {
             "active" => Ok(Self::Active),
             "inactive" => Ok(Self::Inactive),
@@ -437,11 +437,8 @@ impl VendorCategory {
             item.insert("description".to_string(), AttributeValue::S(desc.clone()));
         }
 
-        item.insert(
-            "category_type".to_string(),
-            AttributeValue::S(self.category_type.to_str().to_string())
-        );
-        item.insert("status".to_string(), AttributeValue::S(self.status.to_str().to_string()));
+        item.insert("category_type".to_string(), AttributeValue::S(self.category_type.to_string()));
+        item.insert("status".to_string(), AttributeValue::S(self.status.to_string()));
 
         if let Some(parent_id) = &self.parent_category_id {
             item.insert("parent_category_id".to_string(), AttributeValue::S(parent_id.clone()));
