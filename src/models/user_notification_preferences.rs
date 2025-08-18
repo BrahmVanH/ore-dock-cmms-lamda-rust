@@ -356,7 +356,7 @@ impl UserNotificationPreferences {
 
         item.insert("id".to_string(), AttributeValue::S(self.id.clone()));
         item.insert("user_id".to_string(), AttributeValue::S(self.user_id.clone()));
-        item.insert("scope".to_string(), AttributeValue::S(self.scope.to_str().to_string()));
+        item.insert("scope".to_string(), AttributeValue::S(self.scope.to_string()));
 
         if let Some(scope_val) = &self.scope_value {
             item.insert("scope_value".to_string(), AttributeValue::S(scope_val.clone()));
@@ -368,7 +368,7 @@ impl UserNotificationPreferences {
         if !self.preferred_channels.is_empty() {
             let preferred_strings: Vec<String> = self.preferred_channels
                 .iter()
-                .map(|c| c.to_str().to_string())
+                .map(|c| c.to_string())
                 .collect();
             item.insert("preferred_channels".to_string(), AttributeValue::Ss(preferred_strings));
         }
@@ -377,7 +377,7 @@ impl UserNotificationPreferences {
         if !self.blocked_channels.is_empty() {
             let blocked_strings: Vec<String> = self.blocked_channels
                 .iter()
-                .map(|c| c.to_str().to_string())
+                .map(|c| c.to_string())
                 .collect();
             item.insert("blocked_channels".to_string(), AttributeValue::Ss(blocked_strings));
         }
@@ -405,7 +405,7 @@ impl UserNotificationPreferences {
         if let Some(min_severity) = &self.min_severity_level {
             item.insert(
                 "min_severity_level".to_string(),
-                AttributeValue::S(min_severity.to_str().to_string())
+                AttributeValue::S(min_severity.to_string())
             );
         }
 

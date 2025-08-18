@@ -24,7 +24,7 @@ pub enum PermissionAction {
 }
 
 impl PermissionAction {
-    pub(crate)  fn to_str(&self) -> &str {
+    pub(crate) fn to_str(&self) -> &str {
         match self {
             PermissionAction::Create => "create",
             PermissionAction::Read => "read",
@@ -39,11 +39,11 @@ impl PermissionAction {
         }
     }
 
-    pub(crate)  fn to_string(&self) -> String {
+    pub(crate) fn to_string(&self) -> String {
         self.to_str().to_string()
     }
 
-    pub(crate)  fn from_string(s: &str) -> Result<PermissionAction, AppError> {
+    pub(crate) fn from_string(s: &str) -> Result<PermissionAction, AppError> {
         match s {
             "create" => Ok(Self::Create),
             "read" => Ok(Self::Read),
@@ -112,7 +112,7 @@ pub enum ResourceType {
 }
 
 impl ResourceType {
-    pub(crate)  fn to_str(&self) -> &str {
+    pub(crate) fn to_str(&self) -> &str {
         match self {
             ResourceType::Asset => "asset",
             ResourceType::Location => "location",
@@ -126,11 +126,11 @@ impl ResourceType {
         }
     }
 
-    pub(crate)  fn to_string(&self) -> String {
+    pub(crate) fn to_string(&self) -> String {
         self.to_str().to_string()
     }
 
-    pub(crate)  fn from_string(s: &str) -> Result<ResourceType, AppError> {
+    pub(crate) fn from_string(s: &str) -> Result<ResourceType, AppError> {
         match s {
             "asset" => Ok(Self::Asset),
             "location" => Ok(Self::Location),
@@ -264,7 +264,7 @@ impl PermissionLog {
     /// # Returns
     ///
     /// 'Some' PermissionLog if item fields match, 'None' otherwise
-    pub(crate)  fn from_item(item: &HashMap<String, AttributeValue>) -> Option<Self> {
+    pub(crate) fn from_item(item: &HashMap<String, AttributeValue>) -> Option<Self> {
         info!("calling from_item with: {:?}", &item);
 
         let id = item.get("id")?.as_s().ok()?.to_string();
@@ -359,18 +359,15 @@ impl PermissionLog {
     /// # Returns
     ///
     /// HashMap representing DB item for PermissionLog instance
-    pub(crate)  fn to_item(&self) -> HashMap<String, AttributeValue> {
+    pub(crate) fn to_item(&self) -> HashMap<String, AttributeValue> {
         let mut item = HashMap::new();
 
         item.insert("id".to_string(), AttributeValue::S(self.id.clone()));
         item.insert("user_id".to_string(), AttributeValue::S(self.user_id.clone()));
-        item.insert(
-            "resource_type".to_string(),
-            AttributeValue::S(self.resource_type.to_str().to_string())
-        );
+        item.insert("resource_type".to_string(), AttributeValue::S(self.resource_type.to_string()));
         item.insert("resource_id".to_string(), AttributeValue::S(self.resource_id.clone()));
-        item.insert("action".to_string(), AttributeValue::S(self.action.to_str().to_string()));
-        item.insert("status".to_string(), AttributeValue::S(self.status.to_str().to_string()));
+        item.insert("action".to_string(), AttributeValue::S(self.action.to_string()));
+        item.insert("status".to_string(), AttributeValue::S(self.status.to_string()));
         item.insert("attempted_at".to_string(), AttributeValue::S(self.attempted_at.to_string()));
 
         if let Some(granted) = &self.granted_at {

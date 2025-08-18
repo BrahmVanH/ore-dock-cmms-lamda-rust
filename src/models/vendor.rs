@@ -22,7 +22,7 @@ pub enum VendorStatus {
 }
 
 impl VendorStatus {
-    pub fn to_str(&self) -> &str {
+    pub(crate) fn to_str(&self) -> &str {
         match self {
             VendorStatus::Active => "active",
             VendorStatus::Inactive => "inactive",
@@ -33,11 +33,11 @@ impl VendorStatus {
         }
     }
 
-    pub fn to_string(&self) -> String {
+    pub(crate) fn to_string(&self) -> String {
         self.to_str().to_string()
     }
 
-    pub fn from_string(s: &str) -> Result<VendorStatus, AppError> {
+    pub(crate) fn from_string(s: &str) -> Result<VendorStatus, AppError> {
         match s {
             "active" => Ok(Self::Active),
             "inactive" => Ok(Self::Inactive),
@@ -60,7 +60,7 @@ pub enum VendorTier {
 }
 
 impl VendorTier {
-    pub fn to_str(&self) -> &str {
+    pub(crate) fn to_str(&self) -> &str {
         match self {
             VendorTier::Preferred => "preferred",
             VendorTier::Standard => "standard",
@@ -69,11 +69,11 @@ impl VendorTier {
         }
     }
 
-    pub fn to_string(&self) -> String {
+    pub(crate) fn to_string(&self) -> String {
         self.to_str().to_string()
     }
 
-    pub fn from_string(s: &str) -> Result<VendorTier, AppError> {
+    pub(crate) fn from_string(s: &str) -> Result<VendorTier, AppError> {
         match s {
             "preferred" => Ok(Self::Preferred),
             "standard" => Ok(Self::Standard),
@@ -741,8 +741,8 @@ impl Vendor {
             "vendor_category_id".to_string(),
             AttributeValue::S(self.vendor_category_id.clone())
         );
-        item.insert("status".to_string(), AttributeValue::S(self.status.to_str().to_string()));
-        item.insert("tier".to_string(), AttributeValue::S(self.tier.to_str().to_string()));
+        item.insert("status".to_string(), AttributeValue::S(self.status.to_string()));
+        item.insert("tier".to_string(), AttributeValue::S(self.tier.to_string()));
         item.insert("phone_number".to_string(), AttributeValue::S(self.phone_number.clone()));
 
         if let Some(secondary_phone) = &self.secondary_phone {

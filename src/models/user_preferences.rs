@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use async_graphql::{Enum, Object};
+use async_graphql::{ Enum, Object };
 use aws_sdk_dynamodb::types::AttributeValue;
 use chrono::{ DateTime, Timelike, Utc };
 use serde::{ Deserialize, Serialize };
@@ -436,13 +436,10 @@ impl UserPreferences {
 
         item.insert("id".to_string(), AttributeValue::S(self.id.clone()));
         item.insert("user_id".to_string(), AttributeValue::S(self.user_id.clone()));
-        item.insert("language".to_string(), AttributeValue::S(self.language.to_str().to_string()));
-        item.insert("theme".to_string(), AttributeValue::S(self.theme.to_str().to_string()));
+        item.insert("language".to_string(), AttributeValue::S(self.language.to_string()));
+        item.insert("theme".to_string(), AttributeValue::S(self.theme.to_string()));
         item.insert("timezone".to_string(), AttributeValue::S(self.timezone.clone()));
-        item.insert(
-            "time_format".to_string(),
-            AttributeValue::S(self.time_format.to_str().to_string())
-        );
+        item.insert("time_format".to_string(), AttributeValue::S(self.time_format.to_string()));
         item.insert("date_format".to_string(), AttributeValue::S(self.date_format.clone()));
 
         if let Ok(dashboard_json) = serde_json::to_string(&self.dashboard_layout) {

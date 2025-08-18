@@ -657,11 +657,8 @@ impl DynamoDbEntity for User {
             item.insert("display_name".to_string(), AttributeValue::S(display_name.clone()));
         }
 
-        item.insert(
-            "user_type".to_string(),
-            AttributeValue::S(self.user_type.to_str().to_string())
-        );
-        item.insert("status".to_string(), AttributeValue::S(self.status.to_str().to_string()));
+        item.insert("user_type".to_string(), AttributeValue::S(self.user_type.to_string()));
+        item.insert("status".to_string(), AttributeValue::S(self.status.to_string()));
 
         if let Some(role_id) = &self.primary_role_id {
             item.insert("primary_role_id".to_string(), AttributeValue::S(role_id.clone()));

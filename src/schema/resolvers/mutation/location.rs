@@ -1,9 +1,11 @@
-use async_graphql::*;
-use tracing::{ info, warn };
-use uuid::Uuid;
-
 use crate::{
-    models::{ address::AddressInput, location::Location, location_type::LocationType, prelude::* },
+    models::{
+        prelude::*,
+        address::AddressInput,
+        location::Location,
+        location_type::LocationType,
+        prelude::*,
+    },
     AppError,
     DbClient,
     Repository,

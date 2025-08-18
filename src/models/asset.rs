@@ -436,13 +436,13 @@ impl DynamoDbEntity for Asset {
         );
         item.insert(
             "current_status".to_string(),
-            AttributeValue::S(self.current_status.to_str().to_string())
+            AttributeValue::S(self.current_status.to_string())
         );
         item.insert("location_id".to_string(), AttributeValue::S(self.location_id.clone()));
         item.insert("manufacturer_id".to_string(), AttributeValue::S(self.manufacturer_id.clone()));
         item.insert(
             "maintenance_frequency".to_string(),
-            AttributeValue::S(self.maintenance_frequency.to_str().to_string())
+            AttributeValue::S(self.maintenance_frequency.to_string())
         );
         let maintenance_schedule_id_attr_value = match &self.maintenance_schedule_id {
             Some(id) => AttributeValue::S(id.clone()),

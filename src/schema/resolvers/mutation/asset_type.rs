@@ -1,8 +1,9 @@
-use async_graphql::*;
-use tracing::{ info, warn };
-use uuid::Uuid;
-
-use crate::{ DbClient, models::asset_type::AssetType, AppError, Repository };
+use crate::{
+    models::{ asset_type::{ AssetType, AssetTypeCategory }, prelude::* },
+    AppError,
+    DbClient,
+    Repository,
+};
 
 #[derive(Debug, Default)]
 pub(crate) struct AssetTypeMutation;
@@ -14,7 +15,8 @@ impl AssetTypeMutation {
         &self,
         ctx: &Context<'_>,
         name: String,
-        description: String
+        description: String,
+        category: String
     ) -> Result<AssetType, Error> {
         info!("Creating new asset_type: {}", name);
 
@@ -27,7 +29,9 @@ impl AssetTypeMutation {
 
         let id = Uuid::new_v4().to_string();
 
-        let asset_type = AssetType::new(id, name, description);
+        let asset_type = AssetType::new(id, name, description, category).map_err(|e|
+            e.to_graphql_error()
+        )?;
 
         asset_type.validate().map_err(|e| { AppError::ValidationError(e).to_graphql_error() })?;
         Repository::new(db_client.clone())
@@ -42,7 +46,8 @@ impl AssetTypeMutation {
         ctx: &Context<'_>,
         id: String,
         name: Option<String>,
-        description: Option<String>
+        description: Option<String>,
+        category: Option<String>
     ) -> Result<AssetType, Error> {
         info!("Updating asset_type: {}", id);
 
@@ -65,6 +70,10 @@ impl AssetTypeMutation {
         if let Some(description) = description {
             asset_type.description = description;
         }
+        if let Some(category) = category {
+            asset_type.category = AssetTypeCategory::from_string(&category)?;
+        }
+
         asset_type.updated_at = chrono::Utc::now();
 
         asset_type.validate().map_err(|e| AppError::ValidationError(e))?;

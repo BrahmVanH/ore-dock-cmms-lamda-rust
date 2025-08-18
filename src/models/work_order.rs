@@ -19,7 +19,7 @@ pub enum WorkOrderSeverity {
 }
 
 impl WorkOrderSeverity {
-    pub fn to_str(&self) -> &str {
+    pub(crate) fn to_str(&self) -> &str {
         match self {
             WorkOrderSeverity::Critical => "critical",
             WorkOrderSeverity::Important => "important",
@@ -28,11 +28,11 @@ impl WorkOrderSeverity {
         }
     }
 
-    pub fn to_string(&self) -> String {
+    pub(crate) fn to_string(&self) -> String {
         self.to_str().to_string()
     }
 
-    pub fn from_string(s: &str) -> Result<WorkOrderSeverity, AppError> {
+    pub(crate) fn from_string(s: &str) -> Result<WorkOrderSeverity, AppError> {
         match s {
             "critical" => Ok(Self::Critical),
             "important" => Ok(Self::Important),
@@ -71,7 +71,7 @@ pub enum WorkOrderDifficulty {
 }
 
 impl WorkOrderDifficulty {
-    pub fn to_str(&self) -> &str {
+    pub(crate) fn to_str(&self) -> &str {
         match self {
             WorkOrderDifficulty::Normal => "normal",
             WorkOrderDifficulty::Extended => "extended",
@@ -80,11 +80,11 @@ impl WorkOrderDifficulty {
         }
     }
 
-    pub fn to_string(&self) -> String {
+    pub(crate) fn to_string(&self) -> String {
         self.to_str().to_string()
     }
 
-    pub fn from_string(s: &str) -> Result<WorkOrderDifficulty, AppError> {
+    pub(crate) fn from_string(s: &str) -> Result<WorkOrderDifficulty, AppError> {
         match s {
             "normal" => Ok(Self::Normal),
             "extended" => Ok(Self::Extended),
@@ -123,7 +123,7 @@ pub enum WorkOrderCost {
 }
 
 impl WorkOrderCost {
-    pub fn to_str(&self) -> &str {
+    pub(crate) fn to_str(&self) -> &str {
         match self {
             WorkOrderCost::One => "one",
             WorkOrderCost::Two => "two",
@@ -132,11 +132,11 @@ impl WorkOrderCost {
         }
     }
 
-    pub fn to_string(&self) -> String {
+    pub(crate) fn to_string(&self) -> String {
         self.to_str().to_string()
     }
 
-    pub fn from_string(s: &str) -> Result<WorkOrderCost, AppError> {
+    pub(crate) fn from_string(s: &str) -> Result<WorkOrderCost, AppError> {
         match s {
             "one" => Ok(Self::One),
             "two" => Ok(Self::Two),
@@ -645,15 +645,12 @@ impl DynamoDbEntity for WorkOrder {
         item.insert("asset_id".to_string(), AttributeValue::S(self.asset_id.clone()));
         item.insert(
             "work_order_type".to_string(),
-            AttributeValue::S(self.work_order_type.to_str().to_string())
+            AttributeValue::S(self.work_order_type.to_string())
         );
-        item.insert("status".to_string(), AttributeValue::S(self.status.to_str().to_string()));
-        item.insert("priority".to_string(), AttributeValue::S(self.priority.to_str().to_string()));
-        item.insert("severity".to_string(), AttributeValue::S(self.severity.to_str().to_string()));
-        item.insert(
-            "difficulty".to_string(),
-            AttributeValue::S(self.difficulty.to_str().to_string())
-        );
+        item.insert("status".to_string(), AttributeValue::S(self.status.to_string()));
+        item.insert("priority".to_string(), AttributeValue::S(self.priority.to_string()));
+        item.insert("severity".to_string(), AttributeValue::S(self.severity.to_string()));
+        item.insert("difficulty".to_string(), AttributeValue::S(self.difficulty.to_string()));
 
         if let Some(tech_id) = &self.assigned_technician_id {
             item.insert("assigned_technician_id".to_string(), AttributeValue::S(tech_id.clone()));

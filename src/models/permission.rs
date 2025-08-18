@@ -165,7 +165,11 @@ impl Permission {
     }
 
     /// Checks if permission applies to a specific resource
-    pub(crate) fn applies_to_resource(&self, resource_type: &ResourceType, resource_id: &str) -> bool {
+    pub(crate) fn applies_to_resource(
+        &self,
+        resource_type: &ResourceType,
+        resource_id: &str
+    ) -> bool {
         if &self.resource_type != resource_type {
             return false;
         }
@@ -288,21 +292,18 @@ impl DynamoDbEntity for Permission {
 
         item.insert("id".to_string(), AttributeValue::S(self.id.clone()));
         item.insert("role_id".to_string(), AttributeValue::S(self.role_id.clone()));
-        item.insert(
-            "resource_type".to_string(),
-            AttributeValue::S(self.resource_type.to_str().to_string())
-        );
+        item.insert("resource_type".to_string(), AttributeValue::S(self.resource_type.to_string()));
 
         // Convert actions to string set
         let action_strings: Vec<String> = self.actions
             .iter()
-            .map(|a| a.to_str().to_string())
+            .map(|a| a.to_string())
             .collect();
         if !action_strings.is_empty() {
             item.insert("actions".to_string(), AttributeValue::Ss(action_strings));
         }
 
-        item.insert("scope".to_string(), AttributeValue::S(self.scope.to_str().to_string()));
+        item.insert("scope".to_string(), AttributeValue::S(self.scope.to_string()));
 
         if let Some(conditions) = &self.conditions {
             if let Ok(conditions_json) = serde_json::to_string(conditions) {

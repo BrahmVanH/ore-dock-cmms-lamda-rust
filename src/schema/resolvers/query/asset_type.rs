@@ -3,6 +3,9 @@ use tracing::{ info, warn };
 
 use crate::{ error::AppError, models::asset_type::AssetType, DbClient, Repository };
 
+// Import for Asset_type::from_item() usage
+use crate::repository::DynamoDbEntity;
+
 #[derive(Debug, Default)]
 pub(crate) struct AssetTypeQuery;
 

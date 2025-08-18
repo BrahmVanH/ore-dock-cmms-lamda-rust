@@ -308,7 +308,7 @@ impl DynamoDbEntity for NotificationTemplate {
         item.insert("name".to_string(), AttributeValue::S(self.name.clone()));
         item.insert(
             "notification_type".to_string(),
-            AttributeValue::S(self.notification_type.to_str().to_string())
+            AttributeValue::S(self.notification_type.to_string())
         );
         item.insert(
             "subject_template".to_string(),
@@ -320,13 +320,13 @@ impl DynamoDbEntity for NotificationTemplate {
         );
         item.insert(
             "default_severity".to_string(),
-            AttributeValue::S(self.default_severity.to_str().to_string())
+            AttributeValue::S(self.default_severity.to_string())
         );
 
         // Convert channels to string set
         let channel_strings: Vec<String> = self.supported_channels
             .iter()
-            .map(|c| c.to_str().to_string())
+            .map(|c| c.to_string())
             .collect();
         if !channel_strings.is_empty() {
             item.insert("supported_channels".to_string(), AttributeValue::Ss(channel_strings));

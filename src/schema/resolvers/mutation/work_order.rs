@@ -1,23 +1,22 @@
-use async_graphql::*;
-use chrono::{ DateTime, Utc };
 use rust_decimal::Decimal;
-use tracing::{ info, warn };
-use uuid::Uuid;
 
 use crate::{
-    DbClient,
     models::{
+        asset::Asset,
+        prelude::*,
+        task::TaskType,
         work_order::{
             WorkOrder,
-            WorkOrderStatus,
+            WorkOrderCost,
+            WorkOrderDifficulty,
             WorkOrderPriority,
             WorkOrderSeverity,
-            WorkOrderDifficulty,
-            WorkOrderCost,
+            WorkOrderStatus,
         },
-        asset::Asset,
     },
+    schema::resolvers::mutation::task::TaskMutation,
     AppError,
+    DbClient,
     Repository,
 };
 
@@ -30,7 +29,6 @@ impl WorkOrderMutation {
     async fn create_work_order(
         &self,
         ctx: &Context<'_>,
-        work_order_number: String,
         title: String,
         description: String,
         asset_id: String,
@@ -54,7 +52,21 @@ impl WorkOrderMutation {
         })?;
 
         let repo = Repository::new(db_client.clone());
+
         let id = Uuid::new_v4().to_string();
+
+        let latest_work_orders = repo
+            .list::<WorkOrder>(Some(1)).await
+            .map_err(|e| e.to_graphql_error())?;
+
+        let next_number = if let Some(latest) = latest_work_orders.first() {
+            // Assuming work_order_number is numeric
+            latest.work_order_number.parse::<u64>().unwrap_or(0) + 1
+        } else {
+            1
+        };
+
+        let work_order_number = format!("{:06}", next_number); // e.g., "000123"
 
         // Validate that asset exists
         let _asset = repo
@@ -79,10 +91,11 @@ impl WorkOrderMutation {
             e.to_graphql_error()
         )?;
 
+        // Clone number, title, and technician id to allow use in Task creation
         let work_order = WorkOrder::new(
             id,
-            work_order_number,
-            title,
+            work_order_number.clone(),
+            title.clone(),
             description,
             notes,
             asset_id,
@@ -90,13 +103,34 @@ impl WorkOrderMutation {
             priority,
             severity_enum,
             difficulty_enum,
-            assigned_technician_id,
+            assigned_technician_id.clone(),
             estimated_duration_minutes,
             estimated_cost_enum,
             created_by
         ).map_err(|e| e.to_graphql_error())?;
 
-        repo.create(work_order).await.map_err(|e| e.to_graphql_error())
+        let task_description = format!(
+            "Complete work order number {}: {}",
+            &work_order_number,
+            &title
+        );
+
+        let created_work_order = repo.create(work_order).await.map_err(|e| e.to_graphql_error())?;
+        let task_type = TaskType::WorkOrder.to_string();
+        let task_private = false;
+
+        TaskMutation::create_task(
+            &TaskMutation,
+            ctx,
+            title,
+            task_description,
+            Some(created_work_order.id.clone()),
+            task_type,
+            task_private,
+            assigned_technician_id
+        ).await?;
+
+        Ok(created_work_order)
     }
 
     /// Update an existing work order
@@ -152,7 +186,7 @@ impl WorkOrderMutation {
         }
 
         work_order.notes = notes;
-        
+
         if let Some(priority_str) = priority {
             work_order.priority = WorkOrderPriority::from_string(&priority_str).map_err(|e|
                 e.to_graphql_error()

@@ -235,10 +235,10 @@ impl DynamoDbEntity for NotificationDeliveryLog {
 
         item.insert("id".to_string(), AttributeValue::S(self.id.clone()));
         item.insert("notification_id".to_string(), AttributeValue::S(self.notification_id.clone()));
-        item.insert("channel".to_string(), AttributeValue::S(self.channel.to_str().to_string()));
+        item.insert("channel".to_string(), AttributeValue::S(self.channel.to_string()));
         item.insert(
             "delivery_status".to_string(),
-            AttributeValue::S(self.delivery_status.to_str().to_string())
+            AttributeValue::S(self.delivery_status.to_string())
         );
         item.insert("attempted_at".to_string(), AttributeValue::S(self.attempted_at.to_string()));
 
