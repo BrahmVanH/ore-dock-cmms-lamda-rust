@@ -12,6 +12,9 @@ impl AssetType {
     async fn description(&self) -> &str {
         &self.description
     }
+    async fn category(&self) -> &str {
+        &self.category.to_str()
+    }
 
     async fn created_at(&self) -> &DateTime<Utc> {
         &self.created_at
