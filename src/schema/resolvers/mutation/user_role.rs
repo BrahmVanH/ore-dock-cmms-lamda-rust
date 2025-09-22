@@ -1,7 +1,6 @@
-
 use crate::{
     DbClient,
-    models::{prelude::*,  user_role::{ UserRole, RoleAssignmentStatus }, user::User, role::Role },
+    models::{ prelude::*, user_role::{ UserRole, RoleAssignmentStatus }, user::User, role::Role },
     AppError,
     Repository,
 };
@@ -36,7 +35,7 @@ impl UserRoleMutation {
         })?;
 
         let repo = Repository::new(db_client.clone());
-        let id = Uuid::new_v4().to_string();
+        let id = format!("user_role-{}", Uuid::new_v4());
 
         // Verify user exists
         let _user = repo
@@ -512,7 +511,7 @@ impl UserRoleMutation {
                 continue; // Skip users who already have this role
             }
 
-            let id = Uuid::new_v4().to_string();
+            let id = format!("user_role-{}", Uuid::new_v4());
 
             let user_role = UserRole::new(
                 id,

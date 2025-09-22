@@ -27,11 +27,14 @@ impl AssetTypeMutation {
             ).to_graphql_error()
         })?;
 
-        let id = Uuid::new_v4().to_string();
+        let id = format!("asset_type-{}", Uuid::new_v4());
+        
 
         let asset_type = AssetType::new(id, name, description, category).map_err(|e|
             e.to_graphql_error()
         )?;
+
+        info!("Creating new asset_type: {:?}", asset_type);
 
         asset_type.validate().map_err(|e| { AppError::ValidationError(e).to_graphql_error() })?;
         Repository::new(db_client.clone())

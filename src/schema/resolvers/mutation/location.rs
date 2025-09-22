@@ -37,7 +37,7 @@ impl LocationMutation {
         })?;
 
         let repo = Repository::new(db_client.clone());
-        let id = Uuid::new_v4().to_string();
+        let id = format!("location-{}", Uuid::new_v4());
 
         // Validate that location type exists
         repo

@@ -53,7 +53,7 @@ impl WorkOrderMutation {
 
         let repo = Repository::new(db_client.clone());
 
-        let id = Uuid::new_v4().to_string();
+        let id = format!("work_order-{}", Uuid::new_v4());
 
         let latest_work_orders = repo
             .list::<WorkOrder>(Some(1)).await

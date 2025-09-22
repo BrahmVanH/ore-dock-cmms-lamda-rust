@@ -36,7 +36,7 @@ impl MaintenanceScheduleMutation {
         })?;
 
         let repo = Repository::new(db_client.clone());
-        let id = Uuid::new_v4().to_string();
+        let id = format!("ms-{}", Uuid::new_v4());
 
         let _asset = repo
             .get::<Asset>(asset_id.clone()).await
@@ -348,7 +348,7 @@ impl MaintenanceScheduleMutation {
                 ).to_graphql_error()
             })?;
 
-        let new_id = Uuid::new_v4().to_string();
+        let new_id = format!("ms-{}", Uuid::new_v4());
         let due_date = next_due_at.unwrap_or(source_schedule.next_due_at);
 
         let cloned_schedule = MaintenanceSchedule::new(
@@ -513,7 +513,7 @@ impl MaintenanceScheduleMutation {
         let mut results = Vec::new();
 
         for source_schedule in source_schedules {
-            let new_id = Uuid::new_v4().to_string();
+            let new_id = format!("ms-{}", Uuid::new_v4());
 
             let cloned_schedule = MaintenanceSchedule::new(
                 new_id,

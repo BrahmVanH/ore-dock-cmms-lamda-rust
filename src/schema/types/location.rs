@@ -10,7 +10,7 @@ impl Location {
         &self.name
     }
 
-    async fn location_type(&self) -> &str {
+    async fn location_type_id(&self) -> &str {
         self.location_type_id.as_str()
     }
 

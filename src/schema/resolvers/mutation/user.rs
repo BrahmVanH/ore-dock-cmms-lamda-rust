@@ -52,7 +52,7 @@ impl UserMutation {
         })?;
 
         let repo = Repository::new(db_client.clone());
-        let id = Uuid::new_v4().to_string();
+        let id = format!("user-{}", Uuid::new_v4());
 
         // Check if username already exists
         let existing_users = repo.list::<User>(None).await.map_err(|e| e.to_graphql_error())?;

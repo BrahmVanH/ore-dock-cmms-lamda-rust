@@ -104,6 +104,7 @@ impl AssetMutation {
         purchase_date: Option<DateTime<Utc>>,
         installation_date: Option<DateTime<Utc>>,
         location_id: Option<String>,
+        current_status: Option<String>,
         manufacturer_id: Option<String>,
         maintenance_frequency: Option<String>,
         warranty_start_date: Option<DateTime<Utc>>,
@@ -180,6 +181,13 @@ impl AssetMutation {
         if let Some(location_id) = location_id {
             asset.location_id = location_id;
         }
+
+        if let Some(current_status) = current_status {
+            asset.current_status = AssetCurrentStatusOptions::from_string(&current_status).map_err(
+                |e| e.to_graphql_error()
+            )?;
+        }
+
         if let Some(manufacturer_id) = manufacturer_id {
             asset.manufacturer_id = manufacturer_id;
         }

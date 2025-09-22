@@ -38,7 +38,7 @@ impl ManufacturerMutation {
         })?;
 
         let repo = Repository::new(db_client.clone());
-        let id = Uuid::new_v4().to_string();
+        let id = format!("manufacturer-{}", Uuid::new_v4());
 
         Address::from(address.clone())
             .validate()
@@ -388,7 +388,7 @@ impl ManufacturerMutation {
             );
         }
 
-        let new_id = Uuid::new_v4().to_string();
+        let new_id = format!("manufacturer-{}", Uuid::new_v4());
 
         let cloned_manufacturer = Manufacturer::new(
             new_id,

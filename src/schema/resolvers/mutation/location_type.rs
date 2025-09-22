@@ -21,7 +21,7 @@ impl LocationTypeMutation {
             ).to_graphql_error()
         })?;
 
-        let id = Uuid::new_v4().to_string();
+        let id = format!("location_type-{}", Uuid::new_v4());
 
         info!("new location_type id: {:?}", &id);
 

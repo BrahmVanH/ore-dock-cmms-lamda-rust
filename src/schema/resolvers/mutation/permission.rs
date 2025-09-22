@@ -38,7 +38,7 @@ impl PermissionMutation {
         })?;
 
         let repo = Repository::new(db_client.clone());
-        let id = Uuid::new_v4().to_string();
+        let id = format!("permission-{}", Uuid::new_v4());
 
         let _role = repo
             .get::<Role>(role_id.clone()).await
@@ -366,7 +366,7 @@ impl PermissionMutation {
                 ).to_graphql_error()
             })?;
 
-        let new_id = Uuid::new_v4().to_string();
+        let new_id = format!("permission-{}", Uuid::new_v4());
 
         let cloned_permission = Permission::new(
             new_id,
@@ -490,7 +490,7 @@ impl PermissionMutation {
         let mut results = Vec::new();
 
         for source_permission in source_permissions {
-            let new_id = Uuid::new_v4().to_string();
+            let new_id = format!("permission-{}", Uuid::new_v4());
 
             let cloned_permission = Permission::new(
                 new_id,

@@ -1,4 +1,4 @@
-use crate::models::{ prelude::*, asset_type::AssetType };
+use crate::models::{ asset_type::{ AssetType, AssetTypeCategory }, prelude::* };
 #[Object]
 impl AssetType {
     async fn id(&self) -> &str {
@@ -12,8 +12,8 @@ impl AssetType {
     async fn description(&self) -> &str {
         &self.description
     }
-    async fn category(&self) -> &str {
-        &self.category.to_str()
+    async fn category(&self) -> AssetTypeCategory {
+        self.category
     }
 
     async fn created_at(&self) -> &DateTime<Utc> {

@@ -27,10 +27,8 @@ impl TaskMutation {
         })?;
 
         let repo = Repository::new(db_client.clone());
-        let id = Uuid::new_v4().to_string();
-        let latest_tasks = repo
-            .list::<Task>(Some(1)).await
-            .map_err(|e| e.to_graphql_error())?;
+        let id = format!("task-{}", Uuid::new_v4());
+        let latest_tasks = repo.list::<Task>(Some(1)).await.map_err(|e| e.to_graphql_error())?;
         let next_number = if let Some(latest) = latest_tasks.first() {
             // Assuming work_order_number is numeric
             latest.task_number.parse::<u64>().unwrap_or(0) + 1
@@ -48,7 +46,7 @@ impl TaskMutation {
             private,
             assigned_to
         ).map_err(|e| e.to_graphql_error())?;
-        
+
         repo.create(task.clone()).await.map_err(|e| e.to_graphql_error())?;
         Ok(task)
     }

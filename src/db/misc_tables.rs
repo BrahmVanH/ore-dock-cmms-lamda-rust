@@ -59,17 +59,10 @@ pub async fn create_tasks_table(
 ) -> Result<(), AppError> {
     let table_name = "Tasks";
 
-    // if tables.table_names().contains(&table_name.to_string()) {
-    //     println!("Table '{}' already exists", table_name);
-    //     return Ok(());
-    // }
-
     if tables.table_names().contains(&table_name.to_string()) {
-    match client.delete_table().table_name("Tasks").send().await {
-        Ok(_) => println!("Tasks table deleted."),
-        Err(e) => println!("Failed to delete Tasks table: {:?}", e),
+        println!("Table '{}' already exists", table_name);
+        return Ok(());
     }
-}
 
     // Define attribute definitions
     let ad_id = build(

@@ -88,7 +88,7 @@ impl AssetType {
     ) -> Result<Self, AppError> {
         let now = Utc::now();
 
-        let cat = AssetTypeCategory::from_string(&category)?;
+        let cat = AssetTypeCategory::from_string(&category.to_lowercase())?;
 
         Ok(Self {
             id,
