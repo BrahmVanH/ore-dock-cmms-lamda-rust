@@ -17,7 +17,7 @@ impl TaskMutation {
         private: bool,
         assigned_to: Option<String>
     ) -> Result<Task, Error> {
-        info!("Creating new task: {}", title);
+        // info!("Creating new task: {}", title);
 
         let db_client = ctx.data::<DbClient>().map_err(|e| {
             warn!("Failed to get db_client from context: {:?}", e);
@@ -65,7 +65,7 @@ impl TaskMutation {
         assigned_to: Option<String>,
         completed: Option<bool>
     ) -> Result<Task, Error> {
-        info!("Updating task: {}", id);
+        // info!("Updating task: {}", id);
 
         let db_client = ctx
             .data::<DbClient>()
@@ -127,7 +127,7 @@ impl TaskMutation {
         id: String,
         user_id: String
     ) -> Result<Task, Error> {
-        info!("Assigning task {} to user {}", id, user_id);
+        // info!("Assigning task {} to user {}", id, user_id);
 
         let db_client = ctx
             .data::<DbClient>()
@@ -150,7 +150,7 @@ impl TaskMutation {
 
     /// Unassign a task
     async fn unassign_task(&self, ctx: &Context<'_>, id: String) -> Result<Task, Error> {
-        info!("Unassigning task {}", id);
+        // info!("Unassigning task {}", id);
 
         let db_client = ctx
             .data::<DbClient>()
@@ -178,7 +178,7 @@ impl TaskMutation {
         id: String,
         completed_by: Option<String>
     ) -> Result<Task, Error> {
-        info!("Completing task {}", id);
+        // info!("Completing task {}", id);
 
         let db_client = ctx
             .data::<DbClient>()
@@ -201,7 +201,7 @@ impl TaskMutation {
 
     /// Delete a task
     async fn delete_task(&self, ctx: &Context<'_>, id: String) -> Result<bool, Error> {
-        info!("Deleting task: {}", id);
+        // info!("Deleting task: {}", id);
 
         let db_client = ctx
             .data::<DbClient>()

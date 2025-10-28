@@ -6,6 +6,7 @@ pub mod db;
 pub mod repository; // Single repository instead of services
 pub mod config;
 pub mod context;
+pub mod s3;
 
 use async_graphql::{ EmptySubscription, SchemaBuilder };
 // Re-exports
@@ -17,6 +18,8 @@ use crate::schema::resolvers::{ MutationRoot, QueryRoot };
 
 // Type aliases
 pub type DbClient = aws_sdk_dynamodb::Client;
+pub type S3Client = aws_sdk_s3::Client;
+
 pub type GraphQLSchema = async_graphql::Schema<
     schema::resolvers::query::QueryRoot,
     schema::resolvers::mutation::MutationRoot,

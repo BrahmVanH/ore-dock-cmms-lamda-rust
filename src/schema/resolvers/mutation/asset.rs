@@ -1,11 +1,22 @@
+use std::{ env, io::Read };
+use std::str::FromStr;
+
+use async_graphql::Upload;
+use aws_sdk_s3::primitives::ByteStream;
+use base64::Engine;
+use dotenvy::dotenv;
+use serde_json::from_str;
+
+use crate::models::asset::DocumentUploadsInput;
 use crate::{
-    DbClient,
     models::{
+        asset::{ Asset, AssetCurrentStatusOptions, MaintenanceFrequencyOptions, DocumentUpload },
         prelude::*,
-        asset::{ Asset, AssetCurrentStatusOptions, MaintenanceFrequencyOptions },
     },
     AppError,
+    DbClient,
     Repository,
+    S3Client,
 };
 
 #[derive(Debug, Default)]
@@ -18,7 +29,7 @@ impl AssetMutation {
         &self,
         ctx: &Context<'_>,
         name: String,
-        type_id: String,
+        asset_type_id: String,
         serial_number: String,
         model_number: String,
         purchase_date: DateTime<Utc>,
@@ -29,7 +40,15 @@ impl AssetMutation {
         warranty_start_date: Option<DateTime<Utc>>,
         warranty_end_date: Option<DateTime<Utc>>
     ) -> Result<Asset, Error> {
-        info!("Creating new asset: {}", name);
+        // info!("Creating new asset: {}", name);
+        // info!("Creating new asset with asset_type_id: {}", asset_type_id);
+        // info!("Creating new asset with serial_number: {}", serial_number);
+        // info!("Creating new asset with model_number: {}", model_number);
+        // info!("Creating new asset with purchase_date: {}", purchase_date);
+        // info!("Creating new asset with installation_date: {}", installation_date);
+        // info!("Creating new asset with location_id: {}", location_id);
+        // info!("Creating new asset with manufacturer_id: {}", manufacturer_id);
+        // info!("Creating new asset with  maintenance_frequency: {}", maintenance_frequency);
 
         let db_client = ctx.data::<DbClient>().map_err(|e| {
             warn!("Failed to get db_client from context: {:?}", e);
@@ -40,16 +59,18 @@ impl AssetMutation {
 
         let id = format!("asset-{}", Uuid::new_v4());
 
+        info!("new id: {}", &id);
+
         // Validate that dependencies exist
         let repo = Repository::new(db_client.clone());
 
         // Check if asset type exists
         repo
-            .get::<crate::models::asset_type::AssetType>(type_id.clone()).await
+            .get::<crate::models::asset_type::AssetType>(asset_type_id.clone()).await
             .map_err(|e| e.to_graphql_error())?
             .ok_or_else(|| {
                 AppError::ValidationError(
-                    format!("Asset type {} not found", type_id)
+                    format!("Asset type {} not found", asset_type_id)
                 ).to_graphql_error()
             })?;
 
@@ -77,7 +98,7 @@ impl AssetMutation {
         let asset = Asset::new(
             id,
             name,
-            type_id,
+            asset_type_id,
             serial_number,
             model_number,
             purchase_date,
@@ -98,7 +119,7 @@ impl AssetMutation {
         ctx: &Context<'_>,
         id: String,
         name: Option<String>,
-        type_id: Option<String>,
+        asset_type_id: Option<String>,
         serial_number: Option<String>,
         model_number: Option<String>,
         purchase_date: Option<DateTime<Utc>>,
@@ -126,7 +147,7 @@ impl AssetMutation {
             .ok_or_else(|| AppError::NotFound(format!("Asset {} not found", id)))?;
 
         // Validate dependencies if they're being changed
-        if let Some(ref new_type_id) = type_id {
+        if let Some(ref new_type_id) = asset_type_id {
             repo
                 .get::<crate::models::asset_type::AssetType>(new_type_id.clone()).await
                 .map_err(|e| e.to_graphql_error())?
@@ -163,8 +184,8 @@ impl AssetMutation {
         if let Some(name) = name {
             asset.name = name;
         }
-        if let Some(type_id) = type_id {
-            asset.asset_type_id = type_id;
+        if let Some(id) = asset_type_id {
+            asset.asset_type_id = id;
         }
         if let Some(serial_number) = serial_number {
             asset.serial_number = serial_number;
@@ -339,6 +360,180 @@ impl AssetMutation {
                 ).to_graphql_error()
             )
         }
+    }
+
+    async fn upload_asset_document(
+        &self,
+        ctx: &Context<'_>,
+        asset_id: String,
+        file_upload: Upload
+    ) -> Result<String, Error> {
+        dotenv().ok();
+        let bucket_name = env::var("AWS_S3_BUCKET_NAME")?;
+
+        let s3_client = ctx
+            .data::<S3Client>()
+            .map_err(|e| {
+                AppError::InternalServerError(
+                    format!("s3 client not available: {:?}", e)
+                ).to_graphql_error()
+            })?;
+
+        let upload_value = file_upload.value(ctx)?;
+        let filename = upload_value.filename.to_string();
+        let documentation_key = format!("documentation/asset/{}/{}", asset_id, filename);
+
+        info!("Adding documentation {} to asset {}", documentation_key, asset_id);
+
+        let content_type = upload_value.content_type.clone();
+        let mut file = upload_value.content;
+
+        let mut file_buffer = Vec::new();
+        file.read_to_end(&mut file_buffer)?;
+
+        let byte_stream = ByteStream::from(file_buffer);
+
+        s3_client
+            .put_object()
+            .bucket(bucket_name)
+            .key(&filename)
+            .body(byte_stream)
+            .content_type(content_type.unwrap_or_else(|| "application/octet-stream".to_string()))
+            .send().await
+            .map_err(|e|
+                AppError::InternalServerError(
+                    format!("S3 upload error: {:?}", e)
+                ).to_graphql_error()
+            )?;
+
+        // Fetch the asset and return it (or update as needed)
+        let db_client = ctx
+            .data::<DbClient>()
+            .map_err(|_|
+                AppError::InternalServerError("Database client not available".to_string())
+            )?;
+
+        let repo = Repository::new(db_client.clone());
+
+        let mut asset = repo
+            .get::<Asset>(asset_id.clone()).await
+            .map_err(|e| e.to_graphql_error())?
+            .ok_or_else(|| AppError::NotFound(format!("Asset {} not found", asset_id)))?;
+
+        if !asset.documentation_keys.contains(&documentation_key) {
+            asset.documentation_keys.push(documentation_key.clone());
+            asset.updated_at = Utc::now();
+            repo.update(asset).await.map_err(|e| e.to_graphql_error())?;
+
+            Ok(documentation_key)
+        } else {
+            Ok(documentation_key)
+        }
+    }
+
+    async fn upload_asset_documents(
+        &self,
+        ctx: &Context<'_>,
+        input: DocumentUploadsInput
+    ) -> Result<Vec<String>, Error> {
+        dotenv().ok();
+        let bucket_name = env::var("AWS_S3_BUCKET_NAME")?;
+
+        info!("Uploading {} documents to asset {}", input.file_uploads.len(), input.asset_id);
+
+        let s3_client = ctx
+            .data::<S3Client>()
+            .map_err(|e| {
+                AppError::InternalServerError(
+                    format!("s3 client not available: {:?}", e)
+                ).to_graphql_error()
+            })?;
+
+        let db_client = ctx
+            .data::<DbClient>()
+            .map_err(|e|
+                AppError::InternalServerError(
+                    format!("Database client not available: {:?}", e)
+                ).to_graphql_error()
+            )?;
+
+        let repo = Repository::new(db_client.clone());
+
+        // Verify asset exists first
+        let mut asset = repo
+            .get::<Asset>(input.asset_id.clone()).await
+            .map_err(|e| e.to_graphql_error())?
+            .ok_or_else(|| AppError::NotFound(format!("Asset {} not found", input.asset_id)))?;
+
+        let mut uploaded_keys = Vec::new();
+
+        info!("file_uploads: {:?}", input.file_uploads);
+
+        // Process each file upload
+        for file_upload in input.file_uploads {
+            // Validate file size matches decoded content
+            let bytes = base64::engine::general_purpose::STANDARD
+                .decode(&file_upload.content)
+                .map_err(|e|
+                    AppError::InternalServerError(
+                        format!("Base64 decode error for file {}: {:?}", file_upload.filename, e)
+                    ).to_graphql_error()
+                )?;
+
+            // Validate file size
+            if bytes.len() != (file_upload.size as usize) {
+                return Err(
+                    AppError::ValidationError(
+                        format!(
+                            "File size mismatch for {}: expected {}, got {}",
+                            file_upload.filename,
+                            file_upload.size,
+                            bytes.len()
+                        )
+                    ).to_graphql_error()
+                );
+            }
+
+            let filename = file_upload.filename.clone();
+            let documentation_key = format!("documentation/asset/{}/{}", input.asset_id, filename);
+
+            info!("Uploading file: {}", documentation_key);
+
+            let content_type = file_upload.content_type.clone();
+            let byte_stream = ByteStream::from(bytes);
+
+            // Upload to S3
+            s3_client
+                .put_object()
+                .bucket(&bucket_name)
+                .key(&documentation_key)
+                .body(byte_stream)
+                .content_type(content_type)
+                .send().await
+                .map_err(|e|
+                    AppError::InternalServerError(
+                        format!("S3 upload error for {}: {:?}", filename, e)
+                    ).to_graphql_error()
+                )?;
+
+            // Add documentation key to asset if not already present
+            if !asset.documentation_keys.contains(&documentation_key) {
+                asset.documentation_keys.push(documentation_key.clone());
+            }
+
+            uploaded_keys.push(documentation_key);
+        }
+        info!("upload keys: {:?}", uploaded_keys);
+
+        // Update asset with all new documentation keys
+        if !uploaded_keys.is_empty() {
+            info!("upload keys is not empty: {:?}", uploaded_keys);
+
+            asset.updated_at = Utc::now();
+            repo.update(asset).await.map_err(|e| e.to_graphql_error())?;
+        }
+
+        Ok(uploaded_keys)
     }
 
     /// Add documentation key to asset

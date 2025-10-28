@@ -12,7 +12,7 @@ impl LocationTypeMutation {
         name: String,
         description: String
     ) -> Result<LocationType, Error> {
-        info!("Creating new location_type: {}", name);
+        // info!("Creating new location_type: {}", name);
 
         let db_client = ctx.data::<DbClient>().map_err(|e| {
             warn!("Failed to get db_client from context: {:?}", e);
@@ -23,11 +23,11 @@ impl LocationTypeMutation {
 
         let id = format!("location_type-{}", Uuid::new_v4());
 
-        info!("new location_type id: {:?}", &id);
+        // info!("new location_type id: {:?}", &id);
 
         let location_type = LocationType::new(id, name, description);
 
-        info!("new location_type : {:?}", &location_type);
+        // info!("new location_type : {:?}", &location_type);
 
         location_type.validate().map_err(|e| { AppError::ValidationError(e).to_graphql_error() })?;
 
@@ -44,7 +44,7 @@ impl LocationTypeMutation {
         name: Option<String>,
         description: Option<String>
     ) -> Result<LocationType, Error> {
-        info!("Updating location_type: {}", id);
+        // info!("Updating location_type: {}", id);
 
         let db_client = ctx
             .data::<DbClient>()
@@ -74,7 +74,7 @@ impl LocationTypeMutation {
 
     /// Delete a location type
     async fn delete_location_type(&self, ctx: &Context<'_>, id: String) -> Result<bool, Error> {
-        info!("Deleting location_type: {}", id);
+        // info!("Deleting location_type: {}", id);
 
         let db_client = ctx
             .data::<DbClient>()

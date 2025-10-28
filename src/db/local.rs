@@ -9,7 +9,7 @@ use crate::error::AppError;
 pub async fn setup_local_client() -> Result<Client, AppError> {
     dotenv().ok();
     let region_provider = RegionProviderChain::default_provider().or_else("us-east-2");
-    info!("db region provider value: {:?}", &region_provider);
+    // info!("db region provider value: {:?}", &region_provider);
 
     let config = aws_config
         ::from_env()

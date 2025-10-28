@@ -149,7 +149,7 @@ impl DynamoDbEntity for NotificationDeliveryLog {
     ///
     /// 'Some' NotificationDeliveryLog if item fields match, 'None' otherwise
     fn from_item(item: &HashMap<String, AttributeValue>) -> Option<Self> {
-        info!("calling from_item with: {:?}", &item);
+        // info!("calling from_item with: {:?}", &item);
 
         let id = item.get("id")?.as_s().ok()?.to_string();
         let notification_id = item.get("notification_id")?.as_s().ok()?.to_string();
@@ -217,7 +217,7 @@ impl DynamoDbEntity for NotificationDeliveryLog {
             updated_at,
         });
 
-        info!("result of from_item on notification_delivery_log: {:?}", res);
+        // info!("result of from_item on notification_delivery_log: {:?}", res);
         res
     }
 

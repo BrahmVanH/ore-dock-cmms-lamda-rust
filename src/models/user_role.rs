@@ -335,7 +335,7 @@ impl DynamoDbEntity for UserRole {
     ///
     /// 'Some' UserRole if item fields match, 'None' otherwise
     fn from_item(item: &HashMap<String, AttributeValue>) -> Option<Self> {
-        info!("calling from_item with: {:?}", &item);
+        // info!("calling from_item with: {:?}", &item);
 
         let id = item.get("id")?.as_s().ok()?.to_string();
         let user_id = item.get("user_id")?.as_s().ok()?.to_string();
@@ -447,7 +447,7 @@ impl DynamoDbEntity for UserRole {
             updated_at,
         });
 
-        info!("result of from_item on user_role: {:?}", res);
+        // info!("result of from_item on user_role: {:?}", res);
         res
     }
 

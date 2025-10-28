@@ -42,7 +42,7 @@ impl WorkOrderMutation {
         estimated_cost: String,
         created_by: String
     ) -> Result<WorkOrder, Error> {
-        info!("Creating new work order: {}", title);
+        // info!("Creating new work order: {}", title);
 
         let db_client = ctx.data::<DbClient>().map_err(|e| {
             warn!("Failed to get db_client from context: {:?}", e);
@@ -150,7 +150,7 @@ impl WorkOrderMutation {
         estimated_duration_minutes: Option<i32>,
         estimated_cost: Option<String>
     ) -> Result<WorkOrder, Error> {
-        info!("Updating work order: {}", id);
+        // info!("Updating work order: {}", id);
 
         let db_client = ctx
             .data::<DbClient>()
@@ -234,7 +234,7 @@ impl WorkOrderMutation {
         severity: String,
         difficulty: String
     ) -> Result<WorkOrder, Error> {
-        info!("Updating work order classification: {}", id);
+        // info!("Updating work order classification: {}", id);
 
         let db_client = ctx
             .data::<DbClient>()
@@ -268,7 +268,7 @@ impl WorkOrderMutation {
         id: String,
         technician_id: String
     ) -> Result<WorkOrder, Error> {
-        info!("Starting work order: {}", id);
+        // info!("Starting work order: {}", id);
 
         let db_client = ctx
             .data::<DbClient>()
@@ -297,7 +297,7 @@ impl WorkOrderMutation {
         actual_cost: Option<String>,
         labor_hours: Option<f64>
     ) -> Result<WorkOrder, Error> {
-        info!("Completing work order: {}", id);
+        // info!("Completing work order: {}", id);
 
         let db_client = ctx
             .data::<DbClient>()
@@ -340,7 +340,7 @@ impl WorkOrderMutation {
         id: String,
         reason: String
     ) -> Result<WorkOrder, Error> {
-        info!("Cancelling work order: {}", id);
+        // info!("Cancelling work order: {}", id);
 
         let db_client = ctx
             .data::<DbClient>()
@@ -367,7 +367,7 @@ impl WorkOrderMutation {
         id: String,
         reason: String
     ) -> Result<WorkOrder, Error> {
-        info!("Putting work order on hold: {}", id);
+        // info!("Putting work order on hold: {}", id);
 
         let db_client = ctx
             .data::<DbClient>()
@@ -393,7 +393,7 @@ impl WorkOrderMutation {
         ctx: &Context<'_>,
         id: String
     ) -> Result<WorkOrder, Error> {
-        info!("Resuming work order from hold: {}", id);
+        // info!("Resuming work order from hold: {}", id);
 
         let db_client = ctx
             .data::<DbClient>()
@@ -420,7 +420,7 @@ impl WorkOrderMutation {
         id: String,
         status: String
     ) -> Result<WorkOrder, Error> {
-        info!("Updating work order status: {} to {}", id, status);
+        // info!("Updating work order status: {} to {}", id, status);
 
         let db_client = ctx
             .data::<DbClient>()
@@ -445,7 +445,7 @@ impl WorkOrderMutation {
 
     /// Delete a work order
     async fn delete_work_order(&self, ctx: &Context<'_>, id: String) -> Result<bool, Error> {
-        info!("Deleting work order: {}", id);
+        // info!("Deleting work order: {}", id);
 
         let db_client = ctx
             .data::<DbClient>()

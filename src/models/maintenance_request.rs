@@ -237,7 +237,7 @@ impl DynamoDbEntity for MaintenanceRequest {
         self.id.clone()
     }
     fn from_item(item: &HashMap<String, AttributeValue>) -> Option<Self> {
-        info!("calling from_item with: {:?}", &item);
+        // info!("calling from_item with: {:?}", &item);
 
         let id = item.get("id")?.as_s().ok()?.to_string();
         let submitted_by = item.get("submitted_by")?.as_s().ok()?.to_string();

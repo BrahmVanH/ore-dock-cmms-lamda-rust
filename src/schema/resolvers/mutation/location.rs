@@ -27,7 +27,7 @@ impl LocationMutation {
         address: AddressInput,
         coordinates: Option<String>
     ) -> Result<Location, Error> {
-        info!("Creating new location: {}", name);
+        // info!("Creating new location: {}", name);
 
         let db_client = ctx.data::<DbClient>().map_err(|e| {
             warn!("Failed to get db_client from context: {:?}", e);
@@ -89,7 +89,7 @@ impl LocationMutation {
         coordinates: Option<String>,
         is_active: Option<bool>
     ) -> Result<Location, Error> {
-        info!("Updating location: {}", id);
+        // info!("Updating location: {}", id);
 
         let db_client = ctx
             .data::<DbClient>()
@@ -170,7 +170,7 @@ impl LocationMutation {
 
     /// Activate a location
     async fn activate_location(&self, ctx: &Context<'_>, id: String) -> Result<Location, Error> {
-        info!("Activating location: {}", id);
+        // info!("Activating location: {}", id);
 
         let db_client = ctx
             .data::<DbClient>()
@@ -193,7 +193,7 @@ impl LocationMutation {
 
     /// Deactivate a location
     async fn deactivate_location(&self, ctx: &Context<'_>, id: String) -> Result<Location, Error> {
-        info!("Deactivating location: {}", id);
+        // info!("Deactivating location: {}", id);
 
         let db_client = ctx
             .data::<DbClient>()
@@ -225,7 +225,7 @@ impl LocationMutation {
         id: String,
         new_parent_id: Option<String>
     ) -> Result<Location, Error> {
-        info!("Moving location {} to parent {:?}", id, new_parent_id);
+        // info!("Moving location {} to parent {:?}", id, new_parent_id);
 
         let db_client = ctx
             .data::<DbClient>()
@@ -280,7 +280,7 @@ impl LocationMutation {
 
     /// Delete a location
     async fn delete_location(&self, ctx: &Context<'_>, id: String) -> Result<bool, Error> {
-        info!("Deleting location: {}", id);
+        // info!("Deleting location: {}", id);
 
         let db_client = ctx
             .data::<DbClient>()

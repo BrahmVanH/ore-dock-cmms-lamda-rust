@@ -52,7 +52,7 @@ impl AssetTypeQuery {
                 ).to_graphql_error()
             })?;
 
-        info!("get all users response: {:?}", response);
+        // info!("get all users response: {:?}", response);
 
         let asset_types = response
             .items()
@@ -60,7 +60,7 @@ impl AssetTypeQuery {
             .filter_map(|item| AssetType::from_item(item))
             .collect::<Vec<AssetType>>();
 
-        info!("asset_types from response items: {:?}", asset_types);
+        // info!("asset_types from response items: {:?}", asset_types);
 
         Ok(asset_types)
     }

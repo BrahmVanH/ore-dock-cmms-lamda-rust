@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use async_graphql::Enum;
+use async_graphql::{ Enum, InputObject, Upload };
 use aws_sdk_dynamodb::types::AttributeValue;
 use chrono::{ offset::LocalResult, DateTime, TimeZone, Utc };
 use rust_decimal::Decimal;
@@ -8,6 +8,21 @@ use serde::{ Deserialize, Serialize };
 use tracing::info;
 
 use crate::{ error::AppError, repository::DynamoDbEntity };
+
+#[derive(Clone, Debug, InputObject)]
+pub struct DocumentUpload {
+    pub filename: String,
+    #[graphql(name = "contentType")]
+    pub content_type: String,
+    pub content: String, // base64 encoded
+    pub size: i32,
+}
+
+#[derive(Clone, Debug, InputObject)]
+pub struct DocumentUploadsInput {
+    pub asset_id: String,
+    pub file_uploads: Vec<DocumentUpload>,
+}
 
 #[derive(Enum, Copy, Clone, PartialEq, Eq, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "snake_case")]
@@ -22,29 +37,29 @@ pub enum MaintenanceFrequencyOptions {
 impl MaintenanceFrequencyOptions {
     pub(crate) fn to_string(&self) -> String {
         match self {
-            &MaintenanceFrequencyOptions::OneTime => "one-time".to_string(),
+            &MaintenanceFrequencyOptions::OneTime => "one_time".to_string(),
             &MaintenanceFrequencyOptions::Annually => "annually".to_string(),
             &MaintenanceFrequencyOptions::Quarterly => "quarterly".to_string(),
             &MaintenanceFrequencyOptions::Monthly => "monthly".to_string(),
-            &MaintenanceFrequencyOptions::AsNeeded => "as-needed".to_string(),
+            &MaintenanceFrequencyOptions::AsNeeded => "as_needed".to_string(),
         }
     }
     pub(crate) fn to_str(&self) -> &str {
         match self {
-            &MaintenanceFrequencyOptions::OneTime => "one-time",
+            &MaintenanceFrequencyOptions::OneTime => "one_time",
             &MaintenanceFrequencyOptions::Annually => "annually",
             &MaintenanceFrequencyOptions::Quarterly => "quarterly",
             &MaintenanceFrequencyOptions::Monthly => "monthly",
-            &MaintenanceFrequencyOptions::AsNeeded => "as-needed",
+            &MaintenanceFrequencyOptions::AsNeeded => "as_needed",
         }
     }
     pub(crate) fn from_string(s: &str) -> Result<MaintenanceFrequencyOptions, AppError> {
         match s {
-            "one-time" => Ok(Self::OneTime),
+            "one_time" => Ok(Self::OneTime),
             "annually" => Ok(Self::Annually),
             "quarterly" => Ok(Self::Quarterly),
             "monthly" => Ok(Self::Monthly),
-            "as-needed" => Ok(Self::AsNeeded),
+            "as_needed" => Ok(Self::AsNeeded),
             _ =>
                 Err(
                     AppError::DatabaseError(
@@ -81,7 +96,7 @@ impl AssetCurrentStatusOptions {
             &AssetCurrentStatusOptions::Down => "down".to_string(),
             &AssetCurrentStatusOptions::Maintenance => "maintenance".to_string(),
             &AssetCurrentStatusOptions::Retired => "retired".to_string(),
-            &AssetCurrentStatusOptions::NeedsAttention => "needs-attention".to_string(),
+            &AssetCurrentStatusOptions::NeedsAttention => "needs_attention".to_string(),
         }
     }
     pub(crate) fn to_str(&self) -> &str {
@@ -90,7 +105,7 @@ impl AssetCurrentStatusOptions {
             &AssetCurrentStatusOptions::Down => "down",
             &AssetCurrentStatusOptions::Maintenance => "maintenance",
             &AssetCurrentStatusOptions::Retired => "retired",
-            &AssetCurrentStatusOptions::NeedsAttention => "needs-attention",
+            &AssetCurrentStatusOptions::NeedsAttention => "needs_attention",
         }
     }
     pub(crate) fn from_string(s: &str) -> Result<AssetCurrentStatusOptions, AppError> {
@@ -99,7 +114,7 @@ impl AssetCurrentStatusOptions {
             "down" => Ok(Self::Down),
             "maintenance" => Ok(Self::Maintenance),
             "retired" => Ok(Self::Retired),
-            "needs-attention" => Ok(Self::NeedsAttention),
+            "needs_attention" => Ok(Self::NeedsAttention),
             _ => {
                 return Err(
                     AppError::DatabaseError(
@@ -289,7 +304,7 @@ impl DynamoDbEntity for Asset {
     ///
     /// 'Some' Asset if item fields match, 'None' otherwise
     fn from_item(item: &HashMap<String, AttributeValue>) -> Option<Self> {
-        info!("calling from_item with: {:?}", &item);
+        // info!("calling from_item with: {:?}", &item);
 
         let id = item.get("id")?.as_s().ok()?.to_string();
         let name = item.get("name")?.as_s().ok()?.to_string();
@@ -408,7 +423,7 @@ impl DynamoDbEntity for Asset {
             updated_at,
         });
 
-        info!("result of from_item on asset: {:?}", res);
+        // info!("result of from_item on asset: {:?}", res);
         res
     }
 

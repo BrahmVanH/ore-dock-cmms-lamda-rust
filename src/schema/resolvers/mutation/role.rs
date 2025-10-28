@@ -25,7 +25,7 @@ impl RoleMutation {
         max_users: Option<i32>,
         created_by: Option<String>
     ) -> Result<Role, Error> {
-        info!("Creating new role: {}", name);
+        // info!("Creating new role: {}", name);
 
         let db_client = ctx.data::<DbClient>().map_err(|e| {
             warn!("Failed to get db_client from context: {:?}", e);
@@ -98,7 +98,7 @@ impl RoleMutation {
         expires_at: Option<DateTime<Utc>>,
         max_users: Option<i32>
     ) -> Result<Role, Error> {
-        info!("Updating role: {}", id);
+        // info!("Updating role: {}", id);
 
         let db_client = ctx
             .data::<DbClient>()
@@ -195,7 +195,7 @@ impl RoleMutation {
         role_id: String,
         permission_id: String
     ) -> Result<Role, Error> {
-        info!("Adding permission {} to role {}", permission_id, role_id);
+        // info!("Adding permission {} to role {}", permission_id, role_id);
 
         let db_client = ctx
             .data::<DbClient>()
@@ -238,7 +238,7 @@ impl RoleMutation {
         role_id: String,
         permission_id: String
     ) -> Result<Role, Error> {
-        info!("Removing permission {} from role {}", permission_id, role_id);
+        // info!("Removing permission {} from role {}", permission_id, role_id);
 
         let db_client = ctx
             .data::<DbClient>()
@@ -272,7 +272,7 @@ impl RoleMutation {
         role_id: String,
         permission_ids: Vec<String>
     ) -> Result<Role, Error> {
-        info!("Setting permissions for role {}", role_id);
+        // info!("Setting permissions for role {}", role_id);
 
         let db_client = ctx
             .data::<DbClient>()
@@ -313,7 +313,7 @@ impl RoleMutation {
     }
 
     async fn activate_role(&self, ctx: &Context<'_>, id: String) -> Result<Role, Error> {
-        info!("Activating role: {}", id);
+        // info!("Activating role: {}", id);
 
         let db_client = ctx
             .data::<DbClient>()
@@ -335,7 +335,7 @@ impl RoleMutation {
     }
 
     async fn deactivate_role(&self, ctx: &Context<'_>, id: String) -> Result<Role, Error> {
-        info!("Deactivating role: {}", id);
+        // info!("Deactivating role: {}", id);
 
         let db_client = ctx
             .data::<DbClient>()
@@ -370,7 +370,7 @@ impl RoleMutation {
         id: String,
         new_expiration: DateTime<Utc>
     ) -> Result<Role, Error> {
-        info!("Extending role expiration: {}", id);
+        // info!("Extending role expiration: {}", id);
 
         let db_client = ctx
             .data::<DbClient>()
@@ -407,7 +407,7 @@ impl RoleMutation {
         new_description: Option<String>,
         created_by: Option<String>
     ) -> Result<Role, Error> {
-        info!("Cloning role {} to {}", source_role_id, new_name);
+        // info!("Cloning role {} to {}", source_role_id, new_name);
 
         let db_client = ctx.data::<DbClient>().map_err(|e| {
             warn!("Failed to get db_client from context: {:?}", e);
@@ -459,7 +459,7 @@ impl RoleMutation {
         permission_ids: Vec<String>,
         operation: String
     ) -> Result<Vec<Role>, Error> {
-        info!("Bulk updating permissions for {} roles", role_ids.len());
+        // info!("Bulk updating permissions for {} roles", role_ids.len());
 
         let db_client = ctx
             .data::<DbClient>()
@@ -531,7 +531,7 @@ impl RoleMutation {
         id: String,
         force: Option<bool>
     ) -> Result<bool, Error> {
-        info!("Deleting role: {}", id);
+        // info!("Deleting role: {}", id);
 
         let db_client = ctx
             .data::<DbClient>()

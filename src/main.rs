@@ -8,13 +8,14 @@ use ore_dock_cmms_lambda::{
     context::{ AppContext, ContextExtensions },
     create_schema,
     db,
-    AppError,
+    s3::connect::setup_aws_s3_client,
     DbClient,
     GraphQLSchema,
+    S3Client,
 };
 use tower::ServiceBuilder;
 use tower_http::{ compression::CompressionLayer, cors::{ Any, CorsLayer } };
-use async_graphql_axum::{ GraphQLRequest, GraphQLResponse };
+use async_graphql_axum::{ GraphQLBatchRequest, GraphQLRequest, GraphQLResponse };
 use serde::Serialize;
 use tracing::{ info, error };
 
@@ -42,9 +43,9 @@ impl std::error::Error for FailureResponse {}
 // Handler for GraphQL requests
 async fn graphql_handler(
     Extension(schema): Extension<GraphQLSchema>,
-    req: GraphQLRequest
+    req: GraphQLBatchRequest
 ) -> GraphQLResponse {
-    schema.execute(req.into_inner()).await.into()
+    schema.execute_batch(req.into_inner()).await.into()
 }
 
 // Handler for GraphQL playground
@@ -67,18 +68,26 @@ async fn main() {
     info!("Starting up Ore Dock CMMS Lambda service");
 
     // Load configuration
-    let config = Config::from_env().unwrap_or_else(|e| {
+    let db_config = Config::from_env().unwrap_or_else(|e| {
         error!("Failed to load configuration, using defaults: {}", e);
         Config::default()
     });
 
-    info!("Configuration loaded: {:?}", config);
+    info!("Configuration loaded: {:?}", db_config);
 
     // Create database client
-    let db_client = match setup_database_client(&config).await {
+    let db_client = match setup_database_client(&db_config).await {
         Ok(client) => client,
         Err(e) => {
             error!("Fatal error creating database client: {}", e);
+            std::process::exit(1);
+        }
+    };
+
+    let s3_client: S3Client = match setup_aws_s3_client().await {
+        Ok(client) => client,
+        Err(e) => {
+            error!("Fatal error creating aws s3 client: {}", e);
             std::process::exit(1);
         }
     };
@@ -92,19 +101,20 @@ async fn main() {
     info!("Database tables verified/created successfully");
 
     // Create application context
-    let app_context = AppContext::new(db_client.clone(), config.clone());
+    let app_context = AppContext::new(db_client.clone(), db_config.clone(), s3_client.clone());
 
     // Create GraphQL schema with all necessary data
     let schema = create_schema()
         .data(db_client.clone()) // For backward compatibility with existing resolvers
-        .data(config.clone())
+        .data(db_config.clone())
+        .data(s3_client.clone())
         .data(app_context)
         .finish();
 
     info!("GraphQL schema created successfully");
 
     // Configure CORS based on environment
-    let cors = if config.graphql.playground {
+    let cors = if db_config.graphql.playground {
         // Development mode - allow all origins
         CorsLayer::new()
             .allow_origin(Any)
@@ -112,7 +122,7 @@ async fn main() {
             .allow_headers(Any)
     } else {
         // Production mode - restrict origins (you'd configure this based on your needs)
-        let allowed_origins: Vec<String> = config
+        let allowed_origins: Vec<String> = db_config
             .clone()
             .allow_origins.split(",")
             .map(|s| s.to_string())
@@ -140,7 +150,9 @@ async fn main() {
     let mut router = Router::new();
 
     // Add GraphQL endpoint
-    router = router.route("/graphql", get(graphql_playground).post(graphql_handler));
+    router = router
+        .route("/graphql", get(graphql_playground))
+        .route("/graphql", axum::routing::post(graphql_handler));
 
     // Add health check endpoint
     router = router.route("/health", get(health_check));
@@ -151,7 +163,7 @@ async fn main() {
             .layer(CompressionLayer::new().gzip(true).deflate(true).br(true))
             .layer(Extension(db_client))
             .layer(Extension(schema))
-            .layer(Extension(config.clone()))
+            .layer(Extension(db_config.clone()))
             .layer(cors)
     );
 
@@ -210,7 +222,7 @@ async fn setup_local_client_with_config(
 
     let aws_config = aws_config
         ::from_env()
-        .behavior_version(BehaviorVersion::v2025_01_17())
+        .behavior_version(BehaviorVersion::v2025_08_07())
         .region(region_provider)
         .load().await;
 
@@ -241,7 +253,7 @@ async fn setup_aws_client_with_config(
 
     let mut aws_config_builder = aws_config
         ::from_env()
-        .behavior_version(BehaviorVersion::v2025_01_17())
+        .behavior_version(BehaviorVersion::v2025_08_07())
         .region(region_provider);
 
     // Override credentials if provided in config

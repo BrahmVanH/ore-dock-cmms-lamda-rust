@@ -1,5 +1,7 @@
+use async_graphql::Upload;
+
 use crate::models::{
-    asset::{ AssetCurrentStatusOptions, MaintenanceFrequencyOptions },
+    asset::{ AssetCurrentStatusOptions, DocumentUpload, MaintenanceFrequencyOptions },
     prelude::*,
 };
 #[Object]
@@ -84,3 +86,4 @@ impl Asset {
         &self.updated_at
     }
 }
+

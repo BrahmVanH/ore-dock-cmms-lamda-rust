@@ -437,7 +437,7 @@ impl DynamoDbEntity for User {
     ///
     /// 'Some' User if item fields match, 'None' otherwise
     fn from_item(item: &HashMap<String, AttributeValue>) -> Option<Self> {
-        info!("calling from_item with: {:?}", &item);
+        // info!("calling from_item with: {:?}", &item);
 
         let id = item.get("id")?.as_s().ok()?.to_string();
         let username = item.get("username")?.as_s().ok()?.to_string();
@@ -631,7 +631,7 @@ impl DynamoDbEntity for User {
             updated_at,
         });
 
-        info!("result of from_item on user: {:?}", res);
+        // info!("result of from_item on user: {:?}", res);
         res
     }
 

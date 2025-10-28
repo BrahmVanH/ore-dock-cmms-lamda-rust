@@ -9,15 +9,15 @@ use crate::error::AppError;
 pub async fn setup_local_client() -> Result<Client, AppError> {
     dotenv().ok();
     let region_provider = RegionProviderChain::default_provider().or_else("us-east-2");
-    info!("db region provider value: {:?}", &region_provider);
+    // info!("db region provider value: {:?}", &region_provider);
 
     let config = aws_config
         ::from_env()
-        .behavior_version(BehaviorVersion::v2025_01_17())
+        .behavior_version(BehaviorVersion::v2025_08_07())
         .region(region_provider)
         .load().await;
 
-    info!("db config value: {:?}", &config);
+    // info!("db config value: {:?}", &config);
 
     // Load DB_URL from ENV
     let db_url = match env::var("DB_URL") {

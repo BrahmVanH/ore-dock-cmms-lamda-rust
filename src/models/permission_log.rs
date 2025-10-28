@@ -265,7 +265,7 @@ impl PermissionLog {
     ///
     /// 'Some' PermissionLog if item fields match, 'None' otherwise
     pub(crate) fn from_item(item: &HashMap<String, AttributeValue>) -> Option<Self> {
-        info!("calling from_item with: {:?}", &item);
+        // info!("calling from_item with: {:?}", &item);
 
         let id = item.get("id")?.as_s().ok()?.to_string();
         let user_id = item.get("user_id")?.as_s().ok()?.to_string();
@@ -346,7 +346,7 @@ impl PermissionLog {
             updated_at,
         });
 
-        info!("result of from_item on permission_log: {:?}", res);
+        // info!("result of from_item on permission_log: {:?}", res);
         res
     }
 

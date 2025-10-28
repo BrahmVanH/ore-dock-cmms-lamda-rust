@@ -521,7 +521,7 @@ impl DynamoDbEntity for WorkOrder {
     }
 
     fn from_item(item: &HashMap<String, AttributeValue>) -> Option<Self> {
-        info!("calling from_item with: {:?}", &item);
+        // info!("calling from_item with: {:?}", &item);
 
         let id = item.get("id")?.as_s().ok()?.to_string();
         let work_order_number = item.get("work_order_number")?.as_s().ok()?.to_string();

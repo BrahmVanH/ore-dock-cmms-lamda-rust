@@ -26,7 +26,7 @@ impl MaintenanceScheduleMutation {
         recurring: Option<bool>,
         active: Option<bool>
     ) -> Result<MaintenanceSchedule, Error> {
-        info!("Creating new maintenance schedule for asset: {}", asset_id);
+        // info!("Creating new maintenance schedule for asset: {}", asset_id);
 
         let db_client = ctx.data::<DbClient>().map_err(|e| {
             warn!("Failed to get db_client from context: {:?}", e);
@@ -90,7 +90,7 @@ impl MaintenanceScheduleMutation {
         recurring: Option<bool>,
         active: Option<bool>
     ) -> Result<MaintenanceSchedule, Error> {
-        info!("Updating maintenance schedule: {}", id);
+        // info!("Updating maintenance schedule: {}", id);
 
         let db_client = ctx
             .data::<DbClient>()
@@ -153,7 +153,7 @@ impl MaintenanceScheduleMutation {
         completed_by_user_id: String,
         completed_at: Option<DateTime<Utc>>
     ) -> Result<MaintenanceSchedule, Error> {
-        info!("Completing maintenance schedule: {}", id);
+        // info!("Completing maintenance schedule: {}", id);
 
         let db_client = ctx
             .data::<DbClient>()
@@ -206,7 +206,7 @@ impl MaintenanceScheduleMutation {
         id: String,
         new_due_date: DateTime<Utc>
     ) -> Result<MaintenanceSchedule, Error> {
-        info!("Rescheduling maintenance schedule: {}", id);
+        // info!("Rescheduling maintenance schedule: {}", id);
 
         let db_client = ctx
             .data::<DbClient>()
@@ -232,7 +232,7 @@ impl MaintenanceScheduleMutation {
         ctx: &Context<'_>,
         id: String
     ) -> Result<MaintenanceSchedule, Error> {
-        info!("Activating maintenance schedule: {}", id);
+        // info!("Activating maintenance schedule: {}", id);
 
         let db_client = ctx
             .data::<DbClient>()
@@ -258,7 +258,7 @@ impl MaintenanceScheduleMutation {
         ctx: &Context<'_>,
         id: String
     ) -> Result<MaintenanceSchedule, Error> {
-        info!("Deactivating maintenance schedule: {}", id);
+        // info!("Deactivating maintenance schedule: {}", id);
 
         let db_client = ctx
             .data::<DbClient>()
@@ -286,7 +286,7 @@ impl MaintenanceScheduleMutation {
         interval: i32,
         unit: String
     ) -> Result<MaintenanceSchedule, Error> {
-        info!("Adding cadence to maintenance schedule: {}", id);
+        // info!("Adding cadence to maintenance schedule: {}", id);
 
         let db_client = ctx
             .data::<DbClient>()
@@ -321,7 +321,7 @@ impl MaintenanceScheduleMutation {
         target_asset_id: String,
         next_due_at: Option<DateTime<Utc>>
     ) -> Result<MaintenanceSchedule, Error> {
-        info!("Cloning maintenance schedule {} to asset {}", source_schedule_id, target_asset_id);
+        // info!("Cloning maintenance schedule {} to asset {}", source_schedule_id, target_asset_id);
 
         let db_client = ctx.data::<DbClient>().map_err(|e| {
             warn!("Failed to get db_client from context: {:?}", e);
@@ -372,7 +372,7 @@ impl MaintenanceScheduleMutation {
         schedule_ids: Vec<String>,
         days_to_add: i32
     ) -> Result<Vec<MaintenanceSchedule>, Error> {
-        info!("Bulk rescheduling {} maintenance schedules", schedule_ids.len());
+        // info!("Bulk rescheduling {} maintenance schedules", schedule_ids.len());
 
         let db_client = ctx
             .data::<DbClient>()
@@ -409,7 +409,7 @@ impl MaintenanceScheduleMutation {
         recurring: Option<bool>,
         duration_estimate: Option<i32>
     ) -> Result<Vec<MaintenanceSchedule>, Error> {
-        info!("Bulk updating {} maintenance schedules", schedule_ids.len());
+        // info!("Bulk updating {} maintenance schedules", schedule_ids.len());
 
         let db_client = ctx
             .data::<DbClient>()
@@ -461,11 +461,11 @@ impl MaintenanceScheduleMutation {
         target_asset_id: String,
         active_only: Option<bool>
     ) -> Result<Vec<MaintenanceSchedule>, Error> {
-        info!(
-            "Copying maintenance schedules from asset {} to asset {}",
-            source_asset_id,
-            target_asset_id
-        );
+        // info!(
+            // "Copying maintenance schedules from asset {} to asset {}",
+            // source_asset_id,
+            // target_asset_id
+        // );
 
         let db_client = ctx.data::<DbClient>().map_err(|e| {
             warn!("Failed to get db_client from context: {:?}", e);
@@ -540,7 +540,7 @@ impl MaintenanceScheduleMutation {
         ctx: &Context<'_>,
         id: String
     ) -> Result<bool, Error> {
-        info!("Deleting maintenance schedule: {}", id);
+        // info!("Deleting maintenance schedule: {}", id);
 
         let db_client = ctx
             .data::<DbClient>()
@@ -563,7 +563,7 @@ impl MaintenanceScheduleMutation {
         ctx: &Context<'_>,
         asset_id: String
     ) -> Result<i32, Error> {
-        info!("Deleting all maintenance schedules for asset: {}", asset_id);
+        // info!("Deleting all maintenance schedules for asset: {}", asset_id);
 
         let db_client = ctx
             .data::<DbClient>()

@@ -28,7 +28,7 @@ impl PermissionMutation {
         expires_at: Option<DateTime<Utc>>,
         created_by: String
     ) -> Result<Permission, Error> {
-        info!("Creating new permission for role: {}", role_id);
+        // info!("Creating new permission for role: {}", role_id);
 
         let db_client = ctx.data::<DbClient>().map_err(|e| {
             warn!("Failed to get db_client from context: {:?}", e);
@@ -102,7 +102,7 @@ impl PermissionMutation {
         active: Option<bool>,
         expires_at: Option<DateTime<Utc>>
     ) -> Result<Permission, Error> {
-        info!("Updating permission: {}", id);
+        // info!("Updating permission: {}", id);
 
         let db_client = ctx
             .data::<DbClient>()
@@ -182,7 +182,7 @@ impl PermissionMutation {
         permission_id: String,
         action: String
     ) -> Result<Permission, Error> {
-        info!("Adding action {} to permission {}", action, permission_id);
+        // info!("Adding action {} to permission {}", action, permission_id);
 
         let db_client = ctx
             .data::<DbClient>()
@@ -213,7 +213,7 @@ impl PermissionMutation {
         permission_id: String,
         action: String
     ) -> Result<Permission, Error> {
-        info!("Removing action {} from permission {}", action, permission_id);
+        // info!("Removing action {} from permission {}", action, permission_id);
 
         let db_client = ctx
             .data::<DbClient>()
@@ -250,7 +250,7 @@ impl PermissionMutation {
         ctx: &Context<'_>,
         id: String
     ) -> Result<Permission, Error> {
-        info!("Activating permission: {}", id);
+        // info!("Activating permission: {}", id);
 
         let db_client = ctx
             .data::<DbClient>()
@@ -276,7 +276,7 @@ impl PermissionMutation {
         ctx: &Context<'_>,
         id: String
     ) -> Result<Permission, Error> {
-        info!("Deactivating permission: {}", id);
+        // info!("Deactivating permission: {}", id);
 
         let db_client = ctx
             .data::<DbClient>()
@@ -303,7 +303,7 @@ impl PermissionMutation {
         id: String,
         new_expiration: DateTime<Utc>
     ) -> Result<Permission, Error> {
-        info!("Extending permission expiration: {}", id);
+        // info!("Extending permission expiration: {}", id);
 
         let db_client = ctx
             .data::<DbClient>()
@@ -339,7 +339,7 @@ impl PermissionMutation {
         new_role_id: String,
         created_by: String
     ) -> Result<Permission, Error> {
-        info!("Cloning permission {} to role {}", source_permission_id, new_role_id);
+        // info!("Cloning permission {} to role {}", source_permission_id, new_role_id);
 
         let db_client = ctx.data::<DbClient>().map_err(|e| {
             warn!("Failed to get db_client from context: {:?}", e);
@@ -394,7 +394,7 @@ impl PermissionMutation {
         active: Option<bool>,
         expires_at: Option<DateTime<Utc>>
     ) -> Result<Vec<Permission>, Error> {
-        info!("Bulk updating {} permissions", permission_ids.len());
+        // info!("Bulk updating {} permissions", permission_ids.len());
 
         let db_client = ctx
             .data::<DbClient>()
@@ -442,7 +442,7 @@ impl PermissionMutation {
         created_by: String,
         exclude_expired: Option<bool>
     ) -> Result<Vec<Permission>, Error> {
-        info!("Copying permissions from role {} to role {}", source_role_id, target_role_id);
+        // info!("Copying permissions from role {} to role {}", source_role_id, target_role_id);
 
         let db_client = ctx.data::<DbClient>().map_err(|e| {
             warn!("Failed to get db_client from context: {:?}", e);
@@ -517,7 +517,7 @@ impl PermissionMutation {
     }
 
     async fn delete_permission(&self, ctx: &Context<'_>, id: String) -> Result<bool, Error> {
-        info!("Deleting permission: {}", id);
+        // info!("Deleting permission: {}", id);
 
         let db_client = ctx
             .data::<DbClient>()
@@ -540,7 +540,7 @@ impl PermissionMutation {
         ctx: &Context<'_>,
         role_id: String
     ) -> Result<i32, Error> {
-        info!("Deleting all permissions for role: {}", role_id);
+        // info!("Deleting all permissions for role: {}", role_id);
 
         let db_client = ctx
             .data::<DbClient>()

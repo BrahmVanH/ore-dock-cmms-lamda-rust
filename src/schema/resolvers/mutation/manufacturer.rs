@@ -28,7 +28,7 @@ impl ManufacturerMutation {
         warranty_contact: Option<String>,
         active: Option<bool>
     ) -> Result<Manufacturer, Error> {
-        info!("Creating new manufacturer: {}", name);
+        // info!("Creating new manufacturer: {}", name);
 
         let db_client = ctx.data::<DbClient>().map_err(|e| {
             warn!("Failed to get db_client from context: {:?}", e);
@@ -93,7 +93,7 @@ impl ManufacturerMutation {
         warranty_contact: Option<String>,
         active: Option<bool>
     ) -> Result<Manufacturer, Error> {
-        info!("Updating manufacturer: {}", id);
+        // info!("Updating manufacturer: {}", id);
 
         let db_client = ctx
             .data::<DbClient>()
@@ -215,7 +215,7 @@ impl ManufacturerMutation {
         ctx: &Context<'_>,
         id: String
     ) -> Result<Manufacturer, Error> {
-        info!("Activating manufacturer: {}", id);
+        // info!("Activating manufacturer: {}", id);
 
         let db_client = ctx
             .data::<DbClient>()
@@ -241,7 +241,7 @@ impl ManufacturerMutation {
         ctx: &Context<'_>,
         id: String
     ) -> Result<Manufacturer, Error> {
-        info!("Deactivating manufacturer: {}", id);
+        // info!("Deactivating manufacturer: {}", id);
 
         let db_client = ctx
             .data::<DbClient>()
@@ -271,7 +271,7 @@ impl ManufacturerMutation {
         support_contact: Option<String>,
         warranty_contact: Option<String>
     ) -> Result<Manufacturer, Error> {
-        info!("Updating manufacturer contact info: {}", id);
+        // info!("Updating manufacturer contact info: {}", id);
 
         let db_client = ctx
             .data::<DbClient>()
@@ -347,7 +347,7 @@ impl ManufacturerMutation {
         new_name: String,
         new_email: String
     ) -> Result<Manufacturer, Error> {
-        info!("Cloning manufacturer {} with new name: {}", source_id, new_name);
+        // info!("Cloning manufacturer {} with new name: {}", source_id, new_name);
 
         let db_client = ctx.data::<DbClient>().map_err(|e| {
             warn!("Failed to get db_client from context: {:?}", e);
@@ -415,7 +415,7 @@ impl ManufacturerMutation {
         support_contact: Option<String>,
         warranty_contact: Option<String>
     ) -> Result<Vec<Manufacturer>, Error> {
-        info!("Bulk updating {} manufacturers", manufacturer_ids.len());
+        // info!("Bulk updating {} manufacturers", manufacturer_ids.len());
 
         let db_client = ctx
             .data::<DbClient>()
@@ -479,7 +479,7 @@ impl ManufacturerMutation {
         id: String,
         force: Option<bool>
     ) -> Result<bool, Error> {
-        info!("Deleting manufacturer: {}", id);
+        // info!("Deleting manufacturer: {}", id);
 
         let db_client = ctx
             .data::<DbClient>()

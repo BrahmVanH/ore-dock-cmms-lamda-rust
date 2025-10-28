@@ -243,7 +243,7 @@ impl TempRoleElevation {
     ///
     /// 'Some' TempRoleElevation if item fields match, 'None' otherwise
     pub(crate) fn from_item(item: &HashMap<String, AttributeValue>) -> Option<Self> {
-        info!("calling from_item with: {:?}", &item);
+        // info!("calling from_item with: {:?}", &item);
 
         let id = item.get("id")?.as_s().ok()?.to_string();
         let user_id = item.get("user_id")?.as_s().ok()?.to_string();
@@ -366,7 +366,7 @@ impl TempRoleElevation {
             updated_at,
         });
 
-        info!("result of from_item on temp_role_elevation: {:?}", res);
+        // info!("result of from_item on temp_role_elevation: {:?}", res);
         res
     }
 

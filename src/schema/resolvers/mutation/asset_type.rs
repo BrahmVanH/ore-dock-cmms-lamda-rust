@@ -18,7 +18,7 @@ impl AssetTypeMutation {
         description: String,
         category: String
     ) -> Result<AssetType, Error> {
-        info!("Creating new asset_type: {}", name);
+        // info!("Creating new asset_type: {}", name);
 
         let db_client = ctx.data::<DbClient>().map_err(|e| {
             warn!("Failed to get db_client from context: {:?}", e);
@@ -28,13 +28,12 @@ impl AssetTypeMutation {
         })?;
 
         let id = format!("asset_type-{}", Uuid::new_v4());
-        
 
         let asset_type = AssetType::new(id, name, description, category).map_err(|e|
             e.to_graphql_error()
         )?;
 
-        info!("Creating new asset_type: {:?}", asset_type);
+        // info!("Creating new asset_type: {:?}", asset_type);
 
         asset_type.validate().map_err(|e| { AppError::ValidationError(e).to_graphql_error() })?;
         Repository::new(db_client.clone())
@@ -52,7 +51,7 @@ impl AssetTypeMutation {
         description: Option<String>,
         category: Option<String>
     ) -> Result<AssetType, Error> {
-        info!("Updating asset_type: {}", id);
+        // info!("Updating asset_type: {}", id);
 
         let db_client = ctx
             .data::<DbClient>()
@@ -86,7 +85,7 @@ impl AssetTypeMutation {
 
     /// Delete an asset type
     async fn delete_asset_type(&self, ctx: &Context<'_>, id: String) -> Result<bool, Error> {
-        info!("Deleting asset_type: {}", id);
+        // info!("Deleting asset_type: {}", id);
 
         let db_client = ctx
             .data::<DbClient>()

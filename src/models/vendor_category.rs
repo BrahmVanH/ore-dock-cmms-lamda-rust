@@ -267,7 +267,7 @@ impl VendorCategory {
     ///
     /// 'Some' VendorCategory if item fields match, 'None' otherwise
     pub fn from_item(item: &HashMap<String, AttributeValue>) -> Option<Self> {
-        info!("calling from_item with: {:?}", &item);
+        // info!("calling from_item with: {:?}", &item);
 
         let id = item.get("id")?.as_s().ok()?.to_string();
         let name = item.get("name")?.as_s().ok()?.to_string();
@@ -414,7 +414,7 @@ impl VendorCategory {
             updated_at,
         });
 
-        info!("result of from_item on vendor_category: {:?}", res);
+        // info!("result of from_item on vendor_category: {:?}", res);
         res
     }
 

@@ -38,7 +38,7 @@ impl Repository {
 
     pub async fn create<T: DynamoDbEntity>(&self, entity: T) -> Result<T, AppError> {
         let item = entity.to_item();
-        info!("new location_type item in repository: {:?}", &item);
+        // info!("new location_type item in repository: {:?}", &item);
 
         // self.client
         //     .put_item()
@@ -63,7 +63,7 @@ impl Repository {
             .send().await;
         match &temp {
             Ok(v) => {
-                info!("new item temp in repository: {:#?}", &v);
+                // info!("new item temp in repository: {:#?}", &v);
             }
             Err(e) => {
                 warn!("new item temp has sdk error: {:#?}", e);
@@ -78,7 +78,7 @@ impl Repository {
             }
         })?;
 
-        info!("new iten putitemoutput in repository: {:#?}", temp2);
+        // info!("new iten putitemoutput in repository: {:#?}", temp2);
 
         Ok(entity)
     }

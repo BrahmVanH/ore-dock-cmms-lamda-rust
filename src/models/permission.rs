@@ -198,7 +198,7 @@ impl DynamoDbEntity for Permission {
     ///
     /// 'Some' Permission if item fields match, 'None' otherwise
     fn from_item(item: &HashMap<String, AttributeValue>) -> Option<Self> {
-        info!("calling from_item with: {:?}", &item);
+        // info!("calling from_item with: {:?}", &item);
 
         let id = item.get("id")?.as_s().ok()?.to_string();
         let role_id = item.get("role_id")?.as_s().ok()?.to_string();
@@ -274,7 +274,7 @@ impl DynamoDbEntity for Permission {
             updated_at,
         });
 
-        info!("result of from_item on permission: {:?}", res);
+        // info!("result of from_item on permission: {:?}", res);
         res
     }
 

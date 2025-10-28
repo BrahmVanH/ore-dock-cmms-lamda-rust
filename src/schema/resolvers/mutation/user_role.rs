@@ -25,7 +25,7 @@ impl UserRoleMutation {
         elevation_request_id: Option<String>,
         metadata: Option<String>
     ) -> Result<UserRole, Error> {
-        info!("Assigning role {} to user {}", role_id, user_id);
+        // info!("Assigning role {} to user {}", role_id, user_id);
 
         let db_client = ctx.data::<DbClient>().map_err(|e| {
             warn!("Failed to get db_client from context: {:?}", e);
@@ -127,7 +127,7 @@ impl UserRoleMutation {
         conditions: Option<String>,
         metadata: Option<String>
     ) -> Result<UserRole, Error> {
-        info!("Updating user role assignment: {}", id);
+        // info!("Updating user role assignment: {}", id);
 
         let db_client = ctx
             .data::<DbClient>()
@@ -205,7 +205,7 @@ impl UserRoleMutation {
         revoked_by_user_id: String,
         revocation_reason: Option<String>
     ) -> Result<UserRole, Error> {
-        info!("Revoking user role assignment: {}", id);
+        // info!("Revoking user role assignment: {}", id);
 
         let db_client = ctx
             .data::<DbClient>()
@@ -255,7 +255,7 @@ impl UserRoleMutation {
         suspended_by_user_id: String,
         suspension_reason: Option<String>
     ) -> Result<UserRole, Error> {
-        info!("Suspending user role assignment: {}", id);
+        // info!("Suspending user role assignment: {}", id);
 
         let db_client = ctx
             .data::<DbClient>()
@@ -298,7 +298,7 @@ impl UserRoleMutation {
 
     /// Reactivate a suspended user role assignment
     async fn reactivate_user_role(&self, ctx: &Context<'_>, id: String) -> Result<UserRole, Error> {
-        info!("Reactivating user role assignment: {}", id);
+        // info!("Reactivating user role assignment: {}", id);
 
         let db_client = ctx
             .data::<DbClient>()
@@ -336,7 +336,7 @@ impl UserRoleMutation {
         id: String,
         new_expiration: DateTime<Utc>
     ) -> Result<UserRole, Error> {
-        info!("Extending user role assignment expiration: {}", id);
+        // info!("Extending user role assignment expiration: {}", id);
 
         let db_client = ctx
             .data::<DbClient>()
@@ -371,7 +371,7 @@ impl UserRoleMutation {
         ctx: &Context<'_>,
         id: String
     ) -> Result<UserRole, Error> {
-        info!("Marking user role assignment as used: {}", id);
+        // info!("Marking user role assignment as used: {}", id);
 
         let db_client = ctx
             .data::<DbClient>()
@@ -397,7 +397,7 @@ impl UserRoleMutation {
         ctx: &Context<'_>,
         id: String
     ) -> Result<UserRole, Error> {
-        info!("Setting user role assignment as primary: {}", id);
+        // info!("Setting user role assignment as primary: {}", id);
 
         let db_client = ctx
             .data::<DbClient>()
@@ -455,7 +455,7 @@ impl UserRoleMutation {
         effective_from: Option<DateTime<Utc>>,
         expires_at: Option<DateTime<Utc>>
     ) -> Result<Vec<UserRole>, Error> {
-        info!("Bulk assigning role {} to {} users", role_id, user_ids.len());
+        // info!("Bulk assigning role {} to {} users", role_id, user_ids.len());
 
         let db_client = ctx.data::<DbClient>().map_err(|e| {
             warn!("Failed to get db_client from context: {:?}", e);
@@ -543,7 +543,7 @@ impl UserRoleMutation {
         revoked_by_user_id: String,
         revocation_reason: Option<String>
     ) -> Result<Vec<UserRole>, Error> {
-        info!("Bulk revoking {} user role assignments", user_role_ids.len());
+        // info!("Bulk revoking {} user role assignments", user_role_ids.len());
 
         let db_client = ctx
             .data::<DbClient>()
@@ -590,7 +590,7 @@ impl UserRoleMutation {
 
     /// Delete a user role assignment (hard delete)
     async fn delete_user_role(&self, ctx: &Context<'_>, id: String) -> Result<bool, Error> {
-        info!("Deleting user role assignment: {}", id);
+        // info!("Deleting user role assignment: {}", id);
 
         let db_client = ctx
             .data::<DbClient>()

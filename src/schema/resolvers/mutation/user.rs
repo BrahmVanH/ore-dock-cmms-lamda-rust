@@ -1,8 +1,6 @@
-
-
 use crate::{
     DbClient,
-    models::{prelude::*,  user::{ User, UserStatus, UserType }, role::Role },
+    models::{ prelude::*, user::{ User, UserStatus, UserType }, role::Role },
     AppError,
     Repository,
 };
@@ -42,7 +40,7 @@ impl UserMutation {
         metadata: Option<String>, // JSON string
         created_by: Option<String>
     ) -> Result<User, Error> {
-        info!("Creating new user: {}", username);
+        // info!("Creating new user: {}", username);
 
         let db_client = ctx.data::<DbClient>().map_err(|e| {
             warn!("Failed to get db_client from context: {:?}", e);
@@ -210,7 +208,7 @@ impl UserMutation {
         notes: Option<String>,
         metadata: Option<String>
     ) -> Result<User, Error> {
-        info!("Updating user: {}", id);
+        // info!("Updating user: {}", id);
 
         let db_client = ctx
             .data::<DbClient>()
@@ -416,7 +414,7 @@ impl UserMutation {
         status: String,
         reason: Option<String>
     ) -> Result<User, Error> {
-        info!("Updating user status: {} to {}", id, status);
+        // info!("Updating user status: {} to {}", id, status);
 
         let db_client = ctx
             .data::<DbClient>()
@@ -453,7 +451,7 @@ impl UserMutation {
         id: String,
         reason: Option<String>
     ) -> Result<User, Error> {
-        info!("Suspending user: {}", id);
+        // info!("Suspending user: {}", id);
 
         let db_client = ctx
             .data::<DbClient>()
@@ -482,7 +480,7 @@ impl UserMutation {
 
     /// Reactivate a suspended user account
     async fn reactivate_user(&self, ctx: &Context<'_>, id: String) -> Result<User, Error> {
-        info!("Reactivating user: {}", id);
+        // info!("Reactivating user: {}", id);
 
         let db_client = ctx
             .data::<DbClient>()
@@ -521,7 +519,7 @@ impl UserMutation {
         termination_date: Option<DateTime<Utc>>,
         reason: Option<String>
     ) -> Result<User, Error> {
-        info!("Terminating user: {}", id);
+        // info!("Terminating user: {}", id);
 
         let db_client = ctx
             .data::<DbClient>()
@@ -559,7 +557,7 @@ impl UserMutation {
 
     /// Unlock a user account
     async fn unlock_user_account(&self, ctx: &Context<'_>, id: String) -> Result<User, Error> {
-        info!("Unlocking user account: {}", id);
+        // info!("Unlocking user account: {}", id);
 
         let db_client = ctx
             .data::<DbClient>()
@@ -583,7 +581,7 @@ impl UserMutation {
 
     /// Record user login
     async fn record_user_login(&self, ctx: &Context<'_>, id: String) -> Result<User, Error> {
-        info!("Recording user login: {}", id);
+        // info!("Recording user login: {}", id);
 
         let db_client = ctx
             .data::<DbClient>()
@@ -609,7 +607,7 @@ impl UserMutation {
         ctx: &Context<'_>,
         id: String
     ) -> Result<User, Error> {
-        info!("Recording password change for user: {}", id);
+        // info!("Recording password change for user: {}", id);
 
         let db_client = ctx
             .data::<DbClient>()
@@ -637,7 +635,7 @@ impl UserMutation {
         id: String,
         reason: Option<String>
     ) -> Result<bool, Error> {
-        info!("Deleting user: {}", id);
+        // info!("Deleting user: {}", id);
 
         let db_client = ctx
             .data::<DbClient>()
@@ -670,7 +668,7 @@ impl UserMutation {
 
     /// Hard delete a user (permanent removal)
     async fn permanently_delete_user(&self, ctx: &Context<'_>, id: String) -> Result<bool, Error> {
-        info!("Permanently deleting user: {}", id);
+        // info!("Permanently deleting user: {}", id);
 
         let db_client = ctx
             .data::<DbClient>()

@@ -52,12 +52,12 @@ pub async fn create_assets_table(
         "Failed to build id attribute definition"
     )?;
 
-    let ad_type_id = build(
+    let ad_asset_type_id = build(
         AttributeDefinition::builder()
-            .attribute_name("type_id")
+            .attribute_name("asset_type_id")
             .attribute_type(ScalarAttributeType::S)
             .build(),
-        "Failed to build type_id attribute definition"
+        "Failed to build asset_type_id attribute definition"
     )?;
 
     let ad_location_id = build(
@@ -188,7 +188,7 @@ pub async fn create_assets_table(
         .table_name("Assets")
         .billing_mode(BillingMode::PayPerRequest)
         .attribute_definitions(ad_id)
-        .attribute_definitions(ad_type_id)
+        .attribute_definitions(ad_asset_type_id)
         .attribute_definitions(ad_location_id)
         .attribute_definitions(ad_manufacturer_id)
         .attribute_definitions(ad_current_status)
